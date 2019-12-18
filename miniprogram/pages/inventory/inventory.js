@@ -20,16 +20,18 @@ Page({
    */
   onShow: function() {
     if(!app.globalData.logged) {
-      // redirect to the setting page to let user log in
-      wx.showModal({
+      // redirect to the setting page to let user log in or register
+      wx.showToast({
         title: '请登录',
-        showCancel: false,
+        mask: true,
+        icon: 'none',
+        duration: 1500,
         complete: function (res) {
-          if (res.confirm) {
+          setTimeout(function () {
             wx.switchTab({
               url: '../me/me',
             })
-          }
+          }, 1500)
         }
       })
     }

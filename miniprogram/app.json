@@ -1,9 +1,9 @@
 {
   "cloud": true,
   "pages": [
-    
     "pages/inventory/inventory",
     "pages/me/me",
+    "pages/setname/setname",
     "pages/predict/predict",
     "pages/cup1/cup1"
   ],
@@ -23,7 +23,7 @@
       "text": "千元预测"
     }, {
       "pagePath": "pages/me/me",
-      "text": "设置中心"
+      "text": "个人信息"
     }]
   },
   "sitemapLocation": "sitemap.json",

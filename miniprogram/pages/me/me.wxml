@@ -10,7 +10,7 @@
   </view>
 
   <view class="userNickName">
-    <text>昵称: {{userInfo.nickName}}</text>
+    <text>姓名: {{true_name}}</text>
   </view>
 
   <view class="userOpenId">
@@ -24,13 +24,7 @@
   </view>
 
   <view class="userLevel">
-    <text>权限等级: {{level}}</text>
+    <text>权限等级: {{permission_level}}</text>
   </view>
 
-  <view class="section_level">
-    <text class="section_title">设置权限等级</text>
-    <view class="body-view">
-      <slider bindchange="levelchange" max="3" value="{{level}}" disabled="{{!logged}}"show-value/>
-    </view>
-  </view>
 </view>
