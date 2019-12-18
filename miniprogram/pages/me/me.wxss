@@ -40,3 +40,7 @@
   height: 140rpx;
   width: 80%;
 }
+
+.btn {
+  padding-top:50rpx;
+}

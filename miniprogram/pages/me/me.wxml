@@ -23,6 +23,10 @@
     <text>{{uid}}</text>
   </view>
 
+  <view class="btn">
+    <button wx:if="{{!registered && logged}}" type="primary" bindtap="registerUser"> 点击注册信息 </button>
+  </view>
+
   <view class="userLevel">
     <text>权限等级: {{permission_level}}</text>
   </view>

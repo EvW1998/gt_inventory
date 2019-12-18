@@ -24,6 +24,7 @@ App({
     this.globalData = {}
     this.globalData.logged = false // set for login state
     this.globalData.registered = false // set for register state
+    this.globalData.invite_code = 'SHY019' // set for invite code
 
     // get the setting info from wx server
     wx.getSetting({
@@ -56,7 +57,7 @@ App({
               console.log('user openid: ', res.result.openid)
 
               // check the user register state in this app by openid
-              checkUser(this.globalData.openid)
+              this.checkUser(this.globalData.openid)
             },
             fail: err => {
               // if get a failed result
@@ -70,53 +71,54 @@ App({
         }
       }
     })
+  },
+
+  /***
+   * par openid(String): the openid that try to find in the user db
+   * 
+   *  Check whether user exist in the user database,
+   * if not, navigate to the page to set real name and invite code,
+   * if user exists, record the uid in database.
+   */
+  checkUser: function(openid) {
+    const db = wx.cloud.database()
+
+    db.collection(db_user)
+      .where({
+        // use the user's openid to looking for the user
+        user_openid: openid
+      })
+      .field({
+        true_name: true,
+        permission_level: true,
+        user_openid: true,
+      })
+      .orderBy('permission_level', 'desc')
+      .get({
+        success: res => {
+          // if get a successed result
+          if (res.data.length == 0) {
+            // if this openid didn't found in the database
+            console.log('checkUser: new user')
+
+            // navigate to the page to set name
+            wx.navigateTo({
+              url: register_page
+            })
+          }
+          else {
+            // the user exists in the database, get his permission level and uid
+            console.log('checkUser: user exists')
+            console.log('user uid: ', res.data[0]._id)
+            console.log('user real name: ', res.data[0].true_name)
+
+            this.globalData.registered = true
+            this.globalData.permission_level = res.data[0].permission_level
+            this.globalData.uid = res.data[0]._id
+            this.globalData.true_name = res.data[0].true_name
+          }
+        }
+      })
   }
 
-  
 })
-
-/***
- * par openid(String): the openid that try to find in the user db
- * 
- *  Check whether user exist in the user database,
- * if not, navigate to the page to set real name and invite code,
- * if user exists, record the uid in database.
- */
-function checkUser(openid) {
-  const db = wx.cloud.database()
-
-  db.collection(db_user)
-    .where({
-      // use the user's openid to looking for the user
-      user_openid: openid
-    })
-    .field({
-      true_name: true,
-      permission_level: true,
-      user_openid: true,
-    })
-    .orderBy('permission_level', 'desc')
-    .get({
-      success: res => {
-        // if get a successed result
-        if (res.data.length == 0) {
-          // if this openid didn't found in the database
-          console.log('checkUser: new user')
-
-          // navigate to the page to set name
-          wx.navigateTo({
-            url: register_page
-          })
-        }
-        else {
-          // the user exists in the database, get his permission level and uid
-          console.log('checkUser: user exists')
-          console.log('user uid: ', res.data[0]._id)
-
-          this.globalData.registered = true
-          this.globalData.permission_level = res.data[0].permission_level
-          this.globalData.uid = res.data[0]._id
-        }
-      }
-    })
-}

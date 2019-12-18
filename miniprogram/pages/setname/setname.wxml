@@ -6,14 +6,14 @@
   <form bindsubmit="formSubmit">
     <view class="item">
       <view class="name">真实姓名:  </view>
-      <view class="val"><input name="true_name" type="text"/></view>
+      <view class="val"><input name="true_name" type="text" bindblur="checkBlur_name"/></view>
     </view>
 
     <view class="item">
       <view class="name">邀请码:  </view>
-      <view class="val"><input name="invite_code" type="text"/></view>
+      <view class="val"><input name="invite_code" type="text" bindblur="checkBlur_code"/></view>
     </view>
 
-    <button class="btn" type="primary" form-type="submit">确认提交</button>
+    <button class="btn" type="{{btn_state}}" form-type="submit" disabled="{{!filled}}">确认提交</button>
   </form>
 </view>

@@ -7,8 +7,12 @@
 const app = getApp()
 const db = wx.cloud.database()
 const db_user = 'user' // the collection for the user in db
+const register_page = '../setname/setname' // the url for the register page
 
 Page({
+  /**
+   *  Default data for the page
+   */
   data: {
     logged: true, // login state for the user
     userInfo: {}, // user's infomation
@@ -16,7 +20,8 @@ Page({
     openid: '', // user openid
     permission_level: 0, // user's permission level
     uid: '', // user's uid in this inventory
-    true_name: '' //user's registered real name
+    true_name: '', //user's registered real name
+    registered: true
   },
 
   /***
@@ -25,7 +30,8 @@ Page({
    */
   onLoad: function () {
     this.setData({
-      logged: app.globalData.logged
+      logged: app.globalData.logged,
+      registered: app.globalData.registered
     })
 
     if(this.data.logged) {
@@ -34,8 +40,25 @@ Page({
         avatarUrl: app.globalData.userInfo.avatarUrl,
         openid: app.globalData.openid
       })
+    }
 
-      this.checkUser(app.globalData.openid)
+    if(this.data.registered) {
+      this.setData({
+        uid: app.globalData.uid,
+        true_name: app.globalData.true_name
+      })
+    }
+  },
+
+  onShow: function() {
+    if(app.globalData.registered) {
+      if(this.data.true_name == '') {
+        this.setData({
+          true_name: app.globalData.true_name,
+          uid: app.globalData.uid,
+          registered: app.globalData.registered
+        })
+      }
     }
   },
 
@@ -109,27 +132,27 @@ Page({
             console.log('checkUser: new user')
 
             // navigate to the page to set name
-            //wx.navigateTo({
-            //  url: '../setname/setname',
-            //  success: function(res) {
-            //    console.log(res)
-            //  }
-            //})
-
-            // add this new user to the database
-            this.addUser()
+            wx.navigateTo({
+              url: '../setname/setname'
+            })
           }
           else {
             // the user exists in the database, get his permission level and uid
             console.log('checkUser: user exists')
             console.log('user uid: ', res.data[0]._id)
+            console.log('user real name: ', res.data[0].true_name)
 
             this.setData({
+              registered: true,
               permission_level: res.data[0].permission_level,
-              uid: res.data[0]._id
+              uid: res.data[0]._id,
+              true_name: res.data[0].true_name
             })
+
+            app.globalData.registered = true
             app.globalData.permission_level = res.data[0].permission_level
             app.globalData.uid = res.data[0]._id
+            app.globalData.true_name = res.data[0].true_name
           }
         }
       })
@@ -171,6 +194,13 @@ Page({
         // if get a failed result
         console.error('failed to use cloud function dbAdd()', err)
       }
+    })
+  },
+
+  registerUser: function() {
+    // navigate to the page to set name
+    wx.navigateTo({
+      url: register_page
     })
   },
 
