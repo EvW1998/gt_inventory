@@ -1,0 +1,13 @@
+/* pages/predict/predict.wxss */
+.content{
+  font-size: 20px;
+  text-align: center;
+}
+
+.last, .this, .next{
+  padding-top: 75rpx;
+}
+
+.update{
+  padding-top: 100rpx;
+}

@@ -1,0 +1,18 @@
+<view class="content">
+  <view class="last">
+    <view class="lastweek_predict">上周营业额/千元 点击修改</view>
+    <input type="digit" value="{{lastweek_p}}" maxlength="10" bindinput="inputLastWeek"/>
+  </view>
+  <view class="this">
+    <view class="thisweek_predict">本周营业额/千元 点击修改</view>
+    <input type="digit" value="{{thisweek_p}}" maxlength="10" bindinput="inputThisWeek"/>
+  </view>
+  <view class="next">
+    <view class="nextweek_predict">下周营业额/千元 点击修改</view>
+    <input type="digit" value="{{nextweek_p}}" maxlength="10" bindinput="inputNextWeek"/>
+  </view>
+</view>
+
+<view class="update">
+  <button type="primary" bindtap="update_predict">更新千元</button>
+</view>

@@ -1,0 +1,31 @@
+{
+  "cloud": true,
+  "pages": [
+    
+    "pages/inventory/inventory",
+    "pages/me/me",
+    "pages/predict/predict",
+    "pages/cup1/cup1"
+  ],
+  "window": {
+    "backgroundColor": "#F6F6F6",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#F6F6F6",
+    "navigationBarTitleText": "GT库存",
+    "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "list": [{
+      "pagePath": "pages/inventory/inventory",
+      "text": "前台库存"
+    }, {
+      "pagePath": "pages/predict/predict",
+      "text": "千元预测"
+    }, {
+      "pagePath": "pages/me/me",
+      "text": "设置中心"
+    }]
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2"
+}

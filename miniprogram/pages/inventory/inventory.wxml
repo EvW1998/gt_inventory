@@ -1,0 +1,39 @@
+<view class="bg">
+   <view class="nav">
+       <scroll-view class="scroll-view_H" scroll-x="true" >
+       <view class="scroll-view_H">
+          <view><view class="{{flag==0?'select':'normal'}}" id="0" bindtap="switchNav">杯子</view></view>
+          <view><view class="{{flag==1?'select':'normal'}}" id="1" bindtap="switchNav">杯盖</view></view>
+          <view><view class="{{flag==2?'select':'normal'}}" id="2" bindtap="switchNav">袋子</view></view>
+          <view><view class="{{flag==3?'select':'normal'}}" id="3" bindtap="switchNav">盒子</view></view>
+          <view><view class="{{flag==4?'select':'normal'}}" id="4" bindtap="switchNav">配件</view></view>
+          <view><view class="{{flag==5?'select':'normal'}}" id="5" bindtap="switchNav">酱料</view></view>
+       </view>
+  </scroll-view>
+   </view>
+</view>
+
+<swiper current="{{currentTab}}"style="height:1500px">
+  <swiper-item>
+    <view class="uploader">
+      <navigator url="../cup1/cup1" open-type="navigate" class="uploader-text">
+        <text>12oz 螺纹杯</text>
+      </navigator>
+    </view>
+  </swiper-item>
+  <swiper-item>
+      <button bindtap="pageOnDevelopment">12oz 冷杯盖</button>
+  </swiper-item>
+  <swiper-item>
+      <button bindtap="pageOnDevelopment">4号纸袋</button>
+  </swiper-item>
+  <swiper-item>
+      <button bindtap="pageOnDevelopment">鸡块盒</button>
+  </swiper-item>
+  <swiper-item>
+      <button bindtap="pageOnDevelopment">糖醋酱</button>
+  </swiper-item>
+  <swiper-item>
+      <button bindtap="pageOnDevelopment">沙拉酱</button>
+  </swiper-item>
+</swiper>
