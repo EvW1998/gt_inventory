@@ -32,6 +32,7 @@
 }
 
 .val{
+  margin-left: 30rpx;
   width: 100px;
   height: 28px;
   border:1px solid #cccccc;
