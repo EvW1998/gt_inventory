@@ -1,4 +1,8 @@
 const app = getApp()
+const db = wx.cloud.database()
+const db_user = 'user' // the collection for the user in db
+const register_page = '../setname/setname' // the url for the register page
+const info_page = '../me/me' // the url for the info page
 
 Page({
   data: {
@@ -9,32 +13,136 @@ Page({
   },
 
   /***
-   *   When loading the default page
+   *   When loading the default page, check whether the user logged in,
+   * if not, block the user until get userinfo back
    */
   onLoad: function() {
+    if(!app.globalData.logged) {
+      this.loginUser()
+
+      wx.showLoading({
+        title: '登录中',
+        mask: true
+      })
+    }
   },
 
   /***
-   *   When show the default page, first check whether the user logged in
-   * if not, redirect to the setting page
+   *   When show the default page
    */
   onShow: function() {
-    if(!app.globalData.logged) {
-      // redirect to the setting page to let user log in or register
-      wx.showToast({
-        title: '请登录',
-        mask: true,
-        icon: 'none',
-        duration: 1500,
-        complete: function (res) {
-          setTimeout(function () {
-            wx.switchTab({
-              url: '../me/me',
+
+  },
+
+  /**
+   *  Connect to the wx server, get userinfo
+   */
+  loginUser: function () {
+    // get the setting info from wx server
+    wx.getSetting({
+      success: res => {
+        if (res.authSetting['scope.userInfo']) {
+          // if get user authorization
+          app.globalData.logged = true
+          console.log('user logged: ', app.globalData.logged)
+
+          // get userinfo from the server
+          wx.getUserInfo({
+            success: res => {
+              // if get a successed result
+              app.globalData.userInfo = res.userInfo
+              console.log('userinfo: ', app.globalData.userInfo)
+            },
+            fail: res => {
+              // if get a failed result
+              console.error('failed to get userinfo', res)
+            }
+          })
+
+          // use cloud function login() to get user openid
+          wx.cloud.callFunction({
+            name: 'login',
+            data: {},
+            success: res => {
+              // if get a successed result
+              app.globalData.openid = res.result.openid
+              console.log('user openid: ', app.globalData.openid)
+
+              // check the user register state in this app by openid
+              this.checkUser(app.globalData.openid)
+            },
+            fail: err => {
+              // if get a failed result
+              console.error('failed to get user openid', err)
+            }
+          })
+        }
+        else {
+          // if did not get user authorization
+          console.log('user logged: ', app.globalData.logged)
+
+          wx.hideLoading()
+
+          wx.switchTab({
+            url: info_page,
+          })
+        }
+      },
+      fail: res => {
+        // if get a failed result
+        console.error('failed to getSetting', err)
+      }
+    })
+  },
+
+  /***
+   * par openid(String): the openid that try to find in the user db
+   * 
+   *  Check whether user exist in the user database,
+   * if not, navigate to the page to set real name and invite code,
+   * if user exists, record the uid in database.
+   */
+  checkUser: function (openid) {
+    db.collection(db_user)
+      .where({
+        // use the user's openid to looking for the user
+        user_openid: openid
+      })
+      .field({
+        true_name: true,
+        permission_level: true,
+        user_openid: true,
+      })
+      .orderBy('permission_level', 'desc')
+      .get({
+        success: res => {
+          // if get a successed result
+          if (res.data.length == 0) {
+            // if this openid didn't found in the database
+            console.log('checkUser: new user')
+
+            wx.hideLoading()
+
+            // navigate to the page to set name
+            wx.navigateTo({
+              url: register_page
             })
-          }, 1500)
+          }
+          else {
+            // the user exists in the database, get his permission level and uid
+            console.log('checkUser: user exists')
+            console.log('user uid: ', res.data[0]._id)
+            console.log('user real name: ', res.data[0].true_name)
+
+            app.globalData.registered = true
+            app.globalData.permission_level = res.data[0].permission_level
+            app.globalData.uid = res.data[0]._id
+            app.globalData.true_name = res.data[0].true_name
+
+            wx.hideLoading()
+          }
         }
       })
-    }
   },
 
   switchNav: function (e) {

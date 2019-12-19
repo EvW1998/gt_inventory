@@ -1,4 +1,4 @@
-/***
+/**
  *  The page to show the userinfo in this app
  * Includ the user's name, wechat openid, 
  * the uid in this miniapp, and the permission level
@@ -8,6 +8,7 @@ const app = getApp()
 const db = wx.cloud.database()
 const db_user = 'user' // the collection for the user in db
 const register_page = '../setname/setname' // the url for the register page
+
 
 Page({
   /**
@@ -21,7 +22,7 @@ Page({
     permission_level: 0, // user's permission level
     uid: '', // user's uid in this inventory
     true_name: '', //user's registered real name
-    registered: true
+    registered: true //user's registered state
   },
 
   /***
@@ -35,6 +36,7 @@ Page({
     })
 
     if(this.data.logged) {
+      // if user logged in
       this.setData({
         userInfo: app.globalData.userInfo,
         avatarUrl: app.globalData.userInfo.avatarUrl,
@@ -43,16 +45,33 @@ Page({
     }
 
     if(this.data.registered) {
+      // if user registered
       this.setData({
         uid: app.globalData.uid,
-        true_name: app.globalData.true_name
+        true_name: app.globalData.true_name,
+        registered: app.globalData.registered
       })
     }
   },
 
+  /**
+   *  When show the page, if the user didn't login, show the message,
+   * if the user just get back from the register page, update info
+   */
   onShow: function() {
+    if(!app.globalData.logged) {
+      // if the user didn't login, show the message
+      wx.showToast({
+        title: '请登录',
+        icon: 'none',
+        duration: 1500
+      })
+    }
+
     if(app.globalData.registered) {
-      if(this.data.true_name == '') {
+      // if user just registered from the register page
+      if(!this.data.registered) {
+        // if the page data didn't get update
         this.setData({
           true_name: app.globalData.true_name,
           uid: app.globalData.uid,
@@ -65,10 +84,17 @@ Page({
   /***
    *  If didn't log in, the login button will show up.
    * After clicking, update login state, and userinfo.
+   * 
+   *  par e: the val returned by the button
    */
   onGetUserInfo: function(e) {
     if (!this.data.logged && e.detail.userInfo) {
       // if the login button got triggereed, and user didn't login
+      wx.showLoading({
+        title: '登陆中',
+        mask: true
+      })
+
       app.globalData.logged = true
       app.globalData.userInfo = e.detail.userInfo
 
@@ -105,12 +131,12 @@ Page({
     }
   },
 
-  /***
-   * par openid(String): the openid that try to find in the user db
-   * 
+  /**
    *  Check whether user exist in the user database,
    * if not, call addUser() to add this user to database,
    * if user exists, record the uid in database.
+   * 
+   *  par openid(String): the openid that try to find in the user db
    */
   checkUser: function(openid) {
     db.collection(db_user)
@@ -130,6 +156,8 @@ Page({
           if (res.data.length == 0) {
             // if this openid didn't found in the database
             console.log('checkUser: new user')
+
+            wx.hideLoading()
 
             // navigate to the page to set name
             wx.navigateTo({
@@ -153,6 +181,8 @@ Page({
             app.globalData.permission_level = res.data[0].permission_level
             app.globalData.uid = res.data[0]._id
             app.globalData.true_name = res.data[0].true_name
+
+            wx.hideLoading()
           }
         }
       })
@@ -197,6 +227,10 @@ Page({
     })
   },
 
+  /**
+   *  When the register button get triggered, 
+   * navigate to the register page
+   */
   registerUser: function() {
     // navigate to the page to set name
     wx.navigateTo({
