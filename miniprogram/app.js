@@ -24,5 +24,7 @@ App({
     this.globalData.logged = false // set for login state
     this.globalData.registered = false // set for register state
     this.globalData.invite_code = 'SHY019' // set for invite code
+    this.globalData.tolow = false // whether permission level is too low
+    this.globalData.permission_level = 0 // default permission level
   }
 })

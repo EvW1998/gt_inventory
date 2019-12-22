@@ -31,4 +31,8 @@
     <text>权限等级: {{permission_level}}</text>
   </view>
 
+  <view class="version">
+    <text>test version 1.0.1 SHY019 国泰肯德基 王智健</text>
+  </view>
+
 </view>

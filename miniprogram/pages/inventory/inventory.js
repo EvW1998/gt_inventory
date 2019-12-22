@@ -9,7 +9,8 @@ Page({
     currentTab: 0,
     flag: 0,
     openid: '',
-    level: 0
+    level: 0,
+    firstLoad: true
   },
 
   /***
@@ -31,7 +32,15 @@ Page({
    *   When show the default page
    */
   onShow: function() {
-
+    if(!this.data.firstLoad) {
+      if (app.globalData.permission_level < 1) {
+        console.log('permission level too low')
+        app.globalData.tolow = true
+        wx.switchTab({
+          url: '../me/me'
+        })
+      }
+    }
   },
 
   /**
@@ -82,6 +91,10 @@ Page({
           console.log('user logged: ', app.globalData.logged)
 
           wx.hideLoading()
+
+          this.setData({
+            firstLoad: false
+          })
 
           wx.switchTab({
             url: info_page,
@@ -140,6 +153,18 @@ Page({
             app.globalData.true_name = res.data[0].true_name
 
             wx.hideLoading()
+
+            this.setData({
+              firstLoad: false
+            })
+
+            if (app.globalData.permission_level < 1) {
+              console.log('permission level too low')
+              app.globalData.tolow = true
+              wx.switchTab({
+                url: '../me/me'
+              })
+            }
           }
         }
       })

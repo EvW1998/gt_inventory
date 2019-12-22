@@ -49,7 +49,8 @@ Page({
       this.setData({
         uid: app.globalData.uid,
         true_name: app.globalData.true_name,
-        registered: app.globalData.registered
+        registered: app.globalData.registered,
+        permission_level: app.globalData.permission_level
       })
     }
   },
@@ -58,7 +59,7 @@ Page({
    *  When show the page, if the user didn't login, show the message,
    * if the user just get back from the register page, update info
    */
-  onShow: function() {
+  onShow: function () {
     if(!app.globalData.logged) {
       // if the user didn't login, show the message
       wx.showToast({
@@ -75,9 +76,19 @@ Page({
         this.setData({
           true_name: app.globalData.true_name,
           uid: app.globalData.uid,
-          registered: app.globalData.registered
+          registered: app.globalData.registered,
+          permission_level: app.globalData.permission_level
         })
       }
+    }
+
+    if(app.globalData.tolow) {
+      app.globalData.tolow = false
+      wx.showToast({
+        title: '权限不足',
+        icon: 'none',
+        duration: 1500
+      })
     }
   },
 

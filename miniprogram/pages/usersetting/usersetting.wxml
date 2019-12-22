@@ -1,0 +1,18 @@
+<!--pages/usersetting/usersetting.wxml-->
+<view class="content">
+  <view class="title">员工设置</view>
+
+  <form bindsubmit="formSubmit">
+    <view class="item">
+      <view class="name">真实姓名:  </view>
+      <view class="val"><input name="name" type="text" bindblur="checkBlur_name" value="{{manage_name}}"/></view>
+    </view>
+
+    <view class="item">
+      <view class="name">权限等级:  </view>
+      <view class="val"><input name="level" type="text" bindblur="checkBlur_code" value="{{manage_level}}"/></view>
+    </view>
+
+    <button class="btn" type="{{btn_state}}" form-type="submit" disabled="{{!filled}}">确认更改</button>
+  </form>
+</view>

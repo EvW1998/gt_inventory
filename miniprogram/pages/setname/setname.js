@@ -150,6 +150,7 @@ Page({
         app.globalData.uid = res.result._id
         console.log('user registered real name: ', n)
         app.globalData.true_name = n
+        app.globalData.permission_level= 0
 
         wx.hideLoading()
         wx.showToast({

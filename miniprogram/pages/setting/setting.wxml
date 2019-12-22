@@ -1,0 +1,12 @@
+<!--pages/setting/setting.wxml-->
+<view class="um">
+  <navigator url="../usermanage/usermanage" open-type="navigate" class="um-text">
+    <text>员工管理</text>
+  </navigator>
+</view>
+
+<view class="pd">
+  <navigator url="../predict/predict" open-type="navigate" class="pd-text">
+    <text>营业额设置</text>
+  </navigator>
+</view>

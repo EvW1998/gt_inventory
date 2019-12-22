@@ -44,3 +44,13 @@
 .btn {
   padding-top:50rpx;
 }
+
+.version {
+  bottom: 30rpx;
+  position: absolute;
+  text-align: center;
+  left: 0;
+  right: 0;
+  color: rgb(200, 200, 200);
+  font-size: 30rpx;
+}
