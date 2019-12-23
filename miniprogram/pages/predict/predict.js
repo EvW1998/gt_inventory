@@ -6,6 +6,7 @@ var util4 = require('../../utils/findnextweekfirstday.js')
 
 const app = getApp()
 const db = wx.cloud.database()
+const db_predict = 'predict'
 
 Page({
 
@@ -13,12 +14,15 @@ Page({
    * 页面的初始数据
    */
   data: {
-    openid: '',
-    level: 0,
     lastweek_p: 0,
     thisweek_p: 0,
     nextweek_p: 0,
-    time: {}
+    time: {},
+    filled_lw: true,
+    filled_tw: true,
+    filled_nw: true,
+    filled: true,
+    btn_state: "primary" // the state for the confirm button
   },
 
   /**
@@ -27,8 +31,6 @@ Page({
   onLoad: function () {
     
     this.setData({
-      openid: app.globalData.openid,
-      level: app.globalData.level,
       time: util.dateInArray(new Date())
     })
   },
@@ -36,76 +38,21 @@ Page({
   /**
    * 生命周期函数--监听页面初次渲染完成
    */
-  onReady: function () {
+  onShow: function () {
+    wx.showLoading({
+      title: '加载中',
+      mask: true
+    })
+
     this.getLastPredict()
     this.getThisPredict()
     this.getNextPredict()
-
-  },
-
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow: function () {
-    this.setData({
-      openid: app.globalData.openid,
-      level: app.globalData.level
-    })
-
-    if (this.data.level < 2) {
-      wx.showModal({
-        title: '权限不足',
-        showCancel: false,
-        success: function (res) {
-          if (res.confirm) {
-            wx.switchTab({
-              url: '../index/index',
-            })
-          }
-        }
-      })
-    }
-  },
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide: function () {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload: function () {
-
-  },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh: function () {
-
-  },
-
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom: function () {
-
-  },
-
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage: function () {
-
   },
 
   getLastPredict: function () {
     // find last week
     var firstday_lastweek = this.getFirstdayLastweek()
-    db.collection('predict')
+    db.collection(db_predict)
       .where({
         year: firstday_lastweek.year,
         month: firstday_lastweek.month,
@@ -115,8 +62,7 @@ Page({
         year: true,
         month: true,
         day: true,
-        value: true,
-        _openid: true
+        value: true
       })
       .orderBy('value', 'desc')
       .get({
@@ -138,7 +84,7 @@ Page({
   getThisPredict: function () {
     // find last week
     var firstday_thisweek = this.getFirstdayThisweek()
-    db.collection('predict')
+    db.collection(db_predict)
       .where({
         year: firstday_thisweek.year,
         month: firstday_thisweek.month,
@@ -148,8 +94,7 @@ Page({
         year: true,
         month: true,
         day: true,
-        value: true,
-        _openid: true
+        value: true
       })
       .orderBy('value', 'desc')
       .get({
@@ -169,9 +114,8 @@ Page({
   },
 
   getNextPredict: function () {
-    // find last week
     var firstday_nextweek = this.getFirstdayNextweek()
-    db.collection('predict')
+    db.collection(db_predict)
       .where({
         year: firstday_nextweek.year,
         month: firstday_nextweek.month,
@@ -181,8 +125,7 @@ Page({
         year: true,
         month: true,
         day: true,
-        value: true,
-        _openid: true
+        value: true
       })
       .orderBy('value', 'desc')
       .get({
@@ -197,33 +140,114 @@ Page({
               nextweek_p: res.data[0].value
             })
           }
+
+          wx.hideLoading()
         }
       })
   },
 
-  inputLastWeek: function(e) {
-    this.setData({
-      lastweek_p: parseInt(e.detail.value)
-    })
+  /**
+   *  check whether the real name val get filled
+   * 
+   *  par e: the value returned from the input text
+   */
+  checkBlur_lw: function (e) {
+    if (e.detail.value != "") {
+      // if the name input text get filled with something
+      this.setData({
+        filled_lw: true
+      })
+
+      if (this.data.filled_nw && this.data.filled_tw) {
+        this.setData({
+          filled: true,
+          btn_state: "primary"
+        })
+      }
+    }
+    else {
+      // if the name input text get filled with nothing
+      this.setData({
+        filled_lw: false,
+        filled: false,
+        btn_state: "default"
+      })
+    }
   },
 
-  inputThisWeek: function (e) {
-    this.setData({
-      thisweek_p: parseInt(e.detail.value)
-    })
+  /**
+   *  check whether the real name val get filled
+   * 
+   *  par e: the value returned from the input text
+   */
+  checkBlur_tw: function (e) {
+    if (e.detail.value != "") {
+      // if the name input text get filled with something
+      this.setData({
+        filled_tw: true
+      })
+
+      if (this.data.filled_lw && this.data.filled_nw) {
+        this.setData({
+          filled: true,
+          btn_state: "primary"
+        })
+      }
+    }
+    else {
+      // if the name input text get filled with nothing
+      this.setData({
+        filled_tw: false,
+        filled: false,
+        btn_state: "default"
+      })
+    }
   },
 
-  inputNextWeek: function (e) {
-    this.setData({
-      nextweek_p: parseInt(e.detail.value)
-    })
+  /**
+   *  check whether the real name val get filled
+   * 
+   *  par e: the value returned from the input text
+   */
+  checkBlur_nw: function (e) {
+    if (e.detail.value != "") {
+      // if the name input text get filled with something
+      this.setData({
+        filled_nw: true
+      })
+
+      if (this.data.filled_lw && this.data.filled_tw) {
+        this.setData({
+          filled: true,
+          btn_state: "primary"
+        })
+      }
+    }
+    else {
+      // if the name input text get filled with nothing
+      this.setData({
+        filled_nw: false,
+        filled: false,
+        btn_state: "default"
+      })
+    }
   },
 
-  update_predict: function() {
+  /**
+   *  When the confirm button triggered
+   * 
+   *  par e: the return val from the form submit
+   */
+  formSubmit: function (e) {
+    console.log(e.detail.value)
+    this.update_predict(e.detail.value)
+  },
+
+  update_predict: function(e) {
     // update last week
-    console.log('update last week to ', this.data.lastweek_p)
+    console.log('update last week to ', e.lw)
     var firstday_lastweek = this.getFirstdayLastweek()
-    db.collection('predict')
+    db.collection(db_predict)
       .where({
         year: firstday_lastweek.year,
         month: firstday_lastweek.month,
@@ -235,25 +259,28 @@ Page({
         day: true,
         value: true
       })
-      .orderBy('value', 'desc')
       .get({
         success: res => {
+          var a = parseInt(e.lw)
+
           if (res.data.length == 0) {
             console.log('no result in db')
-            this.addPredict(firstday_lastweek, this.data.lastweek_p)
+            this.addPredict(firstday_lastweek, a)
           }
           else {
             console.log('had result in db', res.data[0]._id)
-            this.changePredict(firstday_lastweek, this.data.lastweek_p, res.data[0]._id)
+            if (res.data[0].value != a) {
+              this.changePredict(firstday_lastweek, a, res.data[0]._id)
+            }
           }
 
         }
       })
 
     // update this week
-    console.log('update this week to ', this.data.thisweek_p)
+    console.log('update this week to ', e.tw)
     var firstday_thisweek = this.getFirstdayThisweek()
-    db.collection('predict')
+    db.collection(db_predict)
       .where({
         year: firstday_thisweek.year,
         month: firstday_thisweek.month,
@@ -263,28 +290,30 @@ Page({
         year: true,
         month: true,
         day: true,
-        value: true,
-        _openid: true
+        value: true
       })
-      .orderBy('value', 'desc')
       .get({
         success: res => {
+          var b = parseInt(e.tw)
+
           if (res.data.length == 0) {
             console.log('no result in db')
-            this.addPredict(firstday_thisweek, this.data.thisweek_p)
+            this.addPredict(firstday_thisweek, b)
           }
           else {
             console.log('had result in db')
-            this.changePredict(firstday_thisweek, this.data.thisweek_p, res.data[0]._id)
+            if (res.data[0].value != b) {
+              this.changePredict(firstday_thisweek, b, res.data[0]._id)
+            }
           }
 
         }
       })
 
     // update next week
-    console.log('update next week to ', this.data.nextweek_p)
+    console.log('update next week to ', e.nw)
     var firstday_nextweek = this.getFirstdayNextweek()
-    db.collection('predict')
+    db.collection(db_predict)
       .where({
         year: firstday_nextweek.year,
         month: firstday_nextweek.month,
@@ -294,70 +323,77 @@ Page({
         year: true,
         month: true,
         day: true,
-        value: true,
-        _openid: true
+        value: true
       })
-      .orderBy('value', 'desc')
       .get({
         success: res => {
+          var c = parseInt(e.nw)
+
           if (res.data.length == 0) {
             console.log('no result in db')
-            this.addPredict(firstday_nextweek, this.data.nextweek_p)
+            this.addPredict(firstday_nextweek, c)
           }
           else {
             console.log('had result in db')
-            this.changePredict(firstday_nextweek, this.data.nextweek_p, res.data[0]._id)
+            if (res.data[0].value != c) {
+              this.changePredict(firstday_nextweek, c, res.data[0]._id)
+            }
           }
         }
       })
   },
 
   addPredict: function(date, v) {
-    db.collection('predict')
-      .add({
-        data:
-        {
-          year: date.year,
-          month: date.month,
-          day: date.day,
-          value: v
-        },
-        success: res => {
-          console.log('add predict success')
-          wx.showToast({
-            icon: 'none',
-            title: '新增成功'
-          })
-        }
-      })
+    var add_predict_value = {
+      year: date.year,
+      month: date.month,
+      day: date.day,
+      value: v
+    }
 
+    wx.cloud.callFunction({
+      name: 'dbAdd',
+      data: {
+        collection_name: db_predict,
+        add_data: add_predict_value
+      },
+      success: res => {
+        wx.showToast({
+          title: '更改成功',
+          duration: 1500
+        })
+      },
+      fail: err => {
+        // if get a failed result
+        console.error('failed to use cloud function dbChangeUser()', err)
+      }
+    })
   },
 
   changePredict: function(date, v, i) {
-    console.log('id: ', i)
-    console.log('v: ', v)
-    db.collection('predict')
-      .doc(i)
-      .update({
-        data: {
-          value: v
-        },
-        success: res => {
-          console.log('predict change success', res)
-          wx.showToast({
-            icon: 'none',
-            title: '修改成功'
-          })
-        },
-        fail: res => {
-          console.log('level change fail', res)
-          wx.showToast({
-            icon: 'none',
-            title: '修改失败'
-          })
-        }
-      })
+    var update_predict_data = {
+      value: v
+    }
 
+    wx.cloud.callFunction({
+      name: 'dbChangeUser',
+      data: {
+        collection_name: db_predict,
+        update_data: update_predict_data,
+        uid: i
+      },
+      success: res => {
+        wx.hideLoading()
+        wx.showToast({
+          title: '更改成功',
+          duration: 1500,
+        })
+      },
+      fail: err => {
+        // if get a failed result
+        console.error('failed to use cloud function dbChangeUser()', err)
+      }
+    })
   },
 
   getFirstdayLastweek: function() {

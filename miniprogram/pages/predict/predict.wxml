@@ -1,18 +1,23 @@
 <view class="content">
-  <view class="last">
-    <view class="lastweek_predict">上周营业额/千元 点击修改</view>
-    <input type="digit" value="{{lastweek_p}}" maxlength="10" bindinput="inputLastWeek"/>
-  </view>
-  <view class="this">
-    <view class="thisweek_predict">本周营业额/千元 点击修改</view>
-    <input type="digit" value="{{thisweek_p}}" maxlength="10" bindinput="inputThisWeek"/>
-  </view>
-  <view class="next">
-    <view class="nextweek_predict">下周营业额/千元 点击修改</view>
-    <input type="digit" value="{{nextweek_p}}" maxlength="10" bindinput="inputNextWeek"/>
-  </view>
+  <view class="title">营业额设置</view>
+
+  <form bindsubmit="formSubmit">
+    <view class="item">
+      <view class="name">上周营业额:  </view>
+      <view class="val"><input name="lw" type="text" bindblur="checkBlur_lw" value="{{lastweek_p}}"/></view>
+    </view>
+
+    <view class="item">
+      <view class="name">本周营业额:  </view>
+      <view class="val"><input name="tw" type="text" bindblur="checkBlur_tw" value="{{thisweek_p}}"/></view>
+    </view>
+
+    <view class="item">
+      <view class="name">下周营业额:  </view>
+      <view class="val"><input name="nw" type="text" bindblur="checkBlur_nw" value="{{nextweek_p}}"/></view>
+    </view>
+
+    <button class="btn" type="{{btn_state}}" form-type="submit" disabled="{{!filled}}">确认更改</button>
+  </form>
 </view>
 
-<view class="update">
-  <button type="primary" bindtap="update_predict">更新千元</button>
-</view>
