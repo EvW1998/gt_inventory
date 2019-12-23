@@ -1,0 +1,13 @@
+<!--pages/addmenu/addmenu.wxml-->
+<view class="content">
+  <view class="title">新增菜单</view>
+
+  <form bindsubmit="formSubmit">
+    <view class="item">
+      <view class="name">菜单名称:  </view>
+      <view class="val"><input name="name" type="text" bindblur="checkBlur_name"/></view>
+    </view>
+
+    <button class="btn" type="{{btn_state}}" form-type="submit" disabled="{{!filled}}">确认提交</button>
+  </form>
+</view>

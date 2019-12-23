@@ -8,6 +8,8 @@
     "pages/setting/setting",
     "pages/usermanage/usermanage",
     "pages/usersetting/usersetting",
+    "pages/addmenu/addmenu",
+    "pages/addsubmenu/addsubmenu",
     "pages/predict/predict"
   ],
   "window": {

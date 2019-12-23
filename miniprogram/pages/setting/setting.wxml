@@ -6,6 +6,18 @@
 </view>
 
 <view class="pd">
+  <navigator url="../addmenu/addmenu" open-type="navigate" class="pd-text">
+    <text>新增菜单</text>
+  </navigator>
+</view>
+
+<view class="pd">
+  <navigator url="../addmenu/addmenu" open-type="navigate" class="pd-text">
+    <text>新增子菜单</text>
+  </navigator>
+</view>
+
+<view class="pd">
   <navigator url="../predict/predict" open-type="navigate" class="pd-text">
     <text>营业额设置</text>
   </navigator>
