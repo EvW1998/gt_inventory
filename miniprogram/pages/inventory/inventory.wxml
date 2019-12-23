@@ -10,15 +10,16 @@
   </view>
 </view>
 
-<swiper current="{{currentTab}}">
-  <swiper-item>
-    <view class="uploader">
-      <navigator url="../cup1/cup1" open-type="navigate" class="uploader-text">
-        <text>12oz 螺纹杯</text>
-      </navigator>
-    </view>
-  </swiper-item>
-  <swiper-item>
-      <button bindtap="pageOnDevelopment">12oz 冷杯盖</button>
-  </swiper-item>
+<swiper current="{{currentTab}}" style="height:1500px">
+  <view wx:for="{{submenu}}" wx:key="index">
+    <swiper-item>
+      <view wx:for="{{item}}" wx:for-item="subitem" wx:key="_id">
+        <view class="sub">
+          <navigator url="../cup1/cup1" open-type="navigate" class="sub-text">
+            <text>{{subitem.submenu_name}}</text>
+          </navigator>
+        </view>
+      </view>
+    </swiper-item>
+  </view>
 </swiper>

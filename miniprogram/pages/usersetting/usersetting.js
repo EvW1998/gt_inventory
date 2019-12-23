@@ -25,8 +25,12 @@ Page({
       max_level: app.globalData.permission_level - 1
     })
 
-    this.searchUser()
+    wx.showLoading({
+      title: '加载中',
+      mask: true
+    })
 
+    this.searchUser()
   },
 
   searchUser: function() {
@@ -40,6 +44,7 @@ Page({
             manage_user: res.data[0]
           })
 
+          wx.hideLoading()
           console.log('Set for: ', this.data.manage_user)
         }
       })

@@ -1,1 +1,95 @@
-/* pages/addsubmenu/addsubmenu.wxss */
+/* pages/addmenu/addmenu.wxss */
+/* pages/setname/setname.wxss */
+
+.content{
+    font-family : 微软雅黑,宋体;
+    font-size: 14px;
+    background-size:cover;  
+    height: 100%;
+    width:100%;
+    color:#333333;
+    
+}
+
+.title{
+    padding-top:50rpx;
+    font-size: 30px;
+    text-align: center;
+}
+
+.item {
+  padding-top:30rpx;
+  margin:30px;
+  display: flex;
+  flex-direction: row;
+}
+
+.name{
+  width: 100px;
+  text-align: right;
+  height: 28px;
+  line-height: 28px;
+  font-size: 15px;
+}
+
+.val{
+  margin-left: 30rpx;
+  width: 200px;
+  height: 28px;
+  border:1px solid #cccccc;
+  border-radius: 5px;
+  font-size:13px;
+}
+
+.val_b{
+  margin-left: 30rpx;
+  width: 100px;
+  height: 28px;
+  font-size:13px;
+}
+
+.btn{
+  width:220px;
+  height: 45px;
+}
+
+.menu{
+    width: 230px;
+    height: 30px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.bg{
+    display: block;
+    background-color: #cccccc;
+    width: 100%;
+    height: 750px;
+    position: absolute;
+    top:0px;
+    left:0px;
+    z-index: 999;
+    opacity: 0.9;
+}
+
+.radioBg{
+    background-color: #ffffff;
+    width: 80%;
+    height: 500px;
+    margin: 0 auto;
+    margin-top:20px;
+}
+.radioItem{
+    display: flex;
+    flex-direction: row;
+    height: 50px;
+    align-items: center;
+    border-bottom: 1px solid #cccccc;
+}
+.radioName{
+    width: 90%;
+    margin-left: 10rpx;
+}
+.hideBg{
+    display: none;
+}

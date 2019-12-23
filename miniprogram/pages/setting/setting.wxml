@@ -7,13 +7,13 @@
 
 <view class="pd">
   <navigator url="../addmenu/addmenu" open-type="navigate" class="pd-text">
-    <text>新增菜单</text>
+    <text>新增品类</text>
   </navigator>
 </view>
 
 <view class="pd">
-  <navigator url="../addmenu/addmenu" open-type="navigate" class="pd-text">
-    <text>新增子菜单</text>
+  <navigator url="../addsubmenu/addsubmenu" open-type="navigate" class="pd-text">
+    <text>新增子品类</text>
   </navigator>
 </view>
 

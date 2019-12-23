@@ -2,7 +2,7 @@ const app = getApp()
 const db = wx.cloud.database()
 const db_user = 'user' // the collection for the user in db
 const db_menu = 'menu' // the collection for the menu in db
-const db_submenu = 'submenu' // the collection for the menu in db
+const db_submenu = 'submenu' // the collection for the submenu in db
 const register_page = '../setname/setname' // the url for the register page
 const info_page = '../me/me' // the url for the info page
 
@@ -13,7 +13,8 @@ Page({
     openid: '',
     level: 0,
     firstLoad: true,
-    menu: {}
+    menu: {},
+    submenu: {}
   },
 
   /***
@@ -188,6 +189,27 @@ Page({
           this.setData({
             menu: res.data
           })
+
+          var sm = {}
+
+          for(var i in this.data.menu) {
+            db.collection(db_submenu)
+              .where({
+                menu_id: this.data.menu[i].menu_id
+              })
+              .orderBy('submenu_id', 'asc')
+              .get({
+                success: res1 => {
+                  if(res1.data.length != 0) {
+                    sm[res1.data[0].menu_id] = res1.data
+
+                    this.setData({
+                      submenu: sm
+                    })
+                  }
+                }
+              })
+          }
         },
         fail: res => {
           console.error('Failed to get menu', res)
