@@ -40,6 +40,13 @@
   font-size:13px;
 }
 
+.val_level{
+  margin-left: 30rpx;
+  width: 50%;
+  height: 28px;
+  font-size:13px;
+}
+
 .btn{
   width:220px;
   height: 45px;
