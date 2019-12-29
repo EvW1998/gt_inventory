@@ -46,10 +46,53 @@
   align-items: center;
 }
 
-.sub-text {
+.sub_red{
+  margin-top: 40rpx;
+  height: 100rpx;
+  width: 100%;
+  background: rgba(235, 0, 0, 0.568);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-left: none;
+  border-right: none;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.sub-sub-navigator {
   display: flex;
   flex-direction: row;
   margin-left: 40rpx;
   width: 100%;
   font-size: 34rpx;
+}
+
+.stockValue {
+  position: absolute;
+  right: 130px;
+}
+
+.stockLeft {
+  position: absolute;
+  right: 50px;
+}
+
+.val{
+  margin-left: 20rpx;
+  width: 30px;
+  height: 28px;
+  border:1px solid #cccccc;
+  border-radius: 5px;
+  font-size:13px;
+  position: absolute;
+  right: 10px;
+}
+
+.btn{
+  width:220px;
+  height: 45px;
+  position: fixed;
+  bottom: 10rpx;
+  left: 0;
+  right: 0;
 }

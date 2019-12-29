@@ -22,3 +22,11 @@
     <text>营业额设置</text>
   </navigator>
 </view>
+
+<view class="pd">
+  <button bindtap="clearWarning">清除异常提醒</button>
+</view>
+
+<view class="pd">
+  <button bindtap="getSubscribed">接收补货消息提醒</button>
+</view>
