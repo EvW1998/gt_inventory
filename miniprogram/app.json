@@ -1,7 +1,7 @@
 {
   "cloud": true,
   "pages": [
-    "pages/inventory/inventory",
+    "pages/inventoryManage/inventoryUpdate/inventoryUpdate",
     "pages/cup1/cup1",
     "pages/me/me",
     "pages/setname/setname",
@@ -21,7 +21,7 @@
   },
   "tabBar": {
     "list": [{
-      "pagePath": "pages/inventory/inventory",
+      "pagePath": "pages/inventoryManage/inventoryUpdate/inventoryUpdate",
       "text": "前台库存"
     }, {
       "pagePath": "pages/setting/setting",

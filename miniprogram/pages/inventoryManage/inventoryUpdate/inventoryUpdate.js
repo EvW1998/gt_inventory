@@ -7,7 +7,7 @@ const db_stock = 'stock' // the collection for the submenu in db
 const register_page = '../setname/setname' // the url for the register page
 const info_page = '../me/me' // the url for the info page
 
-var util = require('../../utils/util.js');
+var util = require('../../../utils/util.js');
 
 Page({
   data: {
@@ -29,8 +29,8 @@ Page({
    *   When loading the default page, check whether the user logged in,
    * if not, block the user until get userinfo back
    */
-  onLoad: function() {
-    if(!app.globalData.logged) {
+  onLoad: function () {
+    if (!app.globalData.logged) {
       this.loginUser()
 
       wx.showLoading({
@@ -39,14 +39,14 @@ Page({
       })
     }
 
-    
+
   },
 
   /***
    *   When show the default page
    */
-  onShow: function() {
-    if(!this.data.firstLoad) {
+  onShow: function () {
+    if (!this.data.firstLoad) {
       if (app.globalData.permission_level < 1) {
         console.log('permission level too low')
         app.globalData.tolow = true
@@ -186,7 +186,7 @@ Page({
       })
   },
 
-  getMenu: function() {
+  getMenu: function () {
     db.collection(db_menu)
       .field({
         _id: true,
@@ -202,7 +202,7 @@ Page({
 
           var sm = {}
 
-          for(var i in this.data.menu) {
+          for (var i in this.data.menu) {
             db.collection(db_submenu)
               .where({
                 menu_id: this.data.menu[i].menu_id
@@ -210,7 +210,7 @@ Page({
               .orderBy('submenu_id', 'asc')
               .get({
                 success: res1 => {
-                  if(res1.data.length != 0) {
+                  if (res1.data.length != 0) {
                     sm[res1.data[0].menu_id] = res1.data
 
                     this.setData({
@@ -219,10 +219,10 @@ Page({
 
                     if (Object.keys(this.data.menu).length == Object.keys(this.data.submenu).length) {
                       this.getState()
-                      
+
                       this.getStock()
 
-                      
+
                     }
                   }
                 }
@@ -256,9 +256,9 @@ Page({
 
 
 
-  formSubmit: function(e) {
-    
-    if(this.data.left_checked == false) {
+  formSubmit: function (e) {
+
+    if (this.data.left_checked == false) {
       this.setData({
         left_checked: true,
         btn_name: '确认补货'
@@ -267,8 +267,8 @@ Page({
       var today_left = e.detail.value
       var yc = {}
 
-      for(var i in today_left) {
-        if(today_left[i] == "") {
+      for (var i in today_left) {
+        if (today_left[i] == "") {
           today_left[i] = this.data.stock_value[i]
         }
         else {
@@ -306,7 +306,7 @@ Page({
           today_filled[i] = 0
           not_filled = not_filled + 1
 
-          new_notfilled_item[i] = 0        
+          new_notfilled_item[i] = 0
         }
         else {
           today_filled[i] = parseInt(today_filled[i])
@@ -314,7 +314,7 @@ Page({
 
         new_stock_value[i] = new_stock_value[i] - this.data.yesterday_cost[i] + today_filled[i]
 
-        if(today_filled[i] < this.data.yesterday_cost[i]) {
+        if (today_filled[i] < this.data.yesterday_cost[i]) {
           warning = warning + 1
 
           new_warning_item[i] = this.data.yesterday_cost[i] - today_filled[i]
@@ -332,21 +332,21 @@ Page({
       var new_notfilled_name = {}
       var new_warning_name = {}
 
-      for(var i in new_notfilled_item) {
+      for (var i in new_notfilled_item) {
         db.collection('stock')
           .where({
             submenu_id: i
           })
           .get({
             success: res => {
-              new_notfilled_name[res.data[0]._id] = {'_id': res.data[0]._id, 'value': 0}
+              new_notfilled_name[res.data[0]._id] = { '_id': res.data[0]._id, 'value': 0 }
 
-              if(Object.keys(new_notfilled_name).length == not_filled &&
-                            Object.keys(new_warning_name).length == warning) {
+              if (Object.keys(new_notfilled_name).length == not_filled &&
+                Object.keys(new_warning_name).length == warning) {
                 this.setData({
                   notfilled_item: new_notfilled_name,
                   warning_item: new_warning_name
-                  
+
                 })
 
                 console.log('Not filled: ', this.data.notfilled_item)
@@ -364,8 +364,8 @@ Page({
                     permission_level: 2
                   })
                   .get({
-                    success: res1 => {            
-                      for(var u in res1.data) {
+                    success: res1 => {
+                      for (var u in res1.data) {
                         wx.cloud.callFunction({
                           name: 'sendMessage',
                           data: {
@@ -388,7 +388,7 @@ Page({
                       }
                     }
                   })
-              
+
                 db.collection('user')
                   .where({
                     permission_level: 3
@@ -419,12 +419,12 @@ Page({
                     }
                   })
 
-                
+
               }
             }
           })
       }
-      
+
       for (var j in new_warning_item) {
         db.collection('stock')
           .where({
@@ -438,7 +438,7 @@ Page({
               }
 
               if (Object.keys(new_notfilled_name).length == not_filled &&
-                          Object.keys(new_warning_name).length == warning) {
+                Object.keys(new_warning_name).length == warning) {
                 this.setData({
                   notfilled_item: new_notfilled_name,
                   warning_item: new_warning_name
@@ -515,7 +515,7 @@ Page({
                     }
                   })
 
-                
+
               }
             }
           })
@@ -532,7 +532,7 @@ Page({
   },
 
 
-  getStock: function() {
+  getStock: function () {
     console.log(this.data.submenu)
     var sv = {}
     var n = 0
@@ -543,7 +543,7 @@ Page({
       }
     }
 
-    for(var i in this.data.submenu) {
+    for (var i in this.data.submenu) {
       for (var j in this.data.submenu[i]) {
 
         db.collection(db_stock)
@@ -569,10 +569,10 @@ Page({
 
       }
     }
-    
+
   },
 
-  getState: function() {
+  getState: function () {
     var st = {}
 
     db.collection('stock')
@@ -582,7 +582,7 @@ Page({
       })
       .get({
         success: res => {
-          for(var i in res.data) {
+          for (var i in res.data) {
             st[res.data[i].submenu_id] = res.data[i].state
           }
 
@@ -597,11 +597,11 @@ Page({
       })
   },
 
-  setState: function(nf, wa) {
+  setState: function (nf, wa) {
     console.log('state nf: ', nf)
     console.log('state wa: ', wa)
 
-    for(var i in nf) {
+    for (var i in nf) {
       var update_state_data = {
         state: 1
       }
@@ -614,14 +614,14 @@ Page({
           uid: i
         },
         success: res => {
-          
+
         },
         fail: err => {
           // if get a failed result
           console.error('failed to use cloud function dbChangeUser()', err)
         }
       })
-      
+
     }
 
     for (var i in wa) {
@@ -646,6 +646,6 @@ Page({
       })
 
     }
-    
+
   }
 })

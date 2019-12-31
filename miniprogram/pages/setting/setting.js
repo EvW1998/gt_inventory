@@ -17,6 +17,36 @@ Page({
    * When the page get loaded
    */
   onLoad: function () {
+    this.doIt()
+  },
+
+  async doIt() {
+    const do1 = await this.get1();
+    console.log(do1)
+    const do2 =await this.get2();
+    console.log(do2)
+  },
+
+  get1: function() {
+    console.log('get 1 start')
+
+    return new Promise((resolve, reject) => {
+      setTimeout(function() {
+        console.log('get 1 finish')
+        resolve('001')
+      }, 5000)
+    })
+  },
+
+  get2: function() {
+    console.log('get 2 start')
+
+    return new Promise((resolve, reject) => {
+      setTimeout(function () {
+        console.log('get 2 finish')
+        resolve('002')
+      }, 2000)
+    })
   },
 
   onShow: function() {
