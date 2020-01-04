@@ -1,36 +1,36 @@
 {
-  "cloud": true,
-  "pages": [
-    "pages/inventoryManage/inventoryUpdate/inventoryUpdate",
-    "pages/cup1/cup1",
-    "pages/me/me",
-    "pages/setname/setname",
-    "pages/setting/setting",
-    "pages/usermanage/usermanage",
-    "pages/usersetting/usersetting",
-    "pages/addmenu/addmenu",
-    "pages/addsubmenu/addsubmenu",
-    "pages/predict/predict"
-  ],
-  "window": {
-    "backgroundColor": "#F6F6F6",
-    "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#F6F6F6",
-    "navigationBarTitleText": "GT库存",
-    "navigationBarTextStyle": "black"
-  },
-  "tabBar": {
-    "list": [{
-      "pagePath": "pages/inventoryManage/inventoryUpdate/inventoryUpdate",
-      "text": "前台库存"
-    }, {
-      "pagePath": "pages/setting/setting",
-      "text": "参数设置"
-    }, {
-      "pagePath": "pages/me/me",
-      "text": "个人信息"
-    }]
-  },
-  "sitemapLocation": "sitemap.json",
-  "style": "v2"
+    "cloud": true,
+    "pages": [
+        "pages/inventory/inventoryUpdate/inventoryUpdate",
+        "pages/user/userInfo/userInfo",
+        "pages/user/userRegister/userRegister",
+        "pages/cup1/cup1",
+        "pages/setting/setting",
+        "pages/usermanage/usermanage",
+        "pages/usersetting/usersetting",
+        "pages/addmenu/addmenu",
+        "pages/addsubmenu/addsubmenu",
+        "pages/predict/predict"
+    ],
+    "window": {
+        "backgroundColor": "#F6F6F6",
+        "backgroundTextStyle": "light",
+        "navigationBarBackgroundColor": "#F6F6F6",
+        "navigationBarTitleText": "GT库存",
+        "navigationBarTextStyle": "black"
+    },
+    "tabBar": {
+        "list": [{
+            "pagePath": "pages/inventory/inventoryUpdate/inventoryUpdate",
+            "text": "前台库存"
+        }, {
+            "pagePath": "pages/setting/setting",
+            "text": "参数设置"
+        }, {
+            "pagePath": "pages/user/userInfo/userInfo",
+            "text": "个人信息"
+        }]
+    },
+    "sitemapLocation": "sitemap.json",
+    "style": "v2"
 }
