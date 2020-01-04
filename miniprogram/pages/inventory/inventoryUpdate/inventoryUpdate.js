@@ -53,6 +53,9 @@ Page({
         this.getMenu()
     },
 
+    /**
+     * An async function to login the user and get the user's info
+     */
     async userLogin() {
         // get user's authorization to use his info
         app.globalData.logged = await user.getAuthority()

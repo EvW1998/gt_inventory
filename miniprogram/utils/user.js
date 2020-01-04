@@ -1,8 +1,11 @@
 const db_user = 'user' // the collection name for the user info
 
 /**
- *  Connect to the wx server, get user's setting.
- * Check whether the user gave the app authority to use his info.
+ * Connect to the wx server, get user's setting.
+ * Return whether the user gave the app authority to use his info.
+ * 
+ * @method getAuthority
+ * @return{Promise} A promise with resolve that has user's authorization info
  */
 function getAuthority() {
 
@@ -18,7 +21,7 @@ function getAuthority() {
                 resolve(false)
             },
             fail: err => {
-                // if get a failed result
+                // if failed to call getSetting
                 console.error('Failed to use getSetting()', err)
                 reject(err)
             }
@@ -28,7 +31,10 @@ function getAuthority() {
 
 
 /**
- *  Connect to the wx server, get user's info.
+ * Get the user's info from the server
+ * 
+ * @method getUserInfomation
+ * @return{Promise} A promise with resolve about userInfo
  */
 function getUserInfomation() {
 
@@ -36,11 +42,11 @@ function getUserInfomation() {
         // get the user's info from the wechat
         wx.getUserInfo({
             success: res => {
-                // if get a successed result
+                // return the userInfo if successed
                 resolve(res.userInfo)
             },
             fail: err => {
-                // if get a failed result
+                // if failed to use getUserInfo
                 console.error('Failed to use getUserInfo()', err)
                 reject(err)
             }
@@ -50,7 +56,10 @@ function getUserInfomation() {
 
 
 /**
- *  Use cloud function to get the user's openid.
+ * Use cloud function to get the user's openid.
+ * 
+ * @method getOpenId
+ * @return{Promise} A promise with resolve about the user's openid
  */
 function getOpenId() {
 
@@ -60,12 +69,12 @@ function getOpenId() {
             name: 'getOpenId',
             data: {},
             success: res => {
-                // if get a successed result
+                // return the user's openid if successed
                 resolve(res.result.openid)
             },
             fail: err => {
-                // if get a failed result
-                console.error('Failed to use cloud function login()', err)
+                // if failed to use cloud funtion getOpenId
+                console.error('Failed to use cloud function getOpenId()', err)
                 reject(err)
             }
         })
@@ -76,19 +85,19 @@ function getOpenId() {
 /**
  * Check whether the user exists in the user collection in the database.
  * If the user has been registered, get the user's uid in, permission level and real name.
- * If not, navigate to the register page.
+ * If not, return the user has not been registered.
  * 
  * @method checkUser
  * @param{String} openid The user's openid
  * @param{Object} db The database
- * @param{String} db_user The collection name of user in the database
+ * @return{Promise} A promise with resolve about the user's uid, permission level and real name
  */
 function checkUser(openid, db) {
 
     return new Promise((resolve, reject) => {
         db.collection(db_user)
             .where({
-                // use the user's openid to search in db
+                // use the user's openid to search in the collection
                 user_openid: openid
             })
             .field({
@@ -99,13 +108,13 @@ function checkUser(openid, db) {
             .get({
                 success: res => {
                     if (res.data.length == 0) {
-                        // if the user hasn't registered
+                        // if no user is found with the openid
                         resolve({
                             registered: false
                         })
 
                     } else {
-                        // if the user registered before
+                        // if found a user
                         resolve({
                             registered: true,
                             uid: res.data[0]._id,
@@ -115,8 +124,8 @@ function checkUser(openid, db) {
                     }
                 },
                 fail: err => {
-                    // if get a failed result
-                    console.error('Failed to use cloud function login()', err)
+                    // if failed to search in the collection
+                    console.error('Failed to search the given openid in the user collection', err)
                     reject(err)
                 }
             })
@@ -124,10 +133,17 @@ function checkUser(openid, db) {
 }
 
 
+/**
+ * Use cloud function, add the new user to the collection
+ * 
+ * @method addNewUser
+ * @param{Object} user_data An Object includes user's openid, real name and permission level
+ * @return{Promise} A promise with resolve about the returned result from the cloud function
+ */
 function addNewUser(user_data) {
 
     return new Promise((resolve, reject) => {
-        // call dbAdd() cloud function to add the user to database user
+        // call dbAdd() cloud function to add the user to the user collection
         wx.cloud.callFunction({
             name: 'dbAdd',
             data: {
@@ -135,12 +151,12 @@ function addNewUser(user_data) {
                 add_data: user_data
             },
             success: res => {
-                // if get a successed result
+                // return the result if successed
                 resolve(res)
             },
             fail: err => {
-                // if get a failed result
-                console.error('failed to use cloud function dbAdd()', err)
+                // if failed to use cloud function dbAdd
+                console.error('Failed to use cloud function dbAdd()', err)
                 reject(err)
             }
         })

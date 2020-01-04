@@ -3,27 +3,26 @@
  * Include the user's name, wechat openid, 
  * the uid in this miniapp, and the permission level.
  */
+const user = require('../../../utils/user.js');
 
 const app = getApp()
 const db = wx.cloud.database()
 const db_user = 'user' // the collection name for the user Info
-const registration_page = '../userRegister/userRegister' // the url for the register page
-
-const user = require('../../../utils/user.js');
+const registration_page = '../userRegister/userRegister' // the url for the registration page
 
 
 Page({
     /**
-     *  Default data for the page
+     * Data for this page
      */
     data: {
-        logged: true, // login state for the user
+        logged: true, // user's login state
+        registered: true, // user's registered state
         userInfo: {}, // user's infomation
         openid: '', // user openid
-        permission_level: 0, // user's permission level
         uid: '', // user's uid in this inventory
         true_name: '', //user's registered real name
-        registered: true, //user's registered state
+        permission_level: 0, // user's permission level
         version: '' // the version info shows at the bottom of the page
     },
 
@@ -59,8 +58,10 @@ Page({
     },
 
     /**
-     *  When show the page, if the user didn't login, show the message,
-     * if the user just get back from the register page, update info
+     * When show the page, if the user didn't login, show the message.
+     * If the user just get back from the register page, update info.
+     * If the user just get navigated to this page because permission level 
+     * is too low, show the message.
      */
     onShow: function () {
         if (!app.globalData.logged) {
@@ -83,6 +84,7 @@ Page({
         }
 
         if (app.globalData.permission_too_low) {
+            // if the user is navigated to this page, because permission level is too low
             app.globalData.permission_too_low = false
 
             wx.showToast({
@@ -93,17 +95,22 @@ Page({
         }
     },
 
-    onPullDownRefresh() {
+    /**
+     * When the user pull down to refresh the page.
+     * Refresh the user's name and permission level from the db
+     */
+    onPullDownRefresh: function() {
         if(app.globalData.registered) {
             refreshInfo(this)
         }
     },
 
-    /***
-     *  If didn't log in, the login button will show up.
-     * After clicking, update login state, and userinfo.
+    /**
+     * When the user click the log in button.
+     * Update login state and userinfo.
      * 
-     *  par e: the val returned by the button
+     * @method onGetUserInfo
+     * @param{Object} e The return val from log in button.
      */
     onGetUserInfo: function (e) {
         if (!this.data.logged && e.detail.userInfo) {
@@ -113,10 +120,20 @@ Page({
                 mask: true
             })
 
+            // get the user's info
             this.userLogin(e)
         }
     },
 
+    /**
+     * Update the login state, get the user's info and openid.
+     * Check whether the user is registered in the App.
+     * If registered, get the user's uid, real name and permission level.
+     * If not, navigate the user to the registration page.
+     * 
+     * @method userLogin
+     * @param{Object} e The return val from log in button.
+     */
     async userLogin(e) {
         app.globalData.logged = true
         console.log('User logged in: ', app.globalData.logged)
@@ -170,29 +187,36 @@ Page({
     },
 
     /**
-     *  When the register button get triggered, 
-     * navigate to the register page
+     * When the register button get triggered, 
+     * navigate to the registration page
      */
     registerUser: function () {
-        // navigate to the page to set name
+        // navigate to the page to register
         wx.navigateTo({
             url: registration_page
         })
     },
 
-    /***
-     *  When the user wants to share this miniapp
+    /**
+     * When the user wants to share this miniapp
      */
     onShareAppMessage: function () {
         return {
             title: 'GT库存',
             desc: '国泰餐厅库存管理程序',
-            path: '/me/me'
+            path: '/userInfo/userInfo'
         }
     }
 })
 
 
+/**
+ * Search the user with the given openid.
+ * Update the user's real name and permission level
+ * 
+ * @method refreshInfo
+ * @param{Page} page The current page
+ */
 function refreshInfo(page) {
     db.collection(db_user)
         .where({
@@ -205,6 +229,7 @@ function refreshInfo(page) {
         })
         .get({
             success: res => {
+                // update the user's info
                 app.globalData.true_name = res.data[0].true_name
                 app.globalData.permission_level = res.data[0].permission_level
 
@@ -217,7 +242,7 @@ function refreshInfo(page) {
                 wx.stopPullDownRefresh()
             },
             fail: err => {
-                // if get a failed result
+                // if failed to search the user in the db
                 console.error('Failed to search user in the database', err)
                 wx.stopPullDownRefresh()
             }

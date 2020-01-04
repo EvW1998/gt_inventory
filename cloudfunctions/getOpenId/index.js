@@ -6,10 +6,9 @@ cloud.init({
 })
 
 /**
- *  para event(object): null
- *  return: the openid of the user
+ * Return the user's openid for the App.
  * 
- *  Get the user's openid for the App
+ * @return{Object} The user's openid
  */
 exports.main = (event, context) => {
     // get wx Context

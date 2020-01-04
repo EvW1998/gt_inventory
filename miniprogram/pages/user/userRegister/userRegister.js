@@ -1,19 +1,17 @@
 /**
- *  Page for user to register in this app, require user's real name,
- * and an invition code for register
+ * Page for user to register in this app, require user's real name,
+ * and an invition code for registration.
  */
+const user = require('../../../utils/user.js');
 
 const app = getApp()
 const db_user = 'user' // the collection for the user in db
 const info_page = '../userInfo/userInfo' // the url for the info page
 
-const user = require('../../../utils/user.js');
-
 
 Page({
-
     /**
-     * Default data for this page
+     * Data for this page
      */
     data: {
         filled: false, // boolean for whether the two required info get filled
@@ -23,7 +21,7 @@ Page({
     },
 
     /**
-     * When the page get loaded
+     * When the page get loaded, show the message for registratoin.
      */
     onLoad: function () {
         if (!app.globalData.registered) {
@@ -123,10 +121,11 @@ Page({
         }
     },
 
-    /***
-     *  Use cloud function dbAdd() to add the user's info to the db
+    /**
+     * Add the user's info to the db, and update the user info
      * 
-     *  par n: the real name of the user
+     * @method addUser
+     * @param{String} n The real name of the user
      */
     async addUser(n) {
 
@@ -137,8 +136,10 @@ Page({
             permission_level: app.globalData.permission_level
         }
 
+        // add the user into the user collection
         var add_result = await user.addNewUser(add_user_data)
 
+        // update the user info
         app.globalData.registered = true
         console.log('User registered in the App: ', app.globalData.registered)
 
@@ -166,14 +167,14 @@ Page({
         })
     },
 
-    /***
-     *  When the user wants to share this miniapp
+    /**
+     * When the user wants to share this miniapp
      */
     onShareAppMessage: function () {
         return {
             title: 'GT库存',
             desc: '国泰餐厅库存管理程序',
-            path: '/setname/setname'
+            path: '/userRegister/userRegister'
         }
     }
 })
