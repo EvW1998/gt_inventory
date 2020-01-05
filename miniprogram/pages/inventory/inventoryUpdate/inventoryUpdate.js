@@ -175,14 +175,16 @@ Page({
     page.setData({ flag: id });
     },
 
+    /**
+     * When the user wants to share this miniapp
+     */
     onShareAppMessage: function () {
-    return {
-        title: 'GT库存',
-        desc: '国泰餐厅库存管理程序',
-        path: '/index/index'
-    }
+        return {
+            title: 'GT库存',
+            desc: '国泰餐厅库存管理程序',
+            path: 'pages/inventory/inventoryUpdate/inventoryUpdate'
+        }
     },
-
 
 
     formSubmit: function (e) {

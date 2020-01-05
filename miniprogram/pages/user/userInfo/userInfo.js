@@ -8,6 +8,7 @@ const user = require('../../../utils/user.js');
 const app = getApp()
 const db = wx.cloud.database()
 const db_user = 'user' // the collection name for the user Info
+
 const registration_page = '../userRegister/userRegister' // the url for the registration page
 
 
@@ -204,7 +205,7 @@ Page({
         return {
             title: 'GT库存',
             desc: '国泰餐厅库存管理程序',
-            path: '/userInfo/userInfo'
+            path: 'pages/inventory/inventoryUpdate/inventoryUpdate'
         }
     }
 })

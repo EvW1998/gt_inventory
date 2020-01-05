@@ -2,12 +2,16 @@
     "cloud": true,
     "pages": [
         "pages/inventory/inventoryUpdate/inventoryUpdate",
+
         "pages/user/userInfo/userInfo",
         "pages/user/userRegister/userRegister",
+        
+        "pages/manage/setting/setting",
+        "pages/manage/userManage/viewUser/viewUser",
+        "pages/manage/userManage/userSetting/userSetting",
+
+
         "pages/cup1/cup1",
-        "pages/setting/setting",
-        "pages/usermanage/usermanage",
-        "pages/usersetting/usersetting",
         "pages/addmenu/addmenu",
         "pages/addsubmenu/addsubmenu",
         "pages/predict/predict"
@@ -24,7 +28,7 @@
             "pagePath": "pages/inventory/inventoryUpdate/inventoryUpdate",
             "text": "前台库存"
         }, {
-            "pagePath": "pages/setting/setting",
+            "pagePath": "pages/manage/setting/setting",
             "text": "参数设置"
         }, {
             "pagePath": "pages/user/userInfo/userInfo",

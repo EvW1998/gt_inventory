@@ -1,6 +1,6 @@
 <!--pages/setting/setting.wxml-->
 <view class="um">
-  <navigator url="../usermanage/usermanage" open-type="navigate" class="um-text">
+  <navigator url="{{user_manage_page}}" open-type="navigate" class="um-text">
     <text>员工管理</text>
   </navigator>
 </view>

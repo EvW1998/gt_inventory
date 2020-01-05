@@ -6,6 +6,7 @@ const user = require('../../../utils/user.js');
 
 const app = getApp()
 const db_user = 'user' // the collection for the user in db
+
 const info_page = '../userInfo/userInfo' // the url for the info page
 
 
@@ -174,7 +175,7 @@ Page({
         return {
             title: 'GT库存',
             desc: '国泰餐厅库存管理程序',
-            path: '/userRegister/userRegister'
+            path: 'pages/inventory/inventoryUpdate/inventoryUpdate'
         }
     }
 })

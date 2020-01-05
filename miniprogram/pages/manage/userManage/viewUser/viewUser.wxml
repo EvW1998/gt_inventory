@@ -4,7 +4,7 @@
 <view wx:for="{{user}}" wx:key="_id">
   <block wx:if="{{permission_level > item.permission_level}}">
     <view class="person">
-      <navigator url="../usersetting/usersetting?title={{item._id}}" class="userdetail">
+      <navigator url="{{userSetting_page}}?title={{item._id}}" class="userdetail">
         <view class="name">{{item.true_name}}</view>
         <view class="level">用户权限: {{item.permission_level}}</view>
       </navigator>
