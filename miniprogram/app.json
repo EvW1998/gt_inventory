@@ -9,10 +9,13 @@
         "pages/manage/setting/setting",
         "pages/manage/userManage/viewUser/viewUser",
         "pages/manage/userManage/userSetting/userSetting",
+        "pages/manage/inventoryManage/categoryView/categoryView",
+        "pages/manage/inventoryManage/categorySetting/categorySetting",
+        "pages/manage/inventoryManage/categoryAdd/categoryAdd",
+        "pages/manage/inventoryManage/categoryModify/categoryModify",
 
 
         "pages/cup1/cup1",
-        "pages/addmenu/addmenu",
         "pages/addsubmenu/addsubmenu",
         "pages/predict/predict"
     ],

@@ -6,8 +6,8 @@
 </view>
 
 <view class="pd">
-  <navigator url="../addmenu/addmenu" open-type="navigate" class="pd-text">
-    <text>新增品类</text>
+  <navigator url="{{category_manage_page}}" open-type="navigate" class="pd-text">
+    <text>品类管理</text>
   </navigator>
 </view>
 

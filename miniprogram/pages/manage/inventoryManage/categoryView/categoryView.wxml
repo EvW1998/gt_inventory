@@ -1,0 +1,15 @@
+<!--pages/usermanage/usermanage.wxml-->
+<view class="title">品类管理</view>
+
+<view class="person">
+  <navigator url="{{categoryAdd_page}}" class="addnew">添加新品类</navigator>
+</view>
+
+<view wx:for="{{category}}" wx:key="_id">
+    <view class="person">
+        <navigator url="{{categorySetting_page}}?title={{item._id}}" class="userdetail">
+        <view class="name">{{item.category_name}}</view>
+        <view class="level">品类序号: {{item.category_order}}</view>
+        </navigator>
+    </view>
+</view>

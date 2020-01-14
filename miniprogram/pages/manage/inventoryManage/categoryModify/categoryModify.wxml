@@ -1,0 +1,15 @@
+<!--pages/usersetting/usersetting.wxml-->
+<view class="content">
+  <view class="title">品类设置</view>
+
+  <form bindsubmit="formSubmit">
+    <view class="item">
+      <view class="name">品类名称:  </view>
+      <view class="val"><input name="name" type="text" bindblur="checkBlur_name" value="{{category_selected.category_name}}"/></view>
+    </view>
+
+    <button class="btn" type="{{btn_state}}" form-type="submit" disabled="{{!filled_name}}">确认更改</button>
+  </form>
+
+  <button class="delete_btn" type="warn" bindtap="removeCategory">删除此品类</button>
+</view>
