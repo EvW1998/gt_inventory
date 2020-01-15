@@ -13,6 +13,8 @@
         "pages/manage/inventoryManage/categorySetting/categorySetting",
         "pages/manage/inventoryManage/categoryAdd/categoryAdd",
         "pages/manage/inventoryManage/categoryModify/categoryModify",
+        "pages/manage/inventoryManage/itemAdd/itemAdd",
+        "pages/manage/inventoryManage/itemSetting/itemSetting",
 
 
         "pages/cup1/cup1",

@@ -1,0 +1,28 @@
+<!--pages/addmenu/addmenu.wxml-->
+<view class="content">
+  <view class="title">在"{{category_selected.category_name}}"中新增子品项</view>
+
+  <form bindsubmit="formSubmit">
+    <view class="item">
+      <view class="name">子品项名称:  </view>
+      <view class="val"><input name="name" type="text" bindblur="checkBlur_name"/></view>
+    </view>
+
+    <view class="item">
+      <view class="name">默认补货量:  </view>
+      <view class="val"><input name="base" type="number" bindblur="checkBlur_base"/></view>
+    </view>
+
+    <view class="item">
+      <view class="name">备货率:  </view>
+      <view class="val"><input name="scale" type="number" bindblur="checkBlur_scale"/></view>
+    </view>
+
+    <view class="item">
+      <view class="name">现有库存:  </view>
+      <view class="val"><input name="stock" type="number" bindblur="checkBlur_stock"/></view>
+    </view>
+
+    <button class="btn" type="{{btn_state}}" form-type="submit" disabled="{{!filled}}">确认提交</button>
+  </form>
+</view>

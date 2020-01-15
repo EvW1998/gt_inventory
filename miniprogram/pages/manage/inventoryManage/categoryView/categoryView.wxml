@@ -9,7 +9,6 @@
     <view class="person">
         <navigator url="{{categorySetting_page}}?title={{item._id}}" class="userdetail">
         <view class="name">{{item.category_name}}</view>
-        <view class="level">品类序号: {{item.category_order}}</view>
         </navigator>
     </view>
 </view>

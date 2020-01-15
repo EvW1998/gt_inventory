@@ -4,6 +4,7 @@
 const app = getApp()
 const db = wx.cloud.database()
 const db_category = 'category' // the collection of categories
+const db_item = 'item' // the collection of items
 
 Page({
 
@@ -102,22 +103,7 @@ Page({
                         mask: true
                     })
 
-                    wx.cloud.callFunction({
-                        name: 'dbRemove',
-                        data: {
-                            collection_name: db_category,
-                            uid: this.data.category_id
-                        },
-                        success: res => {
-                            console.log('Remove category success')
-                            navigateUser('删除成功', 2)
-                        },
-                        fail: err => {
-                            // if get a failed result
-                            console.error('Failed to use cloud function dbRemove()', err)
-                            navigateUser('删除失败', 2)
-                        }
-                    })
+                    removeData(this.data.category_id)
                 }
             },
         })
@@ -191,6 +177,99 @@ function updateCategory(update_category_data, category_id) {
             // if get a failed result
             console.error('Failed to use cloud function dbChangeUser()', err)
             navigateUser('更改失败', 1)
+        }
+    })
+}
+
+
+/**
+ * Remove the given category and all items under it from the db.
+ * 
+ * @method removeData
+ */
+async function removeData(category_id) {
+    var items = await getItem(category_id)
+    await removeItems(items)    
+
+    wx.cloud.callFunction({
+        name: 'dbRemove',
+        data: {
+            collection_name: db_category,
+            uid: category_id
+        },
+        success: res => {
+            console.log('Remove category success')
+            navigateUser('删除成功', 2)
+        },
+        fail: err => {
+            // if get a failed result
+            console.error('Failed to use cloud function dbRemove()', err)
+            navigateUser('删除失败', 2)
+        }
+    })
+}
+
+
+/**
+ * Get all the items under this category.
+ * 
+ * @method getItem
+ * @param{String} category_id The category id
+ * @return{Promise} All the items under this category
+ */
+function getItem(category_id) {
+    return new Promise((resolve, reject) => {
+        db.collection(db_item)
+            .where({
+                category_id: category_id
+            })
+            .orderBy('item_order', 'asc')
+            .get({
+                success: res => {
+                    resolve(res.data)
+                },
+                fail: err => {
+                    reject()
+                }
+            })
+    })
+}
+
+
+/**
+ * Remove all the items under the category.
+ * 
+ * @method removeItems
+ * @param{Object} items All the items
+ * @return{Promise} The state of the function
+ */
+function removeItems(items) {
+    return new Promise((resolve, reject) => {
+        var total_del = items.length
+        var curr_del = 0
+
+        for (var i in items) {
+            wx.cloud.callFunction({
+                name: 'dbRemove',
+                data: {
+                    collection_name: db_item,
+                    uid: items[i]._id
+                },
+                success: res => {
+                    curr_del = curr_del + 1
+                    console.log('Remove item success ', curr_del, '/', total_del)
+
+                    if (curr_del == total_del) {
+                        console.log('Finish removing all items')
+                        resolve()
+                    }
+                },
+                fail: err => {
+                    // if get a failed result
+                    console.error('Failed to use cloud function dbRemove()', err)
+                    reject()
+                }
+            })
         }
     })
 }
