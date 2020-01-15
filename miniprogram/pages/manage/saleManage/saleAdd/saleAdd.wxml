@@ -1,0 +1,22 @@
+<!--pages/addmenu/addmenu.wxml-->
+<view class="content">
+    <view class="title">新增营业额</view>
+
+    <form bindsubmit="formSubmit">
+        <view class="item">
+            <view class="name">营业额:  </view>
+            <view class="val"><input name="sale" type="text" bindblur="checkBlur_value"/></view>
+        </view>
+
+        <view class="section_date">
+            <view class="date_title">日期</view>
+            <picker name="date" mode="date" value="{{select_date}}" start="2019-01-01" end="2022-12-31" bindchange="bindDateChange">
+                <view class="picker">
+                    点击更改：{{select_date}}
+                </view>
+            </picker>
+        </view>
+
+        <button class="btn" type="{{btn_state}}" form-type="submit" disabled="{{!filled}}">确认提交</button>
+    </form>
+</view>

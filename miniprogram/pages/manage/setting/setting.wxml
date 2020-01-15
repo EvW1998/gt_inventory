@@ -12,14 +12,8 @@
 </view>
 
 <view class="pd">
-  <navigator url="../addsubmenu/addsubmenu" open-type="navigate" class="pd-text">
-    <text>新增子品类</text>
-  </navigator>
-</view>
-
-<view class="pd">
-  <navigator url="../predict/predict" open-type="navigate" class="pd-text">
-    <text>营业额设置</text>
+  <navigator url="{{sale_manage_page}}" open-type="navigate" class="pd-text">
+    <text>营业额管理</text>
   </navigator>
 </view>
 

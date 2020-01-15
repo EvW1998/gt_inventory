@@ -7,6 +7,7 @@ const db = wx.cloud.database()
 const info_page = '../../user/userInfo/userInfo'
 const user_manage_page = '../userManage/viewUser/viewUser'
 const category_manage_page = '../inventoryManage/categoryView/categoryView'
+const sale_manage_page = '../saleManage/saleView/saleView'
 
 const message_id = 'hAMmX4ZyrxIGCPc8dMJM07irJrM0zNwyDu-3YdGci4I'
 
@@ -14,7 +15,8 @@ const message_id = 'hAMmX4ZyrxIGCPc8dMJM07irJrM0zNwyDu-3YdGci4I'
 Page({
     data: {
         user_manage_page: user_manage_page,
-        category_manage_page: category_manage_page
+        category_manage_page: category_manage_page,
+        sale_manage_page: sale_manage_page
     },
 
     /**

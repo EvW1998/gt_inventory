@@ -1,0 +1,15 @@
+<!--pages/usersetting/usersetting.wxml-->
+<view class="content">
+  <view class="title">营业额设置</view>
+
+  <form bindsubmit="formSubmit">
+    <view class="item">
+      <view class="name">营业额:  </view>
+      <view class="val"><input name="sale" type="number" bindblur="checkBlur" value="{{sale_selected.sale_value}}"/></view>
+    </view>
+
+    <button class="btn" type="{{btn_state}}" form-type="submit" disabled="{{!filled}}">确认更改</button>
+  </form>
+
+  <button class="delete_btn" type="warn" bindtap="removeSale">删除此营业额数据</button>
+</view>

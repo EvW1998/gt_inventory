@@ -1,3 +1,4 @@
+/* pages/addmenu/addmenu.wxss */
 /* pages/setname/setname.wxss */
 
 .content{
@@ -40,14 +41,13 @@
   font-size:13px;
 }
 
-.val_level{
-  margin-left: 30rpx;
-  width: 50%;
-  height: 28px;
-  font-size:13px;
+.btn{
+    margin-top: 100rpx;
+    width:220px;
+    height: 45px;
 }
 
-.btn{
-  width:220px;
-  height: 45px;
+.section_date{
+    font-size: 16px;
+    text-align: center;  
 }

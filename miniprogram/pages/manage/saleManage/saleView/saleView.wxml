@@ -1,0 +1,17 @@
+<!--pages/usermanage/usermanage.wxml-->
+<view class="title">营业额管理</view>
+
+<view class="person">
+  <navigator url="{{saleAdd_page}}" class="addnew">添加新营业额</navigator>
+</view>
+
+<view wx:for="{{sales}}" wx:key="_id">
+    <view class="person">
+        <navigator url="{{saleSetting_page}}?title={{item._id}}" class="userdetail">
+        <view class="name">{{item.sale_date}}</view>
+        <view class="level">营业额: {{item.sale_value}}</view>
+        </navigator>
+    </view>
+</view>
+
+<view class="space"></view>
