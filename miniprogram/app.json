@@ -2,6 +2,8 @@
     "cloud": true,
     "pages": [
         "pages/inventory/inventoryUpdate/inventoryUpdate",
+        "pages/inventory/inventoryLeft/inventoryLeft",
+        "pages/inventory/inventoryRefill/inventoryRefill",
 
         "pages/user/userInfo/userInfo",
         "pages/user/userRegister/userRegister",

@@ -1,49 +1,32 @@
 <view class="bg">
-  <view class="nav">
-    <scroll-view class="scroll-view_H" scroll-x="true" >
-      <view class="scroll-view_H">
-        <view wx:for="{{menu}}" wx:key="_id">
-          <view class="{{flag==item.menu_id?'select':'normal'}}" id="{{item.menu_id}}" bindtap="switchNav">{{item.menu_name}}</view>
-        </view>
-      </view>
-    </scroll-view>
-  </view>
+    <view class="nav">
+        <scroll-view class="scroll-view_H" scroll-x="true" enable-flex="true">
+            <view class="scroll-view_H">
+                <view wx:for="{{category}}" wx:for-item="category" wx:key="_id">
+                    <view class="{{flag==category.nav_order?'select':'normal'}}" id="{{category.nav_order}}" bindtap="switchNav">{{category.category_name}}</view>
+                </view>
+            </view>
+        </scroll-view>
+    </view>
 </view>
 
-<form bindsubmit="formSubmit">
-  
+<swiper current="{{currentTab}}" style="height:{{h}}rpx" bindchange="swiperChanged">
+    <view wx:for="{{item}}" wx:for-item="i" wx:key="i">
+        <swiper-item>
+            <view wx:for="{{i}}" wx:for-item="subitem" wx:key="_id">
+                <view class="{{subitem.item_state==1?'sub_red':'sub'}}">
+                    <navigator url="../cup1/cup1" open-type="navigate" class="sub-navigator">
+                        <text>{{subitem.item_name}}</text>
+                    </navigator>
 
-  <swiper current="{{currentTab}}" style="height:1500px">
-    <view wx:for="{{submenu}}" wx:key="index">
-      <swiper-item>
-        <view wx:for="{{item}}" wx:for-item="subitem" wx:key="_id">
-          <view class="{{state[subitem._id]==1?'sub_red':'sub'}}">
-
-            <navigator url="../cup1/cup1" open-type="navigate" class="sub-navigator">
-              <text>{{subitem.submenu_name}}</text>
-            </navigator>
-
-            <block wx:if="{{!left_checked}}">
-            
-              <view class="stockValue">昨日存量: {{stock_value[subitem._id]}}</view>
-              <view class="stockLeft">今日剩余: </view>
-              <view class="val"><input name="{{subitem._id}}" type="number"/></view>
-            </block>
-
-            <block wx:if="{{left_checked}}">
-            
-              <view class="stockValue">建议补货: {{yesterday_cost[subitem._id]}}</view>
-              <view class="stockLeft">实际补货: </view>
-              <view class="val"><input name="{{subitem._id}}" type="number"/></view>
-            </block>
-            
-          </view>
-        </view>
-      </swiper-item>
+                    <view class="stockValue">存量: {{subitem.stock_value}}</view>
+                </view>
+            </view>
+        </swiper-item>
     </view>
-  </swiper>
+</swiper>
 
-  <button class="btn" type="primary" form-type="submit">{{btn_name}}</button>
-
-  
-</form>
+<view class="button">
+    <button class="btn" type="primary" bindtap="bindLeft" disabled="{{check_left}}">余量</button>
+    <button class="btn" type="primary" bindtap="bindRefill" disabled="{{!check_left}}">补货</button>
+</view>

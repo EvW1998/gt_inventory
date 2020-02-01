@@ -22,5 +22,5 @@
 </view>
 
 <view class="pd">
-  <button bindtap="getSubscribed">接收补货消息提醒</button>
+  <button bindtap="getLeftSubscribed">接收余量消息提醒</button>
 </view>

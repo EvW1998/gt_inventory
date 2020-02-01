@@ -48,14 +48,18 @@ App({
 function setInfo(app, db, collection) {
     db.collection(collection)
         .field({
+            _id: true,
             invite_code: true,
-            version: true
+            version: true,
+            check_left: true
         })
         .get({
             success: res => {
                 var result = res.data[0]
+                app.globalData.info_id = result._id
                 app.globalData.invite_code = result.invite_code
                 app.globalData.version = result.version
+                app.globalData.check_left = result.check_left
             }
         })
 }

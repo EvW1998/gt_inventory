@@ -1,33 +1,30 @@
+const user = require('../../../utils/user.js')
+
 const app = getApp()
 const db = wx.cloud.database()
 const db_user = 'user' // the collection for the user in db
-const db_menu = 'menu' // the collection for the menu in db
-const db_submenu = 'submenu' // the collection for the submenu in db
-const db_stock = 'stock' // the collection for the submenu in db
+const db_category = 'category' // the collection of categories
+const db_item = 'item' // the collection of items
+const db_info = 'info' // the collection of info
 const registration_page = '../../user/userRegister/userRegister' // the url for the register page
 const info_page = '../../user/userInfo/userInfo' // the url for the info page
+const check_left_page = '../inventoryLeft/inventoryLeft' // the url for the check left page
+const refill_page = '../inventoryRefill/inventoryRefill' // the url for the refill page
 
-var util = require('../../../utils/util.js');
-const user = require('../../../utils/user.js');
 
 Page({
     data: {
-        currentTab: 0,
-        flag: 0,
-        firstLoad: true,
-        menu: {},
-        submenu: {},
-        left_checked: false,
-        stock_value: {},
-        btn_name: '确认余量',
-        yesterday_cost: {},
-        warning_item: {},
-        notfilled_item: {},
-        state: {}
+        currentTab: 0, // the current tab for show
+        flag: 0, // the tab title to be bloded
+        firstLoad: true, // whether it is the first time to load the page
+        category: {}, // the categories in the inventory
+        item: {}, // the items in the inventory
+        h: 1200, // the height for the page
+        check_left: false // whether the left in the inventory has been checked
     },
 
     /***
-     *   When loading the page, check whether the user is logged in.
+     * When loading the page, check whether the user is logged in.
      * If not, block the user until get userinfo back
      */
     onLoad: function () {
@@ -37,12 +34,13 @@ Page({
                 mask: true
             })
 
+            // login the user
             this.userLogin()
         }
     },
 
     /***
-     *   When show the default page
+     * When show the default page, get the inventory info.
      */
     onShow: function () {
         if (!this.data.firstLoad) {
@@ -50,11 +48,21 @@ Page({
             checkPermission()
         }
 
-        this.getMenu()
+        setInventory(this)
     },
 
     /**
-     * An async function to login the user and get the user's info
+     * When the use pulls down to refresh,
+     * call onShow to update item info.
+     */
+    onPullDownRefresh: function () {
+        this.onShow()
+    },
+
+    /**
+     * Login the user and get the user's info
+     * 
+     * @method userLogin
      */
     async userLogin() {
         // get user's authorization to use his info
@@ -115,64 +123,55 @@ Page({
         })
     },
 
-    getMenu: function () {
-    db.collection(db_menu)
-        .field({
-        _id: true,
-        menu_id: true,
-        menu_name: true
-        })
-        .orderBy('menu_id', 'asc')
-        .get({
-        success: res => {
-            this.setData({
-            menu: res.data
-            })
-
-            var sm = {}
-
-            for (var i in this.data.menu) {
-            db.collection(db_submenu)
-                .where({
-                menu_id: this.data.menu[i].menu_id
-                })
-                .orderBy('submenu_id', 'asc')
-                .get({
-                success: res1 => {
-                    if (res1.data.length != 0) {
-                    sm[res1.data[0].menu_id] = res1.data
-
-                    this.setData({
-                        submenu: sm
-                    })
-
-                    if (Object.keys(this.data.menu).length == Object.keys(this.data.submenu).length) {
-                        this.getState()
-
-                        this.getStock()
-
-
-                    }
-                    }
-                }
-                })
-            }
-        },
-        fail: res => {
-            console.error('Failed to get menu', res)
+    /**
+     * When tap the tab title to switch page
+     */
+    switchNav: function (e) {
+        var page = this;
+        var id = parseInt(e.target.id);
+        if (this.data.currentTab == id) {
+            return false;
+        } else {
+            page.setData({ currentTab: id });
         }
+        page.setData({ flag: id });
+    },
+
+    /**
+     * When swipe the page to switch
+     */
+    swiperChanged: function(e) {
+        console.log('Switch navigation to: ', e.detail.current)
+        if (this.data.currentTab != e.detail.current) {
+            this.setData({
+                currentTab: e.detail.current,
+                flag: e.detail.current
+            })
+        }
+    },
+
+    /**
+     * When the Left button is tapped, open the page to check left
+     * 
+     * @method bindLeft
+     */
+    bindLeft: function(e) {
+        console.log('Start checking the left in the inventory')
+        wx.navigateTo({
+            url: check_left_page
         })
     },
 
-    switchNav: function (e) {
-    var page = this;
-    var id = e.target.id;
-    if (this.data.currentTab == id) {
-        return false;
-    } else {
-        page.setData({ currentTab: id });
-    }
-    page.setData({ flag: id });
+    /**
+     * When the refill button is tapped, open the page to refill
+     * 
+     * @method bindRefill
+     */
+    bindRefill: function (e) {
+        console.log('Start refilling the inventory')
+        wx.navigateTo({
+            url: refill_page
+        })
     },
 
     /**
@@ -184,400 +183,6 @@ Page({
             desc: '国泰餐厅库存管理程序',
             path: 'pages/inventory/inventoryUpdate/inventoryUpdate'
         }
-    },
-
-
-    formSubmit: function (e) {
-
-    if (this.data.left_checked == false) {
-        this.setData({
-        left_checked: true,
-        btn_name: '确认补货'
-        })
-
-        var today_left = e.detail.value
-        var yc = {}
-
-        for (var i in today_left) {
-        if (today_left[i] == "") {
-            today_left[i] = this.data.stock_value[i]
-        }
-        else {
-            today_left[i] = parseInt(today_left[i])
-        }
-
-        yc[i] = this.data.stock_value[i] - today_left[i]
-        }
-
-        this.setData({
-        yesterday_cost: yc
-        })
-
-        console.log(this.data.yesterday_cost)
-    }
-    else {
-        wx.showLoading({
-        title: '上传中',
-        mask: true
-        })
-
-        var total = 0
-        var normal = 0
-        var warning = 0
-        var not_filled = 0
-        var today_filled = e.detail.value
-        var new_stock_value = this.data.stock_value
-        var new_warning_item = {}
-        var new_notfilled_item = {}
-
-        for (var i in today_filled) {
-        total = total + 1
-
-        if (today_filled[i] == "" || today_filled[i] == "0") {
-            today_filled[i] = 0
-            not_filled = not_filled + 1
-
-            new_notfilled_item[i] = 0
-        }
-        else {
-            today_filled[i] = parseInt(today_filled[i])
-        }
-
-        new_stock_value[i] = new_stock_value[i] - this.data.yesterday_cost[i] + today_filled[i]
-
-        if (today_filled[i] < this.data.yesterday_cost[i]) {
-            warning = warning + 1
-
-            new_warning_item[i] = this.data.yesterday_cost[i] - today_filled[i]
-        }
-        }
-
-        this.setData({
-        stock_value: new_stock_value,
-        })
-
-        normal = total - warning - not_filled
-
-        console.log(total, normal, warning, not_filled)
-
-        var new_notfilled_name = {}
-        var new_warning_name = {}
-
-        for (var i in new_notfilled_item) {
-        db.collection('stock')
-            .where({
-            submenu_id: i
-            })
-            .get({
-            success: res => {
-                new_notfilled_name[res.data[0]._id] = { '_id': res.data[0]._id, 'value': 0 }
-
-                if (Object.keys(new_notfilled_name).length == not_filled &&
-                Object.keys(new_warning_name).length == warning) {
-                this.setData({
-                    notfilled_item: new_notfilled_name,
-                    warning_item: new_warning_name
-
-                })
-
-                console.log('Not filled: ', this.data.notfilled_item)
-                console.log('Warning: ', this.data.warning_item)
-
-                var time = util.formatTime(new Date())
-                var detail = ''
-
-                detail = detail + '异常补货' + warning.toString() + '项\n' + '未补货' + not_filled.toString() + '项'
-
-                this.setState(this.data.notfilled_item, this.data.warning_item)
-
-                db.collection('user')
-                    .where({
-                    permission_level: 2
-                    })
-                    .get({
-                    success: res1 => {
-                        for (var u in res1.data) {
-                        wx.cloud.callFunction({
-                            name: 'sendMessage',
-                            data: {
-                            openid: res1.data[u].user_openid,
-                            time: time,
-                            detail: detail
-                            },
-                            success: res => {
-                            console.log(res)
-
-                            wx.hideLoading()
-
-                            },
-                            fail: err => {
-                            // if get a failed result
-                            console.error('failed to use cloud function dbChangeUser()', err)
-                            wx.hideLoading()
-                            }
-                        })
-                        }
-                    }
-                    })
-
-                db.collection('user')
-                    .where({
-                    permission_level: 3
-                    })
-                    .get({
-                    success: res1 => {
-                        for (var u in res1.data) {
-                        wx.cloud.callFunction({
-                            name: 'sendMessage',
-                            data: {
-                            openid: res1.data[u].user_openid,
-                            time: time,
-                            detail: detail
-                            },
-                            success: res => {
-                            console.log(res)
-
-                            wx.hideLoading()
-
-                            },
-                            fail: err => {
-                            // if get a failed result
-                            console.error('failed to use cloud function dbChangeUser()', err)
-                            wx.hideLoading()
-                            }
-                        })
-                        }
-                    }
-                    })
-
-
-                }
-            }
-            })
-        }
-
-        for (var j in new_warning_item) {
-        db.collection('stock')
-            .where({
-            submenu_id: j
-            })
-            .get({
-            success: res => {
-                new_warning_name[res.data[0]._id] = {
-                '_id': res.data[0]._id,
-                'value': today_filled[res.data[0]._id]
-                }
-
-                if (Object.keys(new_notfilled_name).length == not_filled &&
-                Object.keys(new_warning_name).length == warning) {
-                this.setData({
-                    notfilled_item: new_notfilled_name,
-                    warning_item: new_warning_name
-                })
-
-                console.log('Not filled: ', this.data.notfilled_item)
-                console.log('Warning: ', this.data.warning_item)
-
-                var time = util.formatTime(new Date())
-                var detail = ''
-
-                detail = detail + '异常补货' + warning.toString() + '项\n' + '未补货' + not_filled.toString() + '项'
-
-                this.setState(this.data.notfilled_item, this.data.warning_item)
-
-
-                db.collection('user')
-                    .where({
-                    permission_level: 2
-                    })
-                    .get({
-                    success: res1 => {
-                        for (var u in res1.data) {
-                        wx.cloud.callFunction({
-                            name: 'sendMessage',
-                            data: {
-                            openid: res1.data[u].user_openid,
-                            time: time,
-                            detail: detail
-                            },
-                            success: res => {
-                            console.log(res)
-
-                            wx.hideLoading()
-
-                            },
-                            fail: err => {
-                            // if get a failed result
-                            console.error('failed to use cloud function dbChangeUser()', err)
-                            wx.hideLoading()
-                            }
-                        })
-                        }
-                    }
-                    })
-
-                db.collection('user')
-                    .where({
-                    permission_level: 3
-                    })
-                    .get({
-                    success: res1 => {
-                        for (var u in res1.data) {
-                        wx.cloud.callFunction({
-                            name: 'sendMessage',
-                            data: {
-                            openid: res1.data[u].user_openid,
-                            time: time,
-                            detail: detail
-                            },
-                            success: res => {
-                            console.log(res)
-
-                            wx.hideLoading()
-
-                            },
-                            fail: err => {
-                            // if get a failed result
-                            console.error('failed to use cloud function dbChangeUser()', err)
-                            wx.hideLoading()
-                            }
-                        })
-                        }
-                    }
-                    })
-
-
-                }
-            }
-            })
-        }
-
-
-
-
-        this.setData({
-        left_checked: false,
-        btn_name: '确认余量'
-        })
-    }
-    },
-
-
-    getStock: function () {
-    console.log(this.data.submenu)
-    var sv = {}
-    var n = 0
-
-    for (var i in this.data.submenu) {
-        for (var j in this.data.submenu[i]) {
-        n = n + 1
-        }
-    }
-
-    for (var i in this.data.submenu) {
-        for (var j in this.data.submenu[i]) {
-
-        db.collection(db_stock)
-            .where({
-            submenu_id: this.data.submenu[i][j]._id
-            })
-            .get({
-            success: res => {
-                if (res.data.length != 0) {
-
-                sv[res.data[0].submenu_id] = res.data[0].stock_value
-
-                this.setData({
-                    stock_value: sv
-                })
-
-                if (Object.keys(this.data.stock_value).length == n) {
-                    console.log(this.data.stock_value)
-                }
-                }
-            }
-            })
-
-        }
-    }
-
-    },
-
-    getState: function () {
-    var st = {}
-
-    db.collection('stock')
-        .field({
-        submenu_id: true,
-        state: true
-        })
-        .get({
-        success: res => {
-            for (var i in res.data) {
-            st[res.data[i].submenu_id] = res.data[i].state
-            }
-
-            console.log('state', st)
-
-            this.setData({
-            state: st
-            })
-
-            app.globalData.state = this.data.state
-        }
-        })
-    },
-
-    setState: function (nf, wa) {
-    console.log('state nf: ', nf)
-    console.log('state wa: ', wa)
-
-    for (var i in nf) {
-        var update_state_data = {
-        state: 1
-        }
-
-        wx.cloud.callFunction({
-        name: 'dbChangeUser',
-        data: {
-            collection_name: 'stock',
-            update_data: update_state_data,
-            uid: i
-        },
-        success: res => {
-
-        },
-        fail: err => {
-            // if get a failed result
-            console.error('failed to use cloud function dbChangeUser()', err)
-        }
-        })
-
-    }
-
-    for (var i in wa) {
-        var update_state_data = {
-        state: 1
-        }
-
-        wx.cloud.callFunction({
-        name: 'dbChangeUser',
-        data: {
-            collection_name: 'stock',
-            update_data: update_state_data,
-            uid: i
-        },
-        success: res => {
-
-        },
-        fail: err => {
-            // if get a failed result
-            console.error('failed to use cloud function dbChangeUser()', err)
-        }
-        })
-
-    }
-
     }
 })
 
@@ -596,4 +201,153 @@ function checkPermission() {
             url: info_page
         })
     }
+}
+
+
+/**
+ * Set all the categories and items data in the inventory.
+ * 
+ * @method setInventory
+ * @param{Page} page The page
+ */
+async function setInventory(page) {
+    var cl = await getCheckLeft()
+    page.setData({
+        check_left: cl
+    })
+    app.globalData.check_left = cl
+    console.log('Left has been checked: ', cl)
+
+    var categories = await getCategory()
+    for(var c in categories) {
+        categories[c]['nav_order'] = parseInt(c)
+    }
+
+    page.setData({
+        category: categories
+    })
+    console.log('Get all the categories: ', page.data.category)
+
+    var items = await getItem(page, categories)
+
+    page.setData({
+        item: items
+    })
+
+    wx.stopPullDownRefresh()
+}
+
+
+/**
+ * Get whether the left in the inventory has been checked.
+ * 
+ * @method getCheckLeft
+ */
+function getCheckLeft() {
+    return new Promise((resolve, reject) => {
+        db.collection(db_info)
+            .field({
+                check_left: true
+            })
+            .get({
+                success: res => {
+                    resolve(res.data[0].check_left)
+                },
+                fail: err => {
+                    console.error('Failed to get check_left from database', err)
+                    reject()
+                }
+            })
+    })
+}
+
+
+/**
+ * Get all the categories in the database.
+ * 
+ * @method getCategory
+ */
+function getCategory() {
+    return new Promise((resolve, reject) => {
+        db.collection(db_category)
+            .field({
+                _id: true,
+                category_order: true,
+                category_name: true,
+                item_amount: true
+            })
+            .orderBy('category_order', 'asc')
+            .get({
+                success: res => {
+                    resolve(res.data)
+                },
+                fail: err => {
+                    console.error('Failed to get categories from database', err)
+                    reject()
+                }
+            })
+    })
+}
+
+
+/**
+ * Get all the items in the database.
+ * 
+ * @method getItem
+ * @param{Object} categories All the categories
+ */
+function getItem(page, categories) {
+    return new Promise((resolve, reject) => {
+        var total_category = categories.length
+        var curr_category = 0
+        var t = {}
+
+        var height = 400
+        var sum = 0
+
+        for (var i in categories) {
+            db.collection(db_item)
+                .where({
+                    category_id: categories[i]._id
+                })
+                .orderBy('item_order', 'asc')
+                .get({
+                    success: res => {
+                        curr_category = curr_category + 1
+                        console.log('Get items ', curr_category, '/', total_category)
+
+                        if (res.data.length != 0) {
+                            var category_order = 0
+                            for (var j in categories) {
+                                if (categories[j]._id == res.data[0].category_id) {
+                                    category_order = categories[j].category_order
+                                }
+                            }
+                            t[category_order] = res.data
+
+                            if(res.data.length > sum) {
+                                sum = res.data.length
+                            }
+                        }
+
+                        if (curr_category == total_category) {
+                            height = height + sum * 150
+
+                            if(page.data.h < height) {
+                                page.setData({
+                                    h: height
+                                })
+                            }
+                            
+                            console.log('Get all the items: ', t)
+                            resolve(t)
+                        }
+                    },
+                    fail: err => {
+                        console.error('Failed to search items', err)
+                        reject()
+                    }
+                })
+        }
+    })
 }

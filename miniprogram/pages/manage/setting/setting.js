@@ -9,7 +9,8 @@ const user_manage_page = '../userManage/viewUser/viewUser'
 const category_manage_page = '../inventoryManage/categoryView/categoryView'
 const sale_manage_page = '../saleManage/saleView/saleView'
 
-const message_id = 'hAMmX4ZyrxIGCPc8dMJM07irJrM0zNwyDu-3YdGci4I'
+const check_left_message_id = 'hAMmX4ZyrxIGCPc8dMJM07irJrM0zNwyDu-3YdGci4I'
+const refill_message_id = 'X9BoiE_piVjqKaKsAH1KcAtjSqdfjQQYDb2_q7hpWAQ'
 
 
 Page({
@@ -29,17 +30,17 @@ Page({
     /**
      * When the user click the button to agree receiving messages.
      */
-    getSubscribed: function () {
-        console.log('Request to receive messages')
+    getLeftSubscribed: function () {
+        console.log('Request to receive check left messages')
 
         wx.requestSubscribeMessage({
-            tmplIds: [message_id],
+            tmplIds: [check_left_message_id],
             success(res) {
                 wx.showToast({
                     title: '同意接收',
                 })
 
-                console.log('User agree to receive messages')
+                console.log('User agree to receive check left messages')
             }
         })
     },

@@ -1,0 +1,47 @@
+<view class="bg">
+    <view class="nav">
+        <scroll-view class="scroll-view_H" scroll-x="true" enable-flex="true">
+            <view class="scroll-view_H">
+                <view wx:for="{{category}}" wx:for-item="category" wx:key="_id">
+                    <view class="{{flag==category.nav_order?'select':'normal'}}" id="{{category.nav_order}}" bindtap="switchNav">{{category.category_name}}</view>
+                </view>
+            </view>
+        </scroll-view>
+    </view>
+</view>
+
+<form bindsubmit="formSubmit">
+    <swiper current="{{currentTab}}" style="height:{{h}}rpx" bindchange="swiperChanged">
+        <view wx:for="{{item}}" wx:for-item="i" wx:key="i">
+            <swiper-item>
+                <view wx:for="{{i}}" wx:for-item="subitem" wx:key="_id">
+                    <view class="{{subitem.item_state==1?'sub_red':'sub'}}">
+
+                        <navigator url="../cup1/cup1" open-type="navigate" class="sub-navigator">
+                            <text>{{subitem.item_name}}</text>
+                        </navigator>
+
+                        <block wx:if="{{!left_checked}}">
+                        
+                            <view class="stockValue">昨日存量: {{subitem.stock_value}}</view>
+                            <view class="stockLeft">今日剩余: </view>
+                            <view class="val"><input name="{{subitem._id}}" type="number" placeholder="{{subitem.stock_value}}"/></view>
+                        </block>
+
+                        <block wx:if="{{left_checked}}">
+                        
+                            <view class="stockValue">建议补货: {{subitem.stock_value}}</view>
+                            <view class="stockLeft">实际补货: </view>
+                            <view class="val"><input name="{{subitem._id}}" type="number"/></view>
+                        </block>
+                    
+                    </view>
+                </view>
+            </swiper-item>
+        </view>
+    </swiper>
+
+  <button class="btn" type="primary" form-type="submit">{{btn_name}}</button>
+
+  
+</form>

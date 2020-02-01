@@ -245,31 +245,36 @@ function getItem(category_id) {
  */
 function removeItems(items) {
     return new Promise((resolve, reject) => {
-        var total_del = items.length
-        var curr_del = 0
+        if(items.length != 0) {
+            var total_del = items.length
+            var curr_del = 0
 
-        for (var i in items) {
-            wx.cloud.callFunction({
-                name: 'dbRemove',
-                data: {
-                    collection_name: db_item,
-                    uid: items[i]._id
-                },
-                success: res => {
-                    curr_del = curr_del + 1
-                    console.log('Remove item success ', curr_del, '/', total_del)
+            for (var i in items) {
+                wx.cloud.callFunction({
+                    name: 'dbRemove',
+                    data: {
+                        collection_name: db_item,
+                        uid: items[i]._id
+                    },
+                    success: res => {
+                        curr_del = curr_del + 1
+                        console.log('Remove item success ', curr_del, '/', total_del)
 
-                    if (curr_del == total_del) {
-                        console.log('Finish removing all items')
-                        resolve()
+                        if (curr_del == total_del) {
+                            console.log('Finish removing all items')
+                            resolve()
+                        }
+                    },
+                    fail: err => {
+                        // if get a failed result
+                        console.error('Failed to use cloud function dbRemove()', err)
+                        reject()
                     }
-                },
-                fail: err => {
-                    // if get a failed result
-                    console.error('Failed to use cloud function dbRemove()', err)
-                    reject()
-                }
-            })
+                })
+            }
+        } else {
+            console.log('Finish removing all items')
+            resolve()
         }
     })
 }

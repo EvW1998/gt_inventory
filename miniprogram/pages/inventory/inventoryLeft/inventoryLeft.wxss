@@ -1,0 +1,84 @@
+.bg{
+  background-color: #FFFFFF;
+  height: 50px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.nav{
+  width: 100%;
+  height: 40px;
+}
+.scroll-view_H{
+  margin-left: 10px;
+  height: 40px;
+  display: flex;
+  flex-direction: row;
+}
+.normal{
+  width: 60px;
+  height: 40px;
+  line-height: 40px;
+  padding-left:10px;
+  padding-right: 10px;
+  font-size: 14px;
+}
+.select{
+  width: 60px;
+  height: 40px;
+  line-height: 40px;
+  padding-left:20px;
+  padding-right: 20px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.sub{
+  margin-top: 40rpx;
+  height: 100rpx;
+  width: 100%;
+  background: rgb(250, 250, 250);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-left: none;
+  border-right: none;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.sub-text {
+  display: flex;
+  flex-direction: row;
+  margin-left: 10px;
+  width: 100%;
+}
+
+.stockValue {
+  position: absolute;
+  right: 130px;
+}
+
+.stockLeft {
+  position: absolute;
+  right: 50px;
+}
+
+.val{
+  margin-left: 20rpx;
+  width: 30px;
+  height: 28px;
+  border:1px solid #cccccc;
+  border-radius: 5px;
+  font-size:13px;
+  position: absolute;
+  right: 10px;
+}
+
+.btn{
+  width:220px;
+  height: 45px;
+  position: fixed;
+  bottom: 30rpx;
+  left: 0;
+  right: 0;
+}
