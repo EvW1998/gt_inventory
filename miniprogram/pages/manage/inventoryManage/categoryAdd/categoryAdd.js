@@ -1,6 +1,9 @@
 /**
  * The page to add new category to the miniapp
  */
+const pAction = require('../../../../utils/pageAction.js')
+
+
 const app = getApp()
 const db = wx.cloud.database()
 const db_category = 'category' // the collection for the category in db
@@ -143,18 +146,7 @@ async function addCategory(category_order, category_name, info_id) {
     await updateCategoryAmount(update_info_data, info_id)
     console.log('Update the total amount of the categories: ', update_info_data.category_amount)
 
-    wx.hideLoading()
-
-    wx.showToast({
-        title: '新增成功',
-        duration: 1500,
-        complete: function (res) {
-            setTimeout(function () {
-                wx.navigateBack({
-                })
-            }, 1500)
-        }
-    })
+    pAction.navigateBackUser('新增成功', 1)
 }
 
 
@@ -199,7 +191,7 @@ function updateCategoryAmount(update_info_data, info_id) {
     return new Promise((resolve, reject) => {
         // call dbChangeUser() cloud function to update the category amount
         wx.cloud.callFunction({
-            name: 'dbChangeUser',
+            name: 'dbUpdate',
             data: {
                 collection_name: db_info,
                 update_data: update_info_data,
@@ -210,7 +202,7 @@ function updateCategoryAmount(update_info_data, info_id) {
             },
             fail: err => {
                 // if get a failed result
-                console.error('Failed to use cloud function dbChangeUser()', err)
+                console.error('Failed to use cloud function dbUpdate()', err)
                 reject()
             }
         })

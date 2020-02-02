@@ -1,9 +1,13 @@
 /**
  * Update the selected sale info, or delete it.
  */
+const date = require('../../../../utils/date.js');
+
+
 const app = getApp()
 const db = wx.cloud.database()
 const db_sale = 'sale' // the collection of sales
+
 
 Page({
 
@@ -78,7 +82,7 @@ Page({
 
         } else {
             console.log('No sale info changed')
-            navigateUser('更改成功', 1)
+            pAction.navigateBackUser('更改成功', 1)
         }
     },
 
@@ -160,7 +164,7 @@ function searchSale(page, sale_id) {
  */
 function updateSale(update_sale_data, sale_id) {
     wx.cloud.callFunction({
-        name: 'dbChangeUser',
+        name: 'dbUpdate',
         data: {
             collection_name: db_sale,
             update_data: update_sale_data,
@@ -168,12 +172,12 @@ function updateSale(update_sale_data, sale_id) {
         },
         success: res => {
             console.log('Update sale info success')
-            navigateUser('更改成功', 1)
+            pAction.navigateBackUser('更改成功', 1)
         },
         fail: err => {
             // if get a failed result
-            console.error('Failed to use cloud function dbChangeUser()', err)
-            navigateUser('更改失败', 1)
+            console.error('Failed to use cloud function dbUpdate()', err)
+            pAction.navigateBackUser('更改失败', 1)
         }
     })
 }
@@ -194,36 +198,12 @@ function removeData(sale_id) {
         },
         success: res => {
             console.log('Remove sale success')
-            navigateUser('删除成功', 1)
+            pAction.navigateBackUser('删除成功', 1)
         },
         fail: err => {
             // if get a failed result
             console.error('Failed to use cloud function dbRemove()', err)
-            navigateUser('删除失败', 1)
-        }
-    })
-}
-
-
-/**
- * Hide Loading and navigate the user back to the previous page.
- * 
- * @method navigateUser
- * @param{String} message The message to show in the toast.
- * @param{Number} level The level navigate back to.
- */
-function navigateUser(message, level) {
-    wx.hideLoading()
-
-    wx.showToast({
-        title: message,
-        duration: 1500,
-        complete: function (res) {
-            setTimeout(function () {
-                wx.navigateBack({
-                    delta: level
-                })
-            }, 1500)
+            pAction.navigateBackUser('删除失败', 1)
         }
     })
 }

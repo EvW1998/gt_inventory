@@ -15,33 +15,20 @@
         <view wx:for="{{item}}" wx:for-item="i" wx:key="i">
             <swiper-item>
                 <view wx:for="{{i}}" wx:for-item="subitem" wx:key="_id">
-                    <view class="{{subitem.item_state==1?'sub_red':'sub'}}">
+                    <view class="sub">
 
-                        <navigator url="../cup1/cup1" open-type="navigate" class="sub-navigator">
+                        <view class="sub-text">
                             <text>{{subitem.item_name}}</text>
-                        </navigator>
-
-                        <block wx:if="{{!left_checked}}">
+                        </view>
                         
-                            <view class="stockValue">昨日存量: {{subitem.stock_value}}</view>
-                            <view class="stockLeft">今日剩余: </view>
-                            <view class="val"><input name="{{subitem._id}}" type="number" placeholder="{{subitem.stock_value}}"/></view>
-                        </block>
-
-                        <block wx:if="{{left_checked}}">
-                        
-                            <view class="stockValue">建议补货: {{subitem.stock_value}}</view>
-                            <view class="stockLeft">实际补货: </view>
-                            <view class="val"><input name="{{subitem._id}}" type="number"/></view>
-                        </block>
-                    
+                        <view class="stockValue">建议补货: {{subitem.stock_value}}</view>
+                        <view class="stockLeft">实际补货: </view>
+                        <view class="val"><input name="{{subitem._id}}" type="number"/></view>
                     </view>
                 </view>
             </swiper-item>
         </view>
     </swiper>
 
-  <button class="btn" type="primary" form-type="submit">{{btn_name}}</button>
-
-  
+  <button class="btn" type="primary" form-type="submit">确认补货</button>
 </form>

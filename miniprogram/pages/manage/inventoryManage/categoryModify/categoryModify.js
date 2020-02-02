@@ -1,10 +1,14 @@
 /**
  * Update the selected category
  */
+const pAction = require('../../../../utils/pageAction.js')
+
+
 const app = getApp()
 const db = wx.cloud.database()
 const db_category = 'category' // the collection of categories
 const db_item = 'item' // the collection of items
+
 
 Page({
 
@@ -79,7 +83,7 @@ Page({
 
         } else {
             console.log('No category info changed')
-            navigateUser('更改成功', 1)
+            pAction.navigateBackUser('更改成功', 1)
         }
     },
 
@@ -163,7 +167,7 @@ function searchCategory(page, category_id) {
  */
 function updateCategory(update_category_data, category_id) {
     wx.cloud.callFunction({
-        name: 'dbChangeUser',
+        name: 'dbUpdate',
         data: {
             collection_name: db_category,
             update_data: update_category_data,
@@ -171,12 +175,12 @@ function updateCategory(update_category_data, category_id) {
         },
         success: res => {
             console.log('Update category info success')
-            navigateUser('更改成功', 1)
+            pAction.navigateBackUser('更改成功', 1)
         },
         fail: err => {
             // if get a failed result
-            console.error('Failed to use cloud function dbChangeUser()', err)
-            navigateUser('更改失败', 1)
+            console.error('Failed to use cloud function dbUpdate()', err)
+            pAction.navigateBackUser('更改失败', 1)
         }
     })
 }
@@ -199,12 +203,12 @@ async function removeData(category_id) {
         },
         success: res => {
             console.log('Remove category success')
-            navigateUser('删除成功', 2)
+            pAction.navigateBackUser('删除成功', 2)
         },
         fail: err => {
             // if get a failed result
             console.error('Failed to use cloud function dbRemove()', err)
-            navigateUser('删除失败', 2)
+            pAction.navigateBackUser('删除失败', 2)
         }
     })
 }
@@ -275,30 +279,6 @@ function removeItems(items) {
         } else {
             console.log('Finish removing all items')
             resolve()
-        }
-    })
-}
-
-
-/**
- * Hide Loading and navigate the user back to the previous page.
- * 
- * @method navigateUser
- * @param{String} message The message to show in the toast.
- * @param{Number} level The level navigate back to.
- */
-function navigateUser(message, level) {
-    wx.hideLoading()
-
-    wx.showToast({
-        title: message,
-        duration: 1500,
-        complete: function (res) {
-            setTimeout(function () {
-                wx.navigateBack({
-                    delta: level
-                })
-            }, 1500)
         }
     })
 }

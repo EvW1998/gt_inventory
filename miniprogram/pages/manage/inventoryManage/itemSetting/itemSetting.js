@@ -1,6 +1,9 @@
 /**
  * Update the selected item or delete it
  */
+const pAction = require('../../../../utils/pageAction.js')
+
+
 const app = getApp()
 const db = wx.cloud.database()
 const db_item = 'item' // the collection of items
@@ -206,7 +209,7 @@ Page({
             updateItem(update_item_data, this.data.item_id)
         } else {
             console.log('No item info changed')
-            navigateUser('更改成功', 1)
+            pAction.navigateBackUser('更改成功', 1)
         }
     },
 
@@ -238,12 +241,12 @@ Page({
                         },
                         success: res => {
                             console.log('Remove item success')
-                            navigateUser('删除成功', 1)
+                            pAction.navigateBackUser('删除成功', 1)
                         },
                         fail: err => {
                             // if get a failed result
                             console.error('Failed to use cloud function dbRemove()', err)
-                            navigateUser('删除失败', 1)
+                            pAction.navigateBackUser('删除失败', 1)
                         }
                     })
                 }
@@ -324,7 +327,7 @@ function isAllFilled(page) {
  */
 function updateItem(update_item_data, item_id) {
     wx.cloud.callFunction({
-        name: 'dbChangeUser',
+        name: 'dbUpdate',
         data: {
             collection_name: db_item,
             update_data: update_item_data,
@@ -332,36 +335,12 @@ function updateItem(update_item_data, item_id) {
         },
         success: res => {
             console.log('Update item info success')
-            navigateUser('更改成功', 1)
+            pAction.navigateBackUser('更改成功', 1)
         },
         fail: err => {
             // if get a failed result
-            console.error('Failed to use cloud function dbChangeUser()', err)
-            navigateUser('更改失败', 1)
-        }
-    })
-}
-
-
-/**
- * Hide Loading and navigate the user back to the previous page.
- * 
- * @method navigateUser
- * @param{String} message The message to show in the toast.
- * @param{Number} level The level navigate back to.
- */
-function navigateUser(message, level) {
-    wx.hideLoading()
-
-    wx.showToast({
-        title: message,
-        duration: 1500,
-        complete: function (res) {
-            setTimeout(function () {
-                wx.navigateBack({
-                    delta: level
-                })
-            }, 1500)
+            console.error('Failed to use cloud function dbUpdate()', err)
+            pAction.navigateBackUser('更改失败', 1)
         }
     })
 }

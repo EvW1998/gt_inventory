@@ -1,9 +1,13 @@
 /**
  * Update the selected user's name and permission level
  */
+const pAction = require('../../../../utils/pageAction.js')
+
+
 const app = getApp()
 const db = wx.cloud.database()
 const db_user = 'user' // the collection name of the user
+
 
 Page({
 
@@ -115,9 +119,9 @@ Page({
 
         if (Object.keys(update_user_data).length != 0) {
             // if there is a user info changed
-            // call dbChangeUser() cloud function to update the userinfo
+            // call dbUpdate() cloud function to update the userinfo
             wx.cloud.callFunction({
-                name: 'dbChangeUser',
+                name: 'dbUpdate',
                 data: {
                     collection_name: db_user,
                     update_data: update_user_data,
@@ -125,17 +129,17 @@ Page({
                 },
                 success: res => {
                     console.log('Update user info success')
-                    navigateUser('更改成功')
+                    pAction.navigateBackUser('更改成功', 1)
                 },
                 fail: err => {
                     // if get a failed result
-                    console.error('failed to use cloud function dbChangeUser()', err)
+                    console.error('failed to use cloud function dbUpdate()', err)
                 }
             })
         }
         else {
             console.log('No use info changed')
-            navigateUser('更改成功')
+            pAction.navigateBackUser('更改成功', 1)
         }
     },
 
@@ -150,24 +154,3 @@ Page({
         }
     }
 })
-
-
-/**
- * Hide Loading and navigate the user back to the previous page.
- * 
- * @method navigateUser
- * @param{String} message The message to show in the toast.
- */
-function navigateUser(message) {
-    wx.hideLoading()
-
-    wx.showToast({
-        title: message,
-        duration: 1500,
-        complete: function (res) {
-            setTimeout(function () {
-                wx.navigateBack()
-            }, 1500)
-        }
-    })
-}

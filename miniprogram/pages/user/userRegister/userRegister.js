@@ -3,6 +3,7 @@
  * and an invition code for registration.
  */
 const user = require('../../../utils/user.js');
+const pAction = require('../../../utils/pageAction.js')
 
 const app = getApp()
 const db_user = 'user' // the collection for the user in db
@@ -153,19 +154,7 @@ Page({
         app.globalData.permission_level = 0
         console.log('User permission level: ', app.globalData.permission_level)
 
-        wx.hideLoading()
-        wx.showToast({
-            title: '注册成功',
-            duration: 1500,
-            complete: res => {
-                setTimeout(function () {
-                    // take the user back to the info page
-                    wx.switchTab({
-                        url: info_page,
-                    })
-                }, 1500)
-            }
-        })
+        pAction.navigateBackUser('注册成功', 1)
     },
 
     /**

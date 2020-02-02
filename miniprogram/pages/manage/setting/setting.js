@@ -66,7 +66,7 @@ Page({
                             }
 
                             wx.cloud.callFunction({
-                                name: 'dbChangeUser',
+                                name: 'dbUpdate',
                                 data: {
                                     collection_name: 'stock',
                                     update_data: update_state_data,
@@ -80,7 +80,7 @@ Page({
                                 },
                                 fail: err => {
                                     // if get a failed result
-                                    console.error('failed to use cloud function dbChangeUser()', err)
+                                    console.error('failed to use cloud function dbUpdate()', err)
                                 }
                             })
 

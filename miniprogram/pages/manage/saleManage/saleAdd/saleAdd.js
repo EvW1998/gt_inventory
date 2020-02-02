@@ -1,7 +1,8 @@
 /**
  * The page to add new sale to the miniapp
  */
-var date = require('../../../../utils/date.js');
+const date = require('../../../../utils/date.js');
+const pAction = require('../../../../utils/pageAction.js')
 
 const app = getApp()
 const db = wx.cloud.database()
@@ -130,18 +131,8 @@ function addSale(value) {
         },
         success: res => {
             console.log('Add new sale data to the database: ', add_sale_data)
-            wx.hideLoading()
 
-            wx.showToast({
-                title: '新增成功',
-                duration: 1500,
-                complete: function (res) {
-                    setTimeout(function () {
-                        wx.navigateBack({
-                        })
-                    }, 1500)
-                }
-            })
+            pAction.navigateBackUser('新增成功', 1)
         },
         fail: err => {
             // if get a failed result

@@ -1,6 +1,9 @@
 /**
  * The page to add new item to the selected category.
  */
+const pAction = require('../../../../utils/pageAction.js')
+
+
 const app = getApp()
 const db = wx.cloud.database()
 const db_category = 'category' // the collection for the category in db
@@ -276,18 +279,7 @@ async function addItem(category_selected, item_info) {
     await updateItemAmount(update_category_data, category_selected._id)
     console.log('Update the total amount of the items: ', update_category_data.item_amount)
 
-    wx.hideLoading()
-
-    wx.showToast({
-        title: '新增成功',
-        duration: 1500,
-        complete: function (res) {
-            setTimeout(function () {
-                wx.navigateBack({
-                })
-            }, 1500)
-        }
-    })
+    pAction.navigateBackUser('新增成功', 1)
 }
 
 
@@ -330,9 +322,9 @@ function addToDB(add_item_data) {
 function updateItemAmount(update_category_data, category_id) {
 
     return new Promise((resolve, reject) => {
-        // call dbChangeUser() cloud function to update the category amount
+        // call dbUpdate() cloud function to update the category amount
         wx.cloud.callFunction({
-            name: 'dbChangeUser',
+            name: 'dbUpdate',
             data: {
                 collection_name: db_category,
                 update_data: update_category_data,
@@ -343,7 +335,7 @@ function updateItemAmount(update_category_data, category_id) {
             },
             fail: err => {
                 // if get a failed result
-                console.error('Failed to use cloud function dbChangeUser()', err)
+                console.error('Failed to use cloud function dbUpdate()', err)
                 reject()
             }
         })
