@@ -20,6 +20,8 @@
         "pages/manage/saleManage/saleView/saleView",
         "pages/manage/saleManage/saleAdd/saleAdd",
         "pages/manage/saleManage/saleSetting/saleSetting",
+        "pages/manage/logManage/checkLog/checkLog",
+        "pages/manage/logManage/checkLogView/checkLogView",
 
 
         "pages/cup1/cup1"

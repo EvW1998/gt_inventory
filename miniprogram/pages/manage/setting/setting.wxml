@@ -18,6 +18,12 @@
 </view>
 
 <view class="pd">
+  <navigator url="{{check_log_manage_page}}" open-type="navigate" class="pd-text">
+    <text>查看余量确认记录</text>
+  </navigator>
+</view>
+
+<view class="pd">
   <button bindtap="clearWarning">清除异常提醒</button>
 </view>
 

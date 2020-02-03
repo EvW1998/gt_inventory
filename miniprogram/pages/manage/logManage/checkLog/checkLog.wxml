@@ -1,0 +1,13 @@
+<!--pages/usermanage/usermanage.wxml-->
+<view class="title">余量确认记录</view>
+
+<view wx:for="{{logs}}" wx:key="_id">
+    <view class="person">
+        <navigator url="{{check_log_view_page}}?title={{item._id}}" class="userdetail">
+        <view class="name">{{item.date}}</view>
+        <view class="name">{{item.user_true_name}}</view>
+        </navigator>
+    </view>
+</view>
+
+<view class="space"></view>

@@ -9,7 +9,7 @@ const db_category = 'category' // the collection of categories
 const db_item = 'item' // the collection of items
 const db_info = 'info' // the collection of info
 const db_useage = { 'daily': 'daily_useage', 'weekly': 'weekly_useage', 'monthly': 'monthly_useage' } // the collections of useage
-
+const db_left_log = 'left_log' // the collection of left logs
 
 Page({
     data: {
@@ -101,10 +101,12 @@ async function confirmUseage(page, e) {
                 stock[item[i][j]._id] = item[i][j]
             }
         }
-        
+
+        var today_left = formatedTodayLeft(stock, e.detail.value)
+
         console.log('Useage: ')
         // calculate the useage data
-        var useage = getUseage(stock, e.detail.value)
+        var useage = getUseage(stock, today_left)
         page.setData({
             useage: useage
         })
@@ -148,11 +150,10 @@ async function confirmUseage(page, e) {
         var update_result = await updateAllUseage(useage, all_record, target_all_date)
         console.log('Finish update all useage')
 
-        // after uploading all the result, update the check_left value
-        if(update_result) {
-            await updateCheckLeft()
-        }
-
+        await updateItem(today_left, useage)
+        await updateLeftLog(today_left, update_result, stock, today)
+        //await updateCheckLeft()
+        
         sendCheckLeftMessage(today, useage)
 
         pAction.navigateBackUser('上传成功', 1)
@@ -160,6 +161,29 @@ async function confirmUseage(page, e) {
     } else {
         pAction.navigateBackUser('上传成功', 1)
     }
+}
+
+
+/**
+ * Format today left value from string to number.
+ * 
+ * @method formatedTodayLeft
+ * @param{Object} stock The stock value
+ * @param{Object} today_left The left value without formated
+ * @return{Object} The formated today left value
+ */
+function formatedTodayLeft(stock, today_left) {
+    var formated_today_left = today_left
+    for (var i in formated_today_left) {
+        if (formated_today_left[i] == "") {
+            formated_today_left[i] = stock[i].stock_value
+        }
+        else {
+            formated_today_left[i] = parseInt(formated_today_left[i])
+        }
+    }
+
+    return formated_today_left
 }
 
 
@@ -175,13 +199,6 @@ function getUseage(stock, today_left) {
     var useage = {}
 
     for (var i in today_left) {
-        if (today_left[i] == "") {
-            today_left[i] = stock[i].stock_value
-        }
-        else {
-            today_left[i] = parseInt(today_left[i])
-        }
-
         useage[i] = stock[i].stock_value - today_left[i]
         console.log(stock[i].item_name, ' Useage ', useage[i], ' = stock ', stock[i].stock_value, ' - today left ', today_left[i])
     }
@@ -237,9 +254,14 @@ function updateAllUseage(useage, record, target_date) {
         var total_update = Object.keys(useage).length * 3
         var curr_update = 0
 
+        var left_log = {}
+
         // for daily, weekly and monthly collection
         for(var i in target_date) {
             console.log('Start to update to ', i, ' usage on: ', target_date[i])
+            left_log[i] = {}
+            left_log[i]['date'] = target_date[i]
+            left_log[i]['detail'] = {}
 
             // reorganize the record data under the current collection
             var formed_record = {}
@@ -254,6 +276,8 @@ function updateAllUseage(useage, record, target_date) {
                     // if a record existed in the collection with the target date
                     var existed_useage = formed_record[k].item_useage
                     var new_useage = useage[k]
+
+                    left_log[i]['detail'][k] = existed_useage + new_useage
 
                     if (new_useage > 0) {
                         // if the useage data needs to update
@@ -274,13 +298,13 @@ function updateAllUseage(useage, record, target_date) {
 
                                 if (curr_update == total_update) {
                                     // if all the updates have been done
-                                    resolve(true)
+                                    resolve(left_log)
                                 }
                             },
                             fail: err => {
                                 // if get a failed result
                                 console.error('Failed to use cloud function dbUpdate()', err)
-                                reject(false)
+                                reject(left_log)
                             }
                         })
                     } else {
@@ -289,7 +313,7 @@ function updateAllUseage(useage, record, target_date) {
                         console.log('Update useage ', curr_update, '/', total_update)
 
                         if (curr_update == total_update) {
-                            resolve(true)
+                            resolve(left_log)
                         }
                     }
 
@@ -299,6 +323,8 @@ function updateAllUseage(useage, record, target_date) {
                     add_useage_data['item_id'] = k
                     add_useage_data['date'] = target_date[i]
                     add_useage_data['item_useage'] = useage[k]
+
+                    left_log[i]['detail'][k] = useage[k]
 
                     // add a new record to the collection
                     wx.cloud.callFunction({
@@ -313,13 +339,13 @@ function updateAllUseage(useage, record, target_date) {
 
                             if (curr_update == total_update) {
                                 // if all the updates have been done
-                                resolve(true)
+                                resolve(left_log)
                             }
                         },
                         fail: err => {
                             // if get a failed result
                             console.error('Failed to use cloud function dbAdd()', err)
-                            reject(false)
+                            reject(left_log)
                         }
                     })
                 }
@@ -352,6 +378,124 @@ function updateCheckLeft() {
             fail: err => {
                 // if get a failed result
                 console.error('Failed to use cloud function dbUpdate()', err)
+                reject()
+            }
+        })
+    })
+}
+
+
+/**
+ * Update the stock value for items.
+ * 
+ * @method updateItem
+ * @param{Object} today_left The formated today left value
+ * @param{useage} useage The useage data
+ * @return{Promise} The state of the function
+ */
+function updateItem(today_left, useage) {
+    return new Promise((resolve, reject) => {
+        var total_update = Object.keys(today_left).length
+        var curr_update = 0
+
+        for(var i in today_left) {
+            if(useage[i] != 0) {
+                // if the stock value changed
+                var update_item_data = {}
+                update_item_data['stock_value'] = today_left[i]
+
+                wx.cloud.callFunction({
+                    name: 'dbUpdate',
+                    data: {
+                        collection_name: db_item,
+                        update_data: update_item_data,
+                        uid: i
+                    },
+                    success: res => {
+                        curr_update = curr_update + 1
+                        console.log('Update stock value ', curr_update, '/', total_update)
+
+                        if (curr_update == total_update) {
+                            // if all the updates have been done
+                            resolve()
+                        }
+                    },
+                    fail: err => {
+                        // if get a failed result
+                        console.error('Failed to use cloud function dbUpdate()', err)
+                        reject()
+                    }
+                })
+            } else {
+                curr_update = curr_update + 1
+                console.log('Update stock value ', curr_update, '/', total_update)
+
+                if (curr_update == total_update) {
+                    // if all the updates have been done
+                    resolve()
+                }
+            }
+        }
+    })
+}
+
+
+/**
+ * Update the check left to a log collection.
+ * 
+ * @method updateLeftLog
+ * @param{Object} today_left The today left value
+ * @param{Object} update_result The update result value
+ * @param{Object} item The formated item value
+ * @param{Date} today The date of today
+ * @return{Promise} The state of the function
+ */
+function updateLeftLog(today_left, update_result, item, today) {
+    return new Promise((resolve, reject) => {
+        var stock_info = {}
+        for(var i in today_left) {
+            stock_info[i] = {}
+            stock_info[i]['item_name'] = item[i].item_name
+            stock_info[i]['stock_value'] = today_left[i]
+        }
+
+        var useage_info = {}
+        for(var i in update_result) {
+            useage_info[i] = {}
+            useage_info[i]['date'] = update_result[i]['date']
+            useage_info[i]['detail'] = {}
+
+            for(var j in update_result[i]['detail']) {
+                useage_info[i]['detail'][j] = {}
+                useage_info[i]['detail'][j]['item_name'] = item[j].item_name
+                useage_info[i]['detail'][j]['useage'] = update_result[i]['detail'][j]
+            }
+        }
+
+        var log_info = {}
+        log_info['stock'] = stock_info
+        log_info['useage'] = useage_info
+
+        var add_log_data = {}
+        add_log_data['date'] = date.formatTime(today)
+        add_log_data['user_uid'] = app.globalData.uid
+        add_log_data['user_true_name'] = app.globalData.true_name
+        add_log_data['log_info'] = log_info
+
+        wx.cloud.callFunction({
+            name: 'dbAdd',
+            data: {
+                collection_name: db_left_log,
+                add_data: add_log_data
+            },
+            success: res => {
+                // return the result if successed
+                console.log('Add a new check left log')
+                resolve()
+            },
+            fail: err => {
+                // if failed to use cloud function dbAdd
+                console.error('Failed to use cloud function dbAdd()', err)
                 reject()
             }
         })

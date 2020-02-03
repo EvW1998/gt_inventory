@@ -1,0 +1,43 @@
+.title {
+  margin-top: 20rpx;
+  text-align: center;
+  font-size: 40rpx;
+}
+
+.person {
+  margin-top: 40rpx;
+  height: 100rpx;
+  width: 100%;
+  background: rgb(250, 250, 250);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-left: none;
+  border-right: none;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.userdetail {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    font-size: 34rpx;
+}
+
+.addnew {
+    text-align: center;
+    width: 100%;
+    font-size: 34rpx;
+    font-weight: bold;
+}
+
+.name {
+    height: 100%;
+    width: 100%;
+    text-align: center;
+}
+
+.space {
+    margin-top: 50rpx;
+    padding-top: 50rpx;
+}
