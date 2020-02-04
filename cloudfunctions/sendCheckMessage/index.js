@@ -1,5 +1,6 @@
 // 云函数入口文件
 const cloud = require('wx-server-sdk')
+const check_template_id = 'LJqgpHGDBW5N1A_7A3goZytqjqN-AR5ldYjSRvjFSSU'
 
 cloud.init({
     // API 调用都保持和云函数当前所在环境一致
@@ -13,14 +14,23 @@ exports.main = async (event, context) => {
             touser: event.openid,
             page: 'inventory/inventoryUpdate/inventoryUpdate',
             data: {
-                time1: {
+                date1: {
                     value: event.time
                 },
-                thing2: {
-                    value: event.detail
+                name2: {
+                    value: event.user
+                },
+                number3: {
+                    value: event.normal_amount
+                },
+                number4: {
+                    value: event.unfilled_amount
+                },
+                thing5: {
+                    value: event.comment
                 }
             },
-            templateId: 'hAMmX4ZyrxIGCPc8dMJM07irJrM0zNwyDu-3YdGci4I'
+            templateId: check_template_id
         })
 
         console.log(result)

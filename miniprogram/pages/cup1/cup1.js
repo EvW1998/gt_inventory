@@ -1,7 +1,4 @@
-var util = require('../../utils/date.js');
-var util1 = require('../../utils/findyesterday.js')
-var util2 = require('../../utils/findthisweek.js')
-var util3 = require('../../utils/findlastweek.js')
+
 
 const app = getApp()
 const db = wx.cloud.database()

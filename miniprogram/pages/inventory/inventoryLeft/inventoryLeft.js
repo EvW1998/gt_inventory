@@ -37,7 +37,7 @@ Page({
             mask: true
         })
 
-        inventory.setInventory(this, 'sub')
+        inventory.setInventory(this, 'left')
     },
 
     /**
@@ -152,7 +152,7 @@ async function confirmUseage(page, e) {
 
         await updateItem(today_left, useage)
         await updateLeftLog(today_left, update_result, stock, today)
-        //await updateCheckLeft()
+        await inventory.updateCheckLeft(true)
         
         sendCheckLeftMessage(today, useage)
 
@@ -521,9 +521,6 @@ function sendCheckLeftMessage(today, useage) {
         }
     }
 
-    var message = '余量统计完成\n'
-    message = message + '统计人: ' + app.globalData.true_name
-
     for(var i = 2; i < 4; i++) {
         console.log('Send confirm left message to uses with permission level: ', i)
         
@@ -536,11 +533,14 @@ function sendCheckLeftMessage(today, useage) {
                     for (var u in user_res.data) {
                         console.log('Send confirm left message to: ', user_res.data[u].true_name)
                         wx.cloud.callFunction({
-                            name: 'sendMessage',
+                            name: 'sendCheckMessage',
                             data: {
                                 openid: user_res.data[u].user_openid,
                                 time: time,
-                                detail: message
+                                user: app.globalData.true_name,
+                                normal_amount: total_amount - not_checked_amount,
+                                unfilled_amount: not_checked_amount,
+                                comment: '具体信息请查看余量确认记录'
                             },
                             success: res => {
                     

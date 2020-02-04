@@ -3,6 +3,7 @@
  */
 const app = getApp()
 const db = wx.cloud.database()
+const db_item = 'item'
 
 const info_page = '../../user/userInfo/userInfo'
 const user_manage_page = '../userManage/viewUser/viewUser'
@@ -10,8 +11,8 @@ const category_manage_page = '../inventoryManage/categoryView/categoryView'
 const sale_manage_page = '../saleManage/saleView/saleView'
 const check_log_manage_page = '../logManage/checkLog/checkLog'
 
-const check_left_message_id = 'hAMmX4ZyrxIGCPc8dMJM07irJrM0zNwyDu-3YdGci4I'
-const refill_message_id = 'X9BoiE_piVjqKaKsAH1KcAtjSqdfjQQYDb2_q7hpWAQ'
+const check_left_message_id = 'LJqgpHGDBW5N1A_7A3goZytqjqN-AR5ldYjSRvjFSSU'
+const refill_message_id = 'X9BoiE_piVjqKaKsAH1KcFhOX46FFps-bWoNBK-LnYQ'
 
 
 Page({
@@ -48,51 +49,33 @@ Page({
     },
 
     /**
+     * When the user click the button to agree receiving messages.
+     */
+    getRefillSubscribed: function () {
+        console.log('Request to receive check left messages')
+
+        wx.requestSubscribeMessage({
+            tmplIds: [refill_message_id],
+            success(res) {
+                wx.showToast({
+                    title: '同意接收',
+                })
+
+                console.log('User agree to receive check left messages')
+            }
+        })
+    },
+
+    /**
      * Clear warning items, reset them to normal.
      */
     clearWarning: function () {
-        var st = app.globalData.state
+        wx.showLoading({
+            title: '清除中',
+            mask: true
+        })
 
-        for (var i in st) {
-            if (st[i] == 1) {
-                db.collection('stock')
-                    .where({
-                        submenu_id: i
-                    })
-                    .get({
-                        success: res => {
-                            console.log(res.data[0]._id)
-
-                            var update_state_data = {
-                                state: 0
-                            }
-
-                            wx.cloud.callFunction({
-                                name: 'dbUpdate',
-                                data: {
-                                    collection_name: 'stock',
-                                    update_data: update_state_data,
-                                    uid: res.data[0]._id
-                                },
-                                success: res1 => {
-                                    wx.showToast({
-                                        title: '清除成功',
-                                        duration: 1500,
-                                    })
-                                },
-                                fail: err => {
-                                    // if get a failed result
-                                    console.error('failed to use cloud function dbUpdate()', err)
-                                }
-                            })
-
-
-                        }
-                    })
-
-            }
-        }
-
+        clearWarningState()
     },
 
     /**
@@ -122,4 +105,62 @@ function checkPermission() {
             url: info_page
         })
     }
+}
+
+
+async function clearWarningState() {
+    var item = await getItem()
+
+    var total_update = Object.keys(item).length
+    var curr_update = 0
+
+    for(var i in item) {
+        var update_item_data = {}
+        update_item_data['item_state'] = 0
+
+        wx.cloud.callFunction({
+            name: 'dbUpdate',
+            data: {
+                collection_name: db_item,
+                update_data: update_item_data,
+                uid: item[i]._id
+            },
+            success: res => {
+                curr_update = curr_update + 1
+                console.log('Clear warning ', curr_update, '/', total_update)
+                if(curr_update == total_update) {
+                    console.log('Finish clear all warnings')
+                    wx.hideLoading()
+
+                    wx.showToast({
+                        title: '清除成功'
+                    })
+                }
+            },
+            fail: err => {
+                // if get a failed result
+                console.error('Failed to use cloud function dbUpdate()', err)
+            }
+        })
+    }
+}
+
+
+function getItem() {
+    return new Promise((resolve, reject) => {
+        db.collection(db_item)
+            .where({
+                item_state: 1
+            })
+            .get({
+                success: res => {
+                    console.log('Get all items: ', res.data)
+                    resolve(res.data)
+                },
+                fail: err => {
+                    console.error('Failed to search items', err)
+                    reject()
+                }
+            })
+    })
 }

@@ -30,3 +30,7 @@
 <view class="pd">
   <button bindtap="getLeftSubscribed">接收余量消息提醒</button>
 </view>
+
+<view class="pd">
+  <button bindtap="getRefillSubscribed">接收补货消息提醒</button>
+</view>

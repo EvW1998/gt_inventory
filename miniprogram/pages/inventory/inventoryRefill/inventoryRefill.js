@@ -1,15 +1,15 @@
-const util = require('../../../utils/util.js');
-const user = require('../../../utils/user.js');
 const date = require('../../../utils/date.js')
 const inventory = require('../../../utils/inventory.js')
 const pAction = require('../../../utils/pageAction.js')
 
 const app = getApp()
 const db = wx.cloud.database()
+const db_user = 'user'
 const db_category = 'category' // the collection of categories
 const db_item = 'item' // the collection of items
 const db_info = 'info' // the collection of info
 const db_useage = { 'daily': 'daily_useage', 'weekly': 'weekly_useage', 'monthly': 'monthly_useage' } // the collections of useage
+const db_refill_log = 'refill_log'
 
 
 Page({
@@ -18,27 +18,26 @@ Page({
         flag: 0, // the tab title to be bloded
         category: {}, // the categories in the inventory
         item: {}, // the items in the inventory
-        h: 1200, // the height for the page
-        useage: {} // the useage for the day
+        h: 1200 // the height for the page
     },
 
     /***
      *   When loading the page
      */
     onLoad: function () {
+        wx.showLoading({
+            title: '加载中',
+            mask: true
+        })
 
+        inventory.setInventory(this, 'refill')
     },
 
     /***
      *   When show the default page, set all inventory data
      */
     onShow: function () {
-        wx.showLoading({
-            title: '加载中',
-            mask: true
-        })
-
-        inventory.setInventory(this, 'sub')
+        
     },
 
     /**
@@ -61,292 +60,7 @@ Page({
             mask: true
         })
 
-        var total = 0
-        var normal = 0
-        var warning = 0
-        var not_filled = 0
-        var today_filled = e.detail.value
-        var new_stock_value = this.data.stock_value
-        var new_warning_item = {}
-        var new_notfilled_item = {}
-
-        for (var i in today_filled) {
-            total = total + 1
-
-            if (today_filled[i] == "" || today_filled[i] == "0") {
-                today_filled[i] = 0
-                not_filled = not_filled + 1
-
-                new_notfilled_item[i] = 0
-            }
-            else {
-                today_filled[i] = parseInt(today_filled[i])
-            }
-
-            new_stock_value[i] = new_stock_value[i] - this.data.yesterday_cost[i] + today_filled[i]
-
-            if (today_filled[i] < this.data.yesterday_cost[i]) {
-                warning = warning + 1
-
-                new_warning_item[i] = this.data.yesterday_cost[i] - today_filled[i]
-            }
-        }
-
-        this.setData({
-            stock_value: new_stock_value,
-        })
-
-        normal = total - warning - not_filled
-
-        console.log(total, normal, warning, not_filled)
-
-        var new_notfilled_name = {}
-        var new_warning_name = {}
-
-        for (var i in new_notfilled_item) {
-            db.collection('stock')
-                .where({
-                    submenu_id: i
-                })
-                .get({
-                    success: res => {
-                        new_notfilled_name[res.data[0]._id] = { '_id': res.data[0]._id, 'value': 0 }
-
-                        if (Object.keys(new_notfilled_name).length == not_filled &&
-                            Object.keys(new_warning_name).length == warning) {
-                            this.setData({
-                                notfilled_item: new_notfilled_name,
-                                warning_item: new_warning_name
-
-                            })
-
-                            console.log('Not filled: ', this.data.notfilled_item)
-                            console.log('Warning: ', this.data.warning_item)
-
-                            var time = util.formatTime(new Date())
-                            var detail = ''
-
-                            detail = detail + '异常补货' + warning.toString() + '项\n' + '未补货' + not_filled.toString() + '项'
-
-                            this.setState(this.data.notfilled_item, this.data.warning_item)
-
-                            db.collection('user')
-                                .where({
-                                    permission_level: 2
-                                })
-                                .get({
-                                    success: res1 => {
-                                        for (var u in res1.data) {
-                                            wx.cloud.callFunction({
-                                                name: 'sendMessage',
-                                                data: {
-                                                    openid: res1.data[u].user_openid,
-                                                    time: time,
-                                                    detail: detail
-                                                },
-                                                success: res => {
-                                                    console.log(res)
-
-                                                    wx.hideLoading()
-
-                                                },
-                                                fail: err => {
-                                                    // if get a failed result
-                                                    console.error('failed to use cloud function sendMessage()', err)
-                                                    wx.hideLoading()
-                                                }
-                                            })
-                                        }
-                                    }
-                                })
-
-                            db.collection('user')
-                                .where({
-                                    permission_level: 3
-                                })
-                                .get({
-                                    success: res1 => {
-                                        for (var u in res1.data) {
-                                            wx.cloud.callFunction({
-                                                name: 'sendMessage',
-                                                data: {
-                                                    openid: res1.data[u].user_openid,
-                                                    time: time,
-                                                    detail: detail
-                                                },
-                                                success: res => {
-                                                    console.log(res)
-
-                                                    wx.hideLoading()
-
-                                                },
-                                                fail: err => {
-                                                    // if get a failed result
-                                                    console.error('failed to use cloud function sendMessage()', err)
-                                                    wx.hideLoading()
-                                                }
-                                            })
-                                        }
-                                    }
-                                })
-
-
-                        }
-                    }
-                })
-        }
-
-        for (var j in new_warning_item) {
-            db.collection('stock')
-                .where({
-                    submenu_id: j
-                })
-                .get({
-                    success: res => {
-                        new_warning_name[res.data[0]._id] = {
-                            '_id': res.data[0]._id,
-                            'value': today_filled[res.data[0]._id]
-                        }
-
-                        if (Object.keys(new_notfilled_name).length == not_filled &&
-                            Object.keys(new_warning_name).length == warning) {
-                            this.setData({
-                                notfilled_item: new_notfilled_name,
-                                warning_item: new_warning_name
-                            })
-
-                            console.log('Not filled: ', this.data.notfilled_item)
-                            console.log('Warning: ', this.data.warning_item)
-
-                            var time = util.formatTime(new Date())
-                            var detail = ''
-
-                            detail = detail + '异常补货' + warning.toString() + '项\n' + '未补货' + not_filled.toString() + '项'
-
-                            this.setState(this.data.notfilled_item, this.data.warning_item)
-
-
-                            db.collection('user')
-                                .where({
-                                    permission_level: 2
-                                })
-                                .get({
-                                    success: res1 => {
-                                        for (var u in res1.data) {
-                                            wx.cloud.callFunction({
-                                                name: 'sendMessage',
-                                                data: {
-                                                    openid: res1.data[u].user_openid,
-                                                    time: time,
-                                                    detail: detail
-                                                },
-                                                success: res => {
-                                                    console.log(res)
-
-                                                    wx.hideLoading()
-
-                                                },
-                                                fail: err => {
-                                                    // if get a failed result
-                                                    console.error('failed to use cloud function sendMessage()', err)
-                                                    wx.hideLoading()
-                                                }
-                                            })
-                                        }
-                                    }
-                                })
-
-                            db.collection('user')
-                                .where({
-                                    permission_level: 3
-                                })
-                                .get({
-                                    success: res1 => {
-                                        for (var u in res1.data) {
-                                            wx.cloud.callFunction({
-                                                name: 'sendMessage',
-                                                data: {
-                                                    openid: res1.data[u].user_openid,
-                                                    time: time,
-                                                    detail: detail
-                                                },
-                                                success: res => {
-                                                    console.log(res)
-
-                                                    wx.hideLoading()
-
-                                                },
-                                                fail: err => {
-                                                    // if get a failed result
-                                                    console.error('failed to use cloud function sendMessage()', err)
-                                                    wx.hideLoading()
-                                                }
-                                            })
-                                        }
-                                    }
-                                })
-
-
-                        }
-                    }
-                })
-        }
-
-        this.setData({
-            left_checked: false,
-            btn_name: '确认余量'
-        })
-
-    },
-
-    setState: function (nf, wa) {
-        console.log('state nf: ', nf)
-        console.log('state wa: ', wa)
-
-        for (var i in nf) {
-            var update_state_data = {
-                state: 1
-            }
-
-            wx.cloud.callFunction({
-                name: 'dbUpdate',
-                data: {
-                    collection_name: 'stock',
-                    update_data: update_state_data,
-                    uid: i
-                },
-                success: res => {
-
-                },
-                fail: err => {
-                    // if get a failed result
-                    console.error('failed to use cloud function dbUpdate()', err)
-                }
-            })
-
-        }
-
-        for (var i in wa) {
-            var update_state_data = {
-                state: 1
-            }
-
-            wx.cloud.callFunction({
-                name: 'dbUpdate',
-                data: {
-                    collection_name: 'stock',
-                    update_data: update_state_data,
-                    uid: i
-                },
-                success: res => {
-
-                },
-                fail: err => {
-                    // if get a failed result
-                    console.error('failed to use cloud function dbUpdate()', err)
-                }
-            })
-        }
+        confirmRefill(this, e.detail.value)
     },
 
     /**
@@ -360,3 +74,200 @@ Page({
         }
     }
 })
+
+
+async function confirmRefill(page, user_input) {
+    var today = new Date()
+    var check_left = inventory.getCheckLeft()
+
+    if(check_left) {
+        var formated_input = {}
+        for (var i in user_input) {
+            formated_input[i] = parseInt(user_input[i])
+            if (isNaN(formated_input[i])) {
+                formated_input[i] = 0
+            }
+        }
+
+        var item = page.data.item
+        var formated_item = {}
+        for (var i in item) {
+            for (var j in item[i]) {
+                formated_item[item[i][j]._id] = item[i][j]
+            }
+        }
+
+        var update_result = await updateItem(formated_input, formated_item)
+        await addRefillLog(formated_input, formated_item, today)
+        await inventory.updateCheckLeft(false)
+
+        sendConfirmRefillMessage(today, update_result)
+
+        pAction.navigateBackUser('上传成功', 1)
+    } else {
+        pAction.navigateBackUser('上传成功', 1)
+    }
+}
+
+
+function updateItem(refill, item) {
+    return new Promise((resolve, reject) => {
+        var total_amount = 0
+        var warning_amount = 0
+
+        var total_update = Object.keys(refill).length
+        var curr_update = 0
+
+        for(var i in refill) {
+            total_amount = total_amount + 1
+
+            var update_item_data = {}
+            if(refill[i] != 0) {
+                update_item_data['stock_value'] = item[i].stock_value + refill[i]
+            }
+            if(refill[i] < item[i].perdiction_value) {
+                update_item_data['item_state'] = 1
+                warning_amount = warning_amount + 1
+            }
+
+            if(Object.keys(update_item_data).length > 0) {
+                wx.cloud.callFunction({
+                    name: 'dbUpdate',
+                    data: {
+                        collection_name: db_item,
+                        update_data: update_item_data,
+                        uid: i
+                    },
+                    success: res => {
+                        curr_update = curr_update + 1
+                        console.log('Update item stock ', curr_update, '/', total_update)
+
+                        if (curr_update == total_update) {
+                            // if all the updates have been done
+                            var update_result = {}
+                            update_result['total'] = total_amount
+                            update_result['warning'] = warning_amount
+                            resolve(update_result)
+                        }
+                    },
+                    fail: err => {
+                        // if get a failed result
+                        console.error('Failed to use cloud function dbUpdate()', err)
+                        var update_result = {}
+                        update_result['total'] = total_amount
+                        update_result['warning'] = warning_amount
+                        reject(update_result)
+                    }
+                })
+            } else {
+                curr_update = curr_update + 1
+                console.log('Update item stock ', curr_update, '/', total_update)
+
+                if (curr_update == total_update) {
+                    // if all the updates have been done
+                    var update_result = {}
+                    update_result['total'] = total_amount
+                    update_result['warning'] = warning_amount
+                    resolve(update_result)
+                }
+            }
+        }
+    })
+}
+
+
+function addRefillLog(refill, item, today) {
+    return new Promise((resolve, reject) => {
+        var formated_stock = {}
+        for(var i in item) {
+            formated_stock[i] = {}
+            formated_stock[i]['item_name'] = item[i].item_name
+            formated_stock[i]['stock_value'] = item[i].stock_value + refill[i]
+        }
+
+        var formated_refill = {}
+        for (var i in item) {
+            formated_refill[i] = {}
+            formated_refill[i]['item_name'] = item[i].item_name
+            formated_refill[i]['refill_value'] = refill[i]
+        }
+
+        var refill_log = {}
+        refill_log['stock'] = formated_stock
+        refill_log['refill'] = formated_refill
+
+        var add_log_data = {}
+        add_log_data['date'] = date.formatTime(today)
+        add_log_data['user_uid'] = app.globalData.uid
+        add_log_data['user_true_name'] = app.globalData.true_name
+        add_log_data['log_info'] = refill_log
+
+        wx.cloud.callFunction({
+            name: 'dbAdd',
+            data: {
+                collection_name: db_refill_log,
+                add_data: add_log_data
+            },
+            success: res => {
+                // return the result if successed
+                console.log('Add a new refill log')
+                resolve()
+            },
+            fail: err => {
+                // if failed to use cloud function dbAdd
+                console.error('Failed to use cloud function dbAdd()', err)
+                reject()
+            }
+        })
+    })
+}
+
+
+/**
+ * Send the confrim left message to all the user with permission level higher than 2.
+ * 
+ * @method sendRefillMessage
+ */
+function sendConfirmRefillMessage(today, update_result) {
+    var time = date.formatTime(today)
+    var total_amount = update_result.total
+    var warning_amount = update_result.warning
+
+    for (var i = 2; i < 4; i++) {
+        console.log('Send confirm refill message to uses with permission level: ', i)
+
+        db.collection(db_user)
+            .where({
+                permission_level: i
+            })
+            .get({
+                success: user_res => {
+                    for (var u in user_res.data) {
+                        console.log('Send confirm refill message to: ', user_res.data[u].true_name)
+                        wx.cloud.callFunction({
+                            name: 'sendRefillMessage',
+                            data: {
+                                openid: user_res.data[u].user_openid,
+                                time: time,
+                                user: app.globalData.true_name,
+                                normal_amount: total_amount - warning_amount,
+                                warning_amount: warning_amount,
+                                comment: '具体信息请查看补货确认记录'
+                            },
+                            success: res => {
+
+                            },
+                            fail: err => {
+                                // if get a failed result
+                                console.error('failed to use cloud function sendMessage()', err)
+                            }
+                        })
+                    }
+                },
+                fail: user_err => {
+                    // if get a failed result
+                    console.error('failed to search users in the collection', user_err)
+                }
+            })
+    }
+}

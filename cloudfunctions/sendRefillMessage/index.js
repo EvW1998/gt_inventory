@@ -1,5 +1,6 @@
 // 云函数入口文件
 const cloud = require('wx-server-sdk')
+const refill_template_id = 'X9BoiE_piVjqKaKsAH1KcFhOX46FFps-bWoNBK-LnYQ'
 
 cloud.init({
     // API 调用都保持和云函数当前所在环境一致
@@ -16,11 +17,20 @@ exports.main = async (event, context) => {
                 time1: {
                     value: event.time
                 },
-                thing2: {
-                    value: event.detail
+                name2: {
+                    value: event.user
+                },
+                number3: {
+                    value: event.normal_amount
+                },
+                number4: {
+                    value: event.warning_amount
+                },
+                thing6: {
+                    value: event.comment
                 }
             },
-            templateId: 'hAMmX4ZyrxIGCPc8dMJM07irJrM0zNwyDu-3YdGci4I'
+            templateId: refill_template_id
         })
 
         console.log(result)
