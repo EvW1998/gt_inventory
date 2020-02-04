@@ -24,6 +24,12 @@
 </view>
 
 <view class="pd">
+  <navigator url="{{refill_manage_page}}" open-type="navigate" class="pd-text">
+    <text>查看补货确认记录</text>
+  </navigator>
+</view>
+
+<view class="pd">
   <button bindtap="clearWarning">清除异常提醒</button>
 </view>
 
@@ -34,3 +40,5 @@
 <view class="pd">
   <button bindtap="getRefillSubscribed">接收补货消息提醒</button>
 </view>
+
+<view class="space"></view>

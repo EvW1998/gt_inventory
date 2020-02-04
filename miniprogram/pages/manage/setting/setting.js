@@ -10,6 +10,7 @@ const user_manage_page = '../userManage/viewUser/viewUser'
 const category_manage_page = '../inventoryManage/categoryView/categoryView'
 const sale_manage_page = '../saleManage/saleView/saleView'
 const check_log_manage_page = '../logManage/checkLog/checkLog'
+const refill_manage_page = '../logManage/refillLog/refillLog'
 
 const check_left_message_id = 'LJqgpHGDBW5N1A_7A3goZytqjqN-AR5ldYjSRvjFSSU'
 const refill_message_id = 'X9BoiE_piVjqKaKsAH1KcFhOX46FFps-bWoNBK-LnYQ'
@@ -20,7 +21,8 @@ Page({
         user_manage_page: user_manage_page,
         category_manage_page: category_manage_page,
         sale_manage_page: sale_manage_page,
-        check_log_manage_page: check_log_manage_page
+        check_log_manage_page: check_log_manage_page,
+        refill_manage_page: refill_manage_page
     },
 
     /**

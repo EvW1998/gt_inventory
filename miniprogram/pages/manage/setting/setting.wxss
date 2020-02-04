@@ -19,3 +19,7 @@
   line-height: 52px;
   font-size: 34rpx;
 }
+
+.space {
+    padding-top: 100rpx;
+}
