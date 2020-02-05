@@ -7,6 +7,7 @@
 
         "pages/user/userInfo/userInfo",
         "pages/user/userRegister/userRegister",
+        "pages/user/userUpgrade/userUpgrade",
         
         "pages/manage/setting/setting",
         "pages/manage/userManage/viewUser/viewUser",
@@ -23,9 +24,7 @@
         "pages/manage/logManage/checkLog/checkLog",
         "pages/manage/logManage/checkLogView/checkLogView",
         "pages/manage/logManage/refillLog/refillLog",
-        "pages/manage/logManage/refillLogView/refillLogView",
-
-        "pages/cup1/cup1"
+        "pages/manage/logManage/refillLogView/refillLogView"
     ],
     "window": {
         "backgroundColor": "#F6F6F6",

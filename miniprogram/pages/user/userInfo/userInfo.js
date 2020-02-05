@@ -10,6 +10,7 @@ const db = wx.cloud.database()
 const db_user = 'user' // the collection name for the user Info
 
 const registration_page = '../userRegister/userRegister' // the url for the registration page
+const upgrade_page = '../userUpgrade/userUpgrade' // the url for the upgrade page
 
 
 Page({
@@ -24,7 +25,8 @@ Page({
         uid: '', // user's uid in this inventory
         true_name: '', //user's registered real name
         permission_level: 0, // user's permission level
-        version: '' // the version info shows at the bottom of the page
+        version: '', // the version info shows at the bottom of the page
+        upgrade_page: upgrade_page
     },
 
     /***
@@ -45,15 +47,6 @@ Page({
             this.setData({
                 userInfo: app.globalData.userInfo,
                 openid: app.globalData.openid
-            })
-        }
-
-        if (app.globalData.registered) {
-            // if the user registered
-            this.setData({
-                uid: app.globalData.uid,
-                true_name: app.globalData.true_name,
-                permission_level: app.globalData.permission_level
             })
         }
     },
@@ -80,6 +73,15 @@ Page({
                 registered: app.globalData.registered,
                 true_name: app.globalData.true_name,
                 uid: app.globalData.uid,
+                permission_level: app.globalData.permission_level
+            })
+        }
+        
+        if (app.globalData.registered) {
+            // if the user registered
+            this.setData({
+                uid: app.globalData.uid,
+                true_name: app.globalData.true_name,
                 permission_level: app.globalData.permission_level
             })
         }

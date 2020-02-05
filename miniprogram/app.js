@@ -51,7 +51,8 @@ function setInfo(app, db, collection) {
             _id: true,
             invite_code: true,
             version: true,
-            check_left: true
+            check_left: true,
+            upgrade_code: true
         })
         .get({
             success: res => {
@@ -60,6 +61,7 @@ function setInfo(app, db, collection) {
                 app.globalData.invite_code = result.invite_code
                 app.globalData.version = result.version
                 app.globalData.check_left = result.check_left
+                app.globalData.upgrade_code = result.upgrade_code
             }
         })
 }
