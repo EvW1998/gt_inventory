@@ -125,7 +125,7 @@ function updateItem(refill, item) {
             if(refill[i] != 0) {
                 update_item_data['stock_value'] = item[i].stock_value + refill[i]
             }
-            if(refill[i] < item[i].perdiction_value) {
+            if (refill[i] < item[i].prediction_value) {
                 update_item_data['item_state'] = 1
                 warning_amount = warning_amount + 1
             }

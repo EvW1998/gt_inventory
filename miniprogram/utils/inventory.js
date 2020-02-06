@@ -47,7 +47,7 @@ async function setInventory(page, type) {
     } else if(type == 'refill') {
 
         wx.cloud.callFunction({
-            name: 'getPerdiction',
+            name: 'getPrediction',
             data: {
                 item: page.data.item
             },
@@ -63,7 +63,7 @@ async function setInventory(page, type) {
             },
             fail: err => {
                 // if get a failed result
-                console.error('Failed to use cloud function getPerdiction()', err)
+                console.error('Failed to use cloud function getPrediction()', err)
             }
         })
     } 

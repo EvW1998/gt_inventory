@@ -21,7 +21,7 @@
                             <text>{{subitem.item_name}}</text>
                         </view>
                         
-                        <view class="stockValue">建议补货: {{subitem.perdiction_value}}</view>
+                        <view class="stockValue">建议补货: {{subitem.prediction_value}}</view>
                         <view class="stockLeft">实际补货: </view>
                         <view class="val"><input name="{{subitem._id}}" type="number" placeholder="0"/></view>
                     </view>
