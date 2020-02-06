@@ -2,6 +2,7 @@
  * Update the selected item or delete it
  */
 const pAction = require('../../../../utils/pageAction.js')
+const delInventory = require('../../../../utils/deleteInventory.js')
 
 
 const app = getApp()
@@ -21,6 +22,7 @@ Page({
         filled_base: true,
         filled_scale: true,
         filled_stock: true,
+        filled_capacity: true,
         filled: true,  // whether the input box of the category name gets filled
         btn_state: "primary" // the state for the confirm button
     },
@@ -165,6 +167,37 @@ Page({
         }
     },
 
+
+    /**
+     * Check whether the new item's stock gets filled
+     * 
+     * @method checkBlur_capacity
+     * @param e The value returned from the input text
+     */
+    checkBlur_capacity: function (e) {
+        if (e.detail.value != "") {
+            // if the name input text get filled with something
+            this.setData({
+                filled_capacity: true
+            })
+
+            if (isAllFilled(this)) {
+                this.setData({
+                    filled: true,
+                    btn_state: "primary"
+                })
+            }
+        }
+        else {
+            // if the name input text get filled with nothing
+            this.setData({
+                filled_capacity: false,
+                filled: false,
+                btn_state: "default"
+            })
+        }
+    },
+
     /**
      * When the confirm button triggered, update the selected item info
      * 
@@ -205,6 +238,12 @@ Page({
             data_changed = true
         }
 
+        var new_capacity = parseInt(new_data.capacity)
+        if (new_capacity != old_data.max_capacity) {
+            update_item_data['max_capacity'] = new_capacity
+            data_changed = true
+        }
+
         if(data_changed) {
             updateItem(update_item_data, this.data.item_id)
         } else {
@@ -233,22 +272,7 @@ Page({
                         mask: true
                     })
 
-                    wx.cloud.callFunction({
-                        name: 'dbRemove',
-                        data: {
-                            collection_name: db_item,
-                            uid: this.data.item_id
-                        },
-                        success: res => {
-                            console.log('Remove item success')
-                            pAction.navigateBackUser('删除成功', 1)
-                        },
-                        fail: err => {
-                            // if get a failed result
-                            console.error('Failed to use cloud function dbRemove()', err)
-                            pAction.navigateBackUser('删除失败', 1)
-                        }
-                    })
+                    delInventory.removeItem(this.data.item_id)
                 }
             },
         })

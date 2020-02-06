@@ -23,6 +23,13 @@
       <view class="val"><input name="stock" type="number" bindblur="checkBlur_stock" value="{{item_selected.stock_value}}"/></view>
     </view>
 
+    <view class="item">
+      <view class="name">最大库存容量:  </view>
+      <view class="val">
+        <input name="capacity" type="number" bindblur="checkBlur_capacity" value="{{item_selected.max_capacity}}"/>
+      </view>
+    </view>
+
     <button class="btn" type="{{btn_state}}" form-type="submit" disabled="{{!filled}}">确认更改</button>
   </form>
 

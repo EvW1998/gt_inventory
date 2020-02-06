@@ -7,7 +7,7 @@
         <view class="{{item.stock_value==0?'detail_red':'detail'}}">{{item.item_name}}: {{item.stock_value}}</view>
     </view>
 
-    <view class="title">本此补货量 {{date}}:</view>
+    <view class="title">本此补货量:</view>
     <view wx:for="{{refill}}" wx:key="_id">
         <view class="{{item.refill_value==0?'detail_red':'detail'}}">{{item.item_name}}: {{item.refill_value}}</view>
     </view>

@@ -23,6 +23,11 @@
       <view class="val"><input name="stock" type="number" bindblur="checkBlur_stock"/></view>
     </view>
 
+    <view class="item">
+      <view class="name">最大库存容量:  </view>
+      <view class="val"><input name="capacity" type="number" bindblur="checkBlur_capacity"/></view>
+    </view>
+
     <button class="btn" type="{{btn_state}}" form-type="submit" disabled="{{!filled}}">确认提交</button>
   </form>
 </view>

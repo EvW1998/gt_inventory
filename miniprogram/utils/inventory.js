@@ -45,14 +45,27 @@ async function setInventory(page, type) {
     if (type == 'main') {
         wx.stopPullDownRefresh()
     } else if(type == 'refill') {
-        var yesterday_sale = await getYesterdaySale()
-        var today_sale = await getTodaySale()
 
-        var yesterday_useage = await getYesterdayUseage()
+        wx.cloud.callFunction({
+            name: 'getPerdiction',
+            data: {
+                item: page.data.item
+            },
+            success: res => {
+                var new_item = res.result
+                console.log('Finish prediction of today', new_item)
 
-        setPerdiction(page, yesterday_sale, yesterday_useage, today_sale)
+                page.setData({
+                    item: new_item
+                })
 
-        wx.hideLoading()
+                wx.hideLoading()
+            },
+            fail: err => {
+                // if get a failed result
+                console.error('Failed to use cloud function getPerdiction()', err)
+            }
+        })
     } 
     else {
         wx.hideLoading()
@@ -124,6 +137,10 @@ function getItem(page, categories) {
         var curr_category = 0
         var t = {}
 
+        if(total_category == 0) {
+            resolve(t)
+        }
+
         var height = 400
         var sum = 0
 
@@ -171,116 +188,6 @@ function getItem(page, categories) {
                     }
                 })
         }
-    })
-}
-
-
-function getYesterdaySale(page) {
-    return new Promise((resolve, reject) => {
-        var yesterday = date.dateInformat(date.getYesterday(date.dateInArray(new Date())))
-
-        db.collection(db_sale)
-            .where({
-                sale_date: yesterday
-            })
-            .get({
-                success: res => {
-                    var yesterday_sale = 0
-                    if(res.data.length == 0) {
-                        console.log('No sale data of yesterday: ', yesterday)
-                    } else {
-                        yesterday_sale = res.data[0].sale_value
-                        console.log('Get yesterday ', yesterday, ' sale data: ', res.data[0].sale_value)
-                    }
-                    resolve(yesterday_sale)
-                },
-                fail: err => {
-                    console.error('Failed to search yesterday sale data', err)
-                    reject(0)
-                }
-            })
-    })
-}
-
-
-function getTodaySale(page) {
-    return new Promise((resolve, reject) => {
-        var today = date.dateInformat(date.dateInArray(new Date()))
-
-        db.collection(db_sale)
-            .where({
-                sale_date: today
-            })
-            .get({
-                success: res => {
-                    var today_sale = 0
-                    if (res.data.length == 0) {
-                        console.log('No sale data of today: ', today)
-                    } else {
-                        today_sale = res.data[0].sale_value
-                        console.log('Get today ', today, ' sale data: ', res.data[0].sale_value)
-                    }
-                    resolve(today_sale)
-                },
-                fail: err => {
-                    console.error('Failed to search today sale data', err)
-                    reject(0)
-                }
-            })
-    })
-}
-
-
-function getYesterdayUseage(page) {
-    return new Promise((resolve, reject) => {
-        var yesterday = date.dateInformat(date.getYesterday(date.dateInArray(new Date())))
-        var yesterday_useage = {}
-
-        db.collection(db_daily_useage)
-            .where({
-                date: yesterday
-            })
-            .get({
-                success: res => {
-                    for(var i in res.data) {
-                        yesterday_useage[res.data[i].item_id] = res.data[i]
-                    }
-                    console.log('Get yesterday useage: ', yesterday_useage)
-                    resolve(yesterday_useage)
-                },
-                fail: err => {
-                    console.error('Failed to search today sale data', err)
-                    reject(yesterday_useage)
-                }
-            })
-    })
-}
-
-
-function setPerdiction(page, yesterday_sale, yesterday_useage, today_sale) {
-    var item = page.data.item
-    
-    if(yesterday_sale == 0 || today_sale == 0) {
-        for (var i in item) {
-            for (var j in item[i]) {
-                item[i][j]['perdiction_value'] = item[i][j].base_number
-            }
-        }
-    } else {
-        var ratio = today_sale / yesterday_sale
-        for (var i in item) {
-            for (var j in item[i]) {
-                var today_perdiction = yesterday_useage[item[i][j]._id].item_useage * ratio
-                today_perdiction = Math.ceil(today_perdiction)
-                item[i][j]['perdiction_value'] = today_perdiction
-            }
-        }
-    }
-
-    console.log('Finish prediction of today', item)
-
-    page.setData({
-        item: item
     })
 }
 

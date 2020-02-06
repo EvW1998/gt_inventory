@@ -323,6 +323,7 @@ function updateAllUseage(useage, record, target_date) {
                     add_useage_data['item_id'] = k
                     add_useage_data['date'] = target_date[i]
                     add_useage_data['item_useage'] = useage[k]
+                    add_useage_data['useage_type'] = db_useage[i]
 
                     left_log[i]['detail'][k] = useage[k]
 

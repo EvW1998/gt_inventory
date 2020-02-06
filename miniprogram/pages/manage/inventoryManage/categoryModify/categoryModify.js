@@ -2,7 +2,7 @@
  * Update the selected category
  */
 const pAction = require('../../../../utils/pageAction.js')
-
+const delInventory = require('../../../../utils/deleteInventory.js')
 
 const app = getApp()
 const db = wx.cloud.database()
@@ -107,7 +107,7 @@ Page({
                         mask: true
                     })
 
-                    removeData(this.data.category_id)
+                    delInventory.removeSelectedCategory(this.data.category_id)
                 }
             },
         })

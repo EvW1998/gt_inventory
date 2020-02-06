@@ -20,6 +20,7 @@ Page({
         filled_base: false,
         filled_scale: false,
         filled_stock: false,
+        filled_capacity: false,
         filled: false,  // whether the input box of the category name gets filled
         btn_state: "default" // the state for the confirm button
     },
@@ -160,6 +161,36 @@ Page({
     },
 
     /**
+     * Check whether the new item's stock gets filled
+     * 
+     * @method checkBlur_capacity
+     * @param e The value returned from the input text
+     */
+    checkBlur_capacity: function (e) {
+        if (e.detail.value != "") {
+            // if the name input text get filled with something
+            this.setData({
+                filled_capacity: true
+            })
+
+            if (isAllFilled(this)) {
+                this.setData({
+                    filled: true,
+                    btn_state: "primary"
+                })
+            }
+        }
+        else {
+            // if the name input text get filled with nothing
+            this.setData({
+                filled_capacity: false,
+                filled: false,
+                btn_state: "default"
+            })
+        }
+    },
+
+    /**
      * When the confirm button triggered
      * 
      * @method formSubmit
@@ -233,7 +264,7 @@ function setCategory(page, category_id) {
 function isAllFilled(page) {
     var pd = page.data
 
-    if(pd.filled_name && pd.filled_base && pd.filled_scale && pd.filled_stock) {
+    if(pd.filled_name && pd.filled_base && pd.filled_scale && pd.filled_stock && pd.filled_capacity) {
         return true
     }
 
@@ -255,6 +286,7 @@ async function addItem(category_selected, item_info) {
     var base_number = parseInt(item_info.base)
     var scale_number = parseFloat(item_info.scale)
     var stock_value = parseInt(item_info.stock)
+    var max_capacity = parseInt(item_info.capacity)
 
     var add_item_data = {
         category_id: category_selected._id,
@@ -263,6 +295,7 @@ async function addItem(category_selected, item_info) {
         base_number: base_number,
         scale_number: scale_number,
         stock_value: stock_value,
+        max_capacity: max_capacity,
         item_state: 0
     }
 
