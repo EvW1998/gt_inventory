@@ -4,50 +4,50 @@ const app = getApp()
 const db = wx.cloud.database()
 const db_category = 'category'
 const db_item = 'item' // the collection of items
-const db_useage = { 'daily': 'daily_useage', 'weekly': 'weekly_useage', 'monthly': 'monthly_useage' } // the collections of useage
+const db_usage = { 'daily': 'daily_usage', 'weekly': 'weekly_usage', 'monthly': 'monthly_usage' } // the collections of usage
 
 async function removeItem(item_id) {
     console.log('Delete item: ', item_id)
-    var useage = await getUseage(item_id)
-    var formated_useage = {}
+    var usage = await getUsage(item_id)
+    var formated_usage = {}
 
-    for(var i in useage) {
-        for(var j in useage[i]) {
-            formated_useage[useage[i][j]._id] = useage[i][j]
+    for(var i in usage) {
+        for(var j in usage[i]) {
+            formated_usage[usage[i][j]._id] = usage[i][j]
         }
     }
 
-    await removeUseage(formated_useage)
-    console.log('Finish remove all useage record under the item')
+    await removeUsage(formated_usage)
+    console.log('Finish remove all usage record under the item')
     
     var message = await removeTheItem(item_id)
     pAction.navigateBackUser(message, 1)
 }
 
-function getUseage(item_id) {
+function getUsage(item_id) {
     return new Promise((resolve, reject) => {
         var total_get = 3
         var curr_get = 0
-        var useage = {}
+        var usage = {}
 
-        for (var i in db_useage) {
-            db.collection(db_useage[i])
+        for (var i in db_usage) {
+            db.collection(db_usage[i])
                 .where({
                     item_id: item_id
                 })
                 .get({
                     success: res => {
-                        useage[curr_get] = res.data
+                        usage[curr_get] = res.data
                         curr_get = curr_get + 1
-                        console.log('Get useage ', curr_get, '/', total_get)
+                        console.log('Get usage ', curr_get, '/', total_get)
 
                         if(curr_get == total_get) {
-                            resolve(useage)
+                            resolve(usage)
                         }                        
                     },
                     fail: err => {
-                        console.error("Failed to get useage ", err)
-                        reject(useage)
+                        console.error("Failed to get usage ", err)
+                        reject(usage)
                     }
                 })
         }
@@ -55,27 +55,27 @@ function getUseage(item_id) {
 
 }
 
-function removeUseage(useage) {
+function removeUsage(usage) {
     return new Promise((resolve, reject) => {
-        var total_remove = Object.keys(useage).length
+        var total_remove = Object.keys(usage).length
         var curr_remove = 0
 
         if(total_remove == 0) {
             resolve()
         }
 
-        for(var i in useage) {
-            console.log('Try to romve ', i, ' from ', useage[i].useage_type)
+        for(var i in usage) {
+            console.log('Try to romve ', i, ' from ', usage[i].usage_type)
 
             wx.cloud.callFunction({
                 name: 'dbRemove',
                 data: {
-                    collection_name: useage[i].useage_type,
+                    collection_name: usage[i].usage_type,
                     uid: i
                 },
                 success: res => {
                     curr_remove = curr_remove + 1
-                    console.log('Remove useage ', curr_remove, '/', total_remove)
+                    console.log('Remove usage ', curr_remove, '/', total_remove)
 
                     if(total_remove == curr_remove) {
                         resolve()
@@ -120,16 +120,16 @@ async function removeSelectedCategory(category_id) {
         formated_items[items[i]._id] = items[i]
     }
 
-    var useages = await getAllUseage(formated_items)
-    var formated_useages = {}
-    for(var i in useages) {
-        for(var j in useages[i]) {
-            formated_useages[useages[i][j]._id] = useages[i][j]
+    var usages = await getAllUsage(formated_items)
+    var formated_usages = {}
+    for(var i in usages) {
+        for(var j in usages[i]) {
+            formated_usages[usages[i][j]._id] = usages[i][j]
         }
     }
 
-    await removeUseage(formated_useages)
-    console.log('Finish remove all useage record under items under the cateogry')
+    await removeUsage(formated_usages)
+    console.log('Finish remove all usage record under items under the cateogry')
 
     await removeAllItems(formated_items)
     console.log('Finish remove all items under the cateogry')
@@ -159,35 +159,35 @@ function getItems(category_id) {
     })
 }
 
-function getAllUseage(items) {
+function getAllUsage(items) {
     return new Promise((resolve, reject) => {
         var total_get = 3 * Object.keys(items).length
         var curr_get = 0
-        var useage = {}
+        var usage = {}
 
         if(total_get == 0) {
-            resolve(useage)
+            resolve(usage)
         }
 
         for(var i in items) {
-            for (var j in db_useage) {
-                db.collection(db_useage[j])
+            for (var j in db_usage) {
+                db.collection(db_usage[j])
                     .where({
                         item_id: i
                     })
                     .get({
                         success: res => {
-                            useage[curr_get] = res.data
+                            usage[curr_get] = res.data
                             curr_get = curr_get + 1
-                            console.log('Get useage ', curr_get, '/', total_get)
+                            console.log('Get usage ', curr_get, '/', total_get)
 
                             if (curr_get == total_get) {
-                                resolve(useage)
+                                resolve(usage)
                             }
                         },
                         fail: err => {
-                            console.error("Failed to get useage ", err)
-                            reject(useage)
+                            console.error("Failed to get usage ", err)
+                            reject(usage)
                         }
                     })
             }

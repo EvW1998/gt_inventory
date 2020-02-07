@@ -8,7 +8,7 @@ const db_user = 'user' // the collection of users
 const db_category = 'category' // the collection of categories
 const db_item = 'item' // the collection of items
 const db_info = 'info' // the collection of info
-const db_useage = { 'daily': 'daily_useage', 'weekly': 'weekly_useage', 'monthly': 'monthly_useage' } // the collections of useage
+const db_usage = { 'daily': 'daily_usage', 'weekly': 'weekly_usage', 'monthly': 'monthly_usage' } // the collections of usage
 const db_left_log = 'left_log' // the collection of left logs
 
 Page({
@@ -18,7 +18,7 @@ Page({
         category: {}, // the categories in the inventory
         item: {}, // the items in the inventory
         h: 1200, // the height for the page
-        useage: {} // the useage for the day
+        usage: {} // the usage for the day
     },
 
     /***
@@ -65,8 +65,8 @@ Page({
             mask: true
         })
 
-        // confirm and upload the useage data
-        confirmUseage(this, e)
+        // confirm and upload the usage data
+        confirmUsage(this, e)
     },
 
     /**
@@ -83,11 +83,11 @@ Page({
 
 
 /**
- * Calculate the useage. Find the right date for the useage upload. Upload the data.
+ * Calculate the usage. Find the right date for the usage upload. Upload the data.
  * 
- * @method confirmUseage
+ * @method confirmUsage
  */
-async function confirmUseage(page, e) {
+async function confirmUsage(page, e) {
     // double check the check_left value in the database
     var check_left = await inventory.getCheckLeft()
 
@@ -104,15 +104,15 @@ async function confirmUseage(page, e) {
 
         var today_left = formatedTodayLeft(stock, e.detail.value)
 
-        console.log('Useage: ')
-        // calculate the useage data
-        var useage = getUseage(stock, today_left)
+        console.log('Usage: ')
+        // calculate the usage data
+        var usage = getUsage(stock, today_left)
         page.setData({
-            useage: useage
+            usage: usage
         })
 
         var today = new Date()
-        // find target date to record useage
+        // find target date to record usage
         var target_daily_date = date.dateInformat(date.dateInArray(today))
         var target_weekly_date = date.dateInformat(date.getThisWeek(today))
         var target_monthly_date = date.dateInformat(date.getThisMonth(date.dateInArray(today)))
@@ -132,9 +132,9 @@ async function confirmUseage(page, e) {
         }
 
         // get all the existed record for the date
-        var daily_record = await getExistedUseage(target_daily_date, 'daily')
-        var weekly_record = await getExistedUseage(target_weekly_date, 'weekly')
-        var montly_record = await getExistedUseage(target_monthly_date, 'monthly')
+        var daily_record = await getExistedUsage(target_daily_date, 'daily')
+        var weekly_record = await getExistedUsage(target_weekly_date, 'weekly')
+        var montly_record = await getExistedUsage(target_monthly_date, 'monthly')
 
         // update all the record
         var target_all_date = {}
@@ -147,14 +147,14 @@ async function confirmUseage(page, e) {
         all_record['weekly'] = weekly_record
         all_record['monthly'] = montly_record
  
-        var update_result = await updateAllUseage(useage, all_record, target_all_date)
-        console.log('Finish update all useage')
+        var update_result = await updateAllUsage(usage, all_record, target_all_date)
+        console.log('Finish update all usage')
 
-        await updateItem(today_left, useage)
+        await updateItem(today_left, usage)
         await updateLeftLog(today_left, update_result, stock, today)
         await inventory.updateCheckLeft(true)
         
-        sendCheckLeftMessage(today, useage)
+        sendCheckLeftMessage(today, usage)
 
         pAction.navigateBackUser('上传成功', 1)
 
@@ -188,36 +188,36 @@ function formatedTodayLeft(stock, today_left) {
 
 
 /**
- * Return the useage value base on the stock value in the db and the left value user entered.
+ * Return the usage value base on the stock value in the db and the left value user entered.
  * 
- * @method getUseage
+ * @method getUsage
  * @param{Object} stock the reorganize stock data
  * @param{Object} today_left the left value user entered
- * @return{Object} the useage data
+ * @return{Object} the usage data
  */
-function getUseage(stock, today_left) {
-    var useage = {}
+function getUsage(stock, today_left) {
+    var usage = {}
 
     for (var i in today_left) {
-        useage[i] = stock[i].stock_value - today_left[i]
-        console.log(stock[i].item_name, ' Useage ', useage[i], ' = stock ', stock[i].stock_value, ' - today left ', today_left[i])
+        usage[i] = stock[i].stock_value - today_left[i]
+        console.log(stock[i].item_name, ' Usage ', usage[i], ' = stock ', stock[i].stock_value, ' - today left ', today_left[i])
     }
 
-    return useage
+    return usage
 }
 
 
 /**
- * Return the existed useage data in the db, with targeted date and collection.
+ * Return the existed usage data in the db, with targeted date and collection.
  * 
- * @method getExistedUseage
+ * @method getExistedUsage
  * @param{String} target_date The target date to search in the db, in year-month-date
- * @param{String} useage_type The type of the useage collection to search in the db, in daily, weekly or monthly
+ * @param{String} usage_type The type of the usage collection to search in the db, in daily, weekly or monthly
  * @return{Promise} The search result in the target collection
  */
-function getExistedUseage(target_date, useage_type) {
+function getExistedUsage(target_date, usage_type) {
     return new Promise((resolve, reject) => {
-        db.collection(db_useage[useage_type])
+        db.collection(db_usage[usage_type])
             .where({
                 date: target_date
             })
@@ -225,14 +225,14 @@ function getExistedUseage(target_date, useage_type) {
                 _id: true,
                 date: true,
                 item_id: true,
-                item_useage: true
+                item_usage: true
             })
             .get({
                 success: res => {
                     resolve(res.data)
                 },
                 fail: err => {
-                    console.error('Failed to get weekly useage from database', err)
+                    console.error('Failed to get weekly usage from database', err)
                     reject()
                 }
             })
@@ -241,17 +241,17 @@ function getExistedUseage(target_date, useage_type) {
 
 
 /**
- * Update all the useage in daily, weekly and monthly collection with the given target date.
+ * Update all the usage in daily, weekly and monthly collection with the given target date.
  * 
- * @method updateAllUseage
- * @param{Object} useage The useage data
+ * @method updateAllUsage
+ * @param{Object} usage The usage data
  * @param{Object} record The existed record in daily, weekly and monthly collection with the given target date
  * @param{Object} target_date The target date for daily, weekly and monthly collection
  * @return{Promise} The state of the function
  */
-function updateAllUseage(useage, record, target_date) {
+function updateAllUsage(usage, record, target_date) {
     return new Promise((resolve, reject) => {
-        var total_update = Object.keys(useage).length * 3
+        var total_update = Object.keys(usage).length * 3
         var curr_update = 0
 
         var left_log = {}
@@ -270,31 +270,31 @@ function updateAllUseage(useage, record, target_date) {
                 formed_record[record[i][j].item_id] = record[i][j]
             }
 
-            // for each useage data in the form
-            for (var k in useage) {
+            // for each usage data in the form
+            for (var k in usage) {
                 if (k in formed_record) {
                     // if a record existed in the collection with the target date
-                    var existed_useage = formed_record[k].item_useage
-                    var new_useage = useage[k]
+                    var existed_usage = formed_record[k].item_usage
+                    var new_usage = usage[k]
 
-                    left_log[i]['detail'][k] = existed_useage + new_useage
+                    left_log[i]['detail'][k] = existed_usage + new_usage
 
-                    if (new_useage > 0) {
-                        // if the useage data needs to update
-                        var update_useage_data = {}
-                        update_useage_data['item_useage'] = existed_useage + new_useage
+                    if (new_usage > 0) {
+                        // if the usage data needs to update
+                        var update_usage_data = {}
+                        update_usage_data['item_usage'] = existed_usage + new_usage
 
-                        // update the existed record with a new useage data
+                        // update the existed record with a new usage data
                         wx.cloud.callFunction({
                             name: 'dbUpdate',
                             data: {
-                                collection_name: db_useage[i],
-                                update_data: update_useage_data,
+                                collection_name: db_usage[i],
+                                update_data: update_usage_data,
                                 uid: formed_record[k]._id
                             },
                             success: res => {
                                 curr_update = curr_update + 1
-                                console.log('Update useage ', curr_update, '/', total_update)
+                                console.log('Update usage ', curr_update, '/', total_update)
 
                                 if (curr_update == total_update) {
                                     // if all the updates have been done
@@ -308,9 +308,9 @@ function updateAllUseage(useage, record, target_date) {
                             }
                         })
                     } else {
-                        // if the useage data did not changed
+                        // if the usage data did not changed
                         curr_update = curr_update + 1
-                        console.log('Update useage ', curr_update, '/', total_update)
+                        console.log('Update usage ', curr_update, '/', total_update)
 
                         if (curr_update == total_update) {
                             resolve(left_log)
@@ -319,24 +319,24 @@ function updateAllUseage(useage, record, target_date) {
 
                 } else {
                     // if there is no record in the collection with the target date
-                    var add_useage_data = {}
-                    add_useage_data['item_id'] = k
-                    add_useage_data['date'] = target_date[i]
-                    add_useage_data['item_useage'] = useage[k]
-                    add_useage_data['useage_type'] = db_useage[i]
+                    var add_usage_data = {}
+                    add_usage_data['item_id'] = k
+                    add_usage_data['date'] = target_date[i]
+                    add_usage_data['item_usage'] = usage[k]
+                    add_usage_data['usage_type'] = db_usage[i]
 
-                    left_log[i]['detail'][k] = useage[k]
+                    left_log[i]['detail'][k] = usage[k]
 
                     // add a new record to the collection
                     wx.cloud.callFunction({
                         name: 'dbAdd',
                         data: {
-                            collection_name: db_useage[i],
-                            add_data: add_useage_data
+                            collection_name: db_usage[i],
+                            add_data: add_usage_data
                         },
                         success: res => {
                             curr_update = curr_update + 1
-                            console.log('Add useage ', curr_update, '/', total_update)
+                            console.log('Add usage ', curr_update, '/', total_update)
 
                             if (curr_update == total_update) {
                                 // if all the updates have been done
@@ -391,16 +391,16 @@ function updateCheckLeft() {
  * 
  * @method updateItem
  * @param{Object} today_left The formated today left value
- * @param{useage} useage The useage data
+ * @param{usage} usage The usage data
  * @return{Promise} The state of the function
  */
-function updateItem(today_left, useage) {
+function updateItem(today_left, usage) {
     return new Promise((resolve, reject) => {
         var total_update = Object.keys(today_left).length
         var curr_update = 0
 
         for(var i in today_left) {
-            if(useage[i] != 0) {
+            if(usage[i] != 0) {
                 // if the stock value changed
                 var update_item_data = {}
                 update_item_data['stock_value'] = today_left[i]
@@ -460,22 +460,22 @@ function updateLeftLog(today_left, update_result, item, today) {
             stock_info[i]['stock_value'] = today_left[i]
         }
 
-        var useage_info = {}
+        var usage_info = {}
         for(var i in update_result) {
-            useage_info[i] = {}
-            useage_info[i]['date'] = update_result[i]['date']
-            useage_info[i]['detail'] = {}
+            usage_info[i] = {}
+            usage_info[i]['date'] = update_result[i]['date']
+            usage_info[i]['detail'] = {}
 
             for(var j in update_result[i]['detail']) {
-                useage_info[i]['detail'][j] = {}
-                useage_info[i]['detail'][j]['item_name'] = item[j].item_name
-                useage_info[i]['detail'][j]['useage'] = update_result[i]['detail'][j]
+                usage_info[i]['detail'][j] = {}
+                usage_info[i]['detail'][j]['item_name'] = item[j].item_name
+                usage_info[i]['detail'][j]['usage'] = update_result[i]['detail'][j]
             }
         }
 
         var log_info = {}
         log_info['stock'] = stock_info
-        log_info['useage'] = useage_info
+        log_info['usage'] = usage_info
 
         var add_log_data = {}
         add_log_data['date'] = date.formatTime(today)
@@ -509,15 +509,15 @@ function updateLeftLog(today_left, update_result, item, today) {
  * 
  * @method sendCheckLeftMessage
  */
-function sendCheckLeftMessage(today, useage) {
+function sendCheckLeftMessage(today, usage) {
     var time = date.formatTime(today)
     var total_amount = 0
     var not_checked_amount = 0
 
-    for(var i in useage) {
+    for(var i in usage) {
         total_amount = total_amount + 1
 
-        if(useage[i] == 0) {
+        if(usage[i] == 0) {
             not_checked_amount = not_checked_amount + 1
         }
     }

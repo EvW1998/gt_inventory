@@ -7,17 +7,17 @@
     <view class="detail">最大库存容量: {{item_selected.max_capacity}}</view>
 
     <view class="title">日用量详情:</view>
-    <view class="{{useage.today==0?'detail_red':'detail'}}">今日用量: {{useage.today}}</view>
-    <view class="{{useage.yesterday==0?'detail_red':'detail'}}">昨日用量: {{useage.yesterday}}</view>
-    <view class="{{useage.day_before_yesterday==0?'detail_red':'detail'}}">前日用量: {{useage.day_before_yesterday}}</view>
+    <view class="{{usage.today==0?'detail_red':'detail'}}">今日用量: {{usage.today}}</view>
+    <view class="{{usage.yesterday==0?'detail_red':'detail'}}">昨日用量: {{usage.yesterday}}</view>
+    <view class="{{usage.day_before_yesterday==0?'detail_red':'detail'}}">前日用量: {{usage.day_before_yesterday}}</view>
     
     <view class="title">周用量详情:</view>
-    <view class="{{useage.this_week==0?'detail_red':'detail'}}">本周用量: {{useage.this_week}}</view>
-    <view class="{{useage.last_week==0?'detail_red':'detail'}}">上周用量: {{useage.last_week}}</view>
+    <view class="{{usage.this_week==0?'detail_red':'detail'}}">本周用量: {{usage.this_week}}</view>
+    <view class="{{usage.last_week==0?'detail_red':'detail'}}">上周用量: {{usage.last_week}}</view>
 
     <view class="title">月用量详情:</view>
-    <view class="{{useage.this_month==0?'detail_red':'detail'}}">本月用量: {{useage.this_month}}</view>
-    <view class="{{useage.last_month==0?'detail_red':'detail'}}">上月用量: {{useage.last_month}}</view>
+    <view class="{{usage.this_month==0?'detail_red':'detail'}}">本月用量: {{usage.this_month}}</view>
+    <view class="{{usage.last_month==0?'detail_red':'detail'}}">上月用量: {{usage.last_month}}</view>
 
     <view class="space"></view>
 </view>

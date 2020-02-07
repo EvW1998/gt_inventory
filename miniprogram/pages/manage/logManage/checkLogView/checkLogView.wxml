@@ -7,19 +7,19 @@
         <view class="{{item.stock_value==0?'detail_red':'detail'}}">{{item.item_name}}: {{item.stock_value}}</view>
     </view>
 
-    <view class="title">各品项日用量 {{useage_daily.date}}:</view>
-    <view wx:for="{{useage_daily.detail}}" wx:key="_id">
-        <view class="{{item.useage==0?'detail_red':'detail'}}">{{item.item_name}}: {{item.useage}}</view>
+    <view class="title">各品项日用量 {{usage_daily.date}}:</view>
+    <view wx:for="{{usage_daily.detail}}" wx:key="_id">
+        <view class="{{item.usage==0?'detail_red':'detail'}}">{{item.item_name}}: {{item.usage}}</view>
     </view>
 
-    <view class="title">各品项周用量 {{useage_weekly.date}}:</view>
-    <view wx:for="{{useage_weekly.detail}}" wx:key="_id">
-        <view class="{{item.useage==0?'detail_red':'detail'}}">{{item.item_name}}: {{item.useage}}</view>
+    <view class="title">各品项周用量 {{usage_weekly.date}}:</view>
+    <view wx:for="{{usage_weekly.detail}}" wx:key="_id">
+        <view class="{{item.usage==0?'detail_red':'detail'}}">{{item.item_name}}: {{item.usage}}</view>
     </view>
 
-    <view class="title">各品项月用量 {{useage_monthly.date}}:</view>
-    <view wx:for="{{useage_monthly.detail}}" wx:key="_id">
-        <view class="{{item.useage==0?'detail_red':'detail'}}">{{item.item_name}}: {{item.useage}}</view>
+    <view class="title">各品项月用量 {{usage_monthly.date}}:</view>
+    <view wx:for="{{usage_monthly.detail}}" wx:key="_id">
+        <view class="{{item.usage==0?'detail_red':'detail'}}">{{item.item_name}}: {{item.usage}}</view>
     </view>
 
     <view class="space"></view>

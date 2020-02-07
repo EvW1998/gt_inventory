@@ -6,7 +6,7 @@ const date = require('../../../utils/date.js')
 const app = getApp()
 const db = wx.cloud.database()
 const db_item = 'item' // the collection of items
-const db_useage = { 'daily': 'daily_useage', 'weekly': 'weekly_useage', 'monthly': 'monthly_useage' } // the collections of useage
+const db_usage = { 'daily': 'daily_usage', 'weekly': 'weekly_usage', 'monthly': 'monthly_usage' } // the collections of usage
 
 
 Page({
@@ -17,7 +17,7 @@ Page({
     data: {
         item_id: '', // the id of the selected item
         item_selected: {},
-        useage: {}
+        usage: {}
     },
 
     /**
@@ -65,11 +65,11 @@ async function searchItem(page, item_id) {
         item_selected: item
     })
 
-    var useage = await getUseage(item_id)
+    var usage = await getUsage(item_id)
     page.setData({
-        useage: useage
+        usage: usage
     })
-    console.log('Get the useage of this item: ', useage)
+    console.log('Get the usage of this item: ', usage)
 
     wx.hideLoading()
 }
@@ -95,207 +95,207 @@ function getItem(item_id) {
 }
 
 
-function getUseage(item_id) {
+function getUsage(item_id) {
     return new Promise((resolve, reject) => {
-        var useage = {}
+        var usage = {}
         var total_get = 7
         var curr_get = 0
 
-        // get today useage
+        // get today usage
         var today = date.dateInformat(date.dateInArray(new Date()))
         
-        db.collection(db_useage['daily'])
+        db.collection(db_usage['daily'])
             .where({
                 date: today,
                 item_id: item_id
             })
             .get({
                 success: res => {
-                    var today_useage = 0
+                    var today_usage = 0
                     if(res.data.length != 0) {
-                        today_useage = res.data[0].item_useage
+                        today_usage = res.data[0].item_usage
                     }
 
-                    useage['today'] = today_useage
+                    usage['today'] = today_usage
 
                     curr_get = curr_get + 1
                     if(curr_get == total_get) {
-                        resolve(useage)
+                        resolve(usage)
                     }
                 },
                 fail: err => {
-                    console.error('Failed to search today useage for the item ', err)
-                    reject(useage)
+                    console.error('Failed to search today usage for the item ', err)
+                    reject(usage)
                 }
             })
 
-        // get yesterday useage
+        // get yesterday usage
         var yesterday = date.dateInformat(date.getYesterday(date.dateInArray(new Date(today))))
 
-        db.collection(db_useage['daily'])
+        db.collection(db_usage['daily'])
             .where({
                 date: yesterday,
                 item_id: item_id
             })
             .get({
                 success: res => {
-                    var yesterday_useage = 0
+                    var yesterday_usage = 0
                     if (res.data.length != 0) {
-                        yesterday_useage = res.data[0].item_useage
+                        yesterday_usage = res.data[0].item_usage
                     }
 
-                    useage['yesterday'] = yesterday_useage
+                    usage['yesterday'] = yesterday_usage
 
                     curr_get = curr_get + 1
                     if (curr_get == total_get) {
-                        resolve(useage)
+                        resolve(usage)
                     }
                 },
                 fail: err => {
-                    console.error('Failed to search yesterday useage for the item ', err)
-                    reject(useage)
+                    console.error('Failed to search yesterday usage for the item ', err)
+                    reject(usage)
                 }
             })
 
-        // get the day before yesterday useage
+        // get the day before yesterday usage
         var day_before_yesterday = date.dateInformat(date.getYesterday(date.dateInArray(new Date(yesterday))))
 
-        db.collection(db_useage['daily'])
+        db.collection(db_usage['daily'])
             .where({
                 date: day_before_yesterday,
                 item_id: item_id
             })
             .get({
                 success: res => {
-                    var day_before_yesterday_useage = 0
+                    var day_before_yesterday_usage = 0
                     if (res.data.length != 0) {
-                        day_before_yesterday_useage = res.data[0].item_useage
+                        day_before_yesterday_usage = res.data[0].item_usage
                     }
 
-                    useage['day_before_yesterday'] = day_before_yesterday_useage
+                    usage['day_before_yesterday'] = day_before_yesterday_usage
 
                     curr_get = curr_get + 1
                     if (curr_get == total_get) {
-                        resolve(useage)
+                        resolve(usage)
                     }
                 },
                 fail: err => {
-                    console.error('Failed to search the day before yesterday useage for the item ', err)
-                    reject(useage)
+                    console.error('Failed to search the day before yesterday usage for the item ', err)
+                    reject(usage)
                 }
             })
 
-        // get this week useage
+        // get this week usage
         var this_week = date.dateInformat(date.getThisWeek(new Date(today)))
 
-        db.collection(db_useage['weekly'])
+        db.collection(db_usage['weekly'])
             .where({
                 date: this_week,
                 item_id: item_id
             })
             .get({
                 success: res => {
-                    var this_week_useage = 0
+                    var this_week_usage = 0
                     if (res.data.length != 0) {
-                        this_week_useage = res.data[0].item_useage
+                        this_week_usage = res.data[0].item_usage
                     }
 
-                    useage['this_week'] = this_week_useage
+                    usage['this_week'] = this_week_usage
 
                     curr_get = curr_get + 1
                     if (curr_get == total_get) {
-                        resolve(useage)
+                        resolve(usage)
                     }
                 },
                 fail: err => {
-                    console.error('Failed to search this week useage for the item ', err)
-                    reject(useage)
+                    console.error('Failed to search this week usage for the item ', err)
+                    reject(usage)
                 }
             })
 
-        // get last week useage
+        // get last week usage
         var last_week_last_day = date.dateInformat(date.getYesterday(date.dateInArray(new Date(this_week))))
         var last_week = date.dateInformat(date.getThisWeek(new Date(last_week_last_day)))
 
-        db.collection(db_useage['weekly'])
+        db.collection(db_usage['weekly'])
             .where({
                 date: last_week,
                 item_id: item_id
             })
             .get({
                 success: res => {
-                    var last_week_useage = 0
+                    var last_week_usage = 0
                     if (res.data.length != 0) {
-                        last_week_useage = res.data[0].item_useage
+                        last_week_usage = res.data[0].item_usage
                     }
 
-                    useage['last_week'] = last_week_useage
+                    usage['last_week'] = last_week_usage
 
                     curr_get = curr_get + 1
                     if (curr_get == total_get) {
-                        resolve(useage)
+                        resolve(usage)
                     }
                 },
                 fail: err => {
-                    console.error('Failed to search last week useage for the item ', err)
-                    reject(useage)
+                    console.error('Failed to search last week usage for the item ', err)
+                    reject(usage)
                 }
             })
         
-        // get this month useage
+        // get this month usage
         var this_month = date.dateInformat(date.getThisMonth(date.dateInArray(new Date(today))))
 
-        db.collection(db_useage['monthly'])
+        db.collection(db_usage['monthly'])
             .where({
                 date: this_month,
                 item_id: item_id
             })
             .get({
                 success: res => {
-                    var this_month_useage = 0
+                    var this_month_usage = 0
                     if (res.data.length != 0) {
-                        this_month_useage = res.data[0].item_useage
+                        this_month_usage = res.data[0].item_usage
                     }
 
-                    useage['this_month'] = this_month_useage
+                    usage['this_month'] = this_month_usage
 
                     curr_get = curr_get + 1
                     if (curr_get == total_get) {
-                        resolve(useage)
+                        resolve(usage)
                     }
                 },
                 fail: err => {
-                    console.error('Failed to search this month useage for the item ', err)
-                    reject(useage)
+                    console.error('Failed to search this month usage for the item ', err)
+                    reject(usage)
                 }
             })
 
-        // get last month useage
+        // get last month usage
         var last_month_last_day = date.dateInformat(date.getYesterday(date.dateInArray(new Date(this_month))))
         var last_month = date.dateInformat(date.getThisMonth(date.dateInArray(new Date(last_month_last_day))))
 
-        db.collection(db_useage['monthly'])
+        db.collection(db_usage['monthly'])
             .where({
                 date: last_month,
                 item_id: item_id
             })
             .get({
                 success: res => {
-                    var last_month_useage = 0
+                    var last_month_usage = 0
                     if (res.data.length != 0) {
-                        last_month_useage = res.data[0].item_useage
+                        last_month_usage = res.data[0].item_usage
                     }
 
-                    useage['last_month'] = last_month_useage
+                    usage['last_month'] = last_month_usage
 
                     curr_get = curr_get + 1
                     if (curr_get == total_get) {
-                        resolve(useage)
+                        resolve(usage)
                     }
                 },
                 fail: err => {
-                    console.error('Failed to search last month useage for the item ', err)
-                    reject(useage)
+                    console.error('Failed to search last month usage for the item ', err)
+                    reject(usage)
                 }
             })
     })

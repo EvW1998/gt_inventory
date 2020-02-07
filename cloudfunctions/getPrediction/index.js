@@ -10,8 +10,8 @@ cloud.init({
 const db = cloud.database()
 const db_sale = 'sale'
 const collection_sale = db.collection(db_sale)
-const db_daily_useage = 'daily_useage'
-const collection_daily_useage = db.collection(db_daily_useage)
+const db_daily_usage = 'daily_usage'
+const collection_daily_usage = db.collection(db_daily_usage)
 
 exports.main = async (event, context) => {
     try {
@@ -39,13 +39,13 @@ exports.main = async (event, context) => {
             console.log('Get today ', today, ' sale data: ', today_sale_result.data[0].sale_value)
         }
 
-        // get yesterday useage data
-        var yesterday_useage = {}
-        var yesterday_useage_result = await collection_daily_useage.where({ date: yesterday }).get()
-        for (var i in yesterday_useage_result.data) {
-            yesterday_useage[yesterday_useage_result.data[i].item_id] = yesterday_useage_result.data[i]
+        // get yesterday usage data
+        var yesterday_usage = {}
+        var yesterday_usage_result = await collection_daily_usage.where({ date: yesterday }).get()
+        for (var i in yesterday_usage_result.data) {
+            yesterday_usage[yesterday_usage_result.data[i].item_id] = yesterday_usage_result.data[i]
         }
-        console.log('Get yesterday useage: ', yesterday_useage)
+        console.log('Get yesterday usage: ', yesterday_usage)
 
         var item = event.item
 
@@ -69,8 +69,8 @@ exports.main = async (event, context) => {
                 for (var j in item[i]) {
                     var today_prediction = item[i][j].base_number
 
-                    if (typeof (yesterday_useage[item[i][j]._id]) != 'undefined') {
-                        today_prediction = yesterday_useage[item[i][j]._id].item_useage * ratio
+                    if (typeof (yesterday_usage[item[i][j]._id]) != 'undefined') {
+                        today_prediction = yesterday_usage[item[i][j]._id].item_usage * ratio
                         today_prediction = Math.ceil(today_prediction)
                     }
 

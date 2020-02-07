@@ -17,9 +17,9 @@ Page({
         date: '',
         user_true_name: '',
         stock: {},
-        useage_daily: {},
-        useage_weekly: {},
-        useage_monthly: {}
+        usage_daily: {},
+        usage_weekly: {},
+        usage_monthly: {}
     },
 
     /**
@@ -74,9 +74,9 @@ function searchLog(page, log_id) {
                     date: res.data[0].date,
                     user_true_name: res.data[0].user_true_name,
                     stock: res.data[0].log_info.stock,
-                    useage_daily: res.data[0].log_info.useage.daily,
-                    useage_weekly: res.data[0].log_info.useage.weekly,
-                    useage_monthly: res.data[0].log_info.useage.monthly
+                    usage_daily: res.data[0].log_info.usage.daily,
+                    usage_weekly: res.data[0].log_info.usage.weekly,
+                    usage_monthly: res.data[0].log_info.usage.monthly
                 })
 
                 console.log('View the left log: ', res.data[0])

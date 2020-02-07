@@ -2,7 +2,7 @@
  * Update the selected sale info, or delete it.
  */
 const date = require('../../../../utils/date.js');
-
+const pAction = require('../../../../utils/pageAction.js')
 
 const app = getApp()
 const db = wx.cloud.database()

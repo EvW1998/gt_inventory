@@ -6,7 +6,7 @@ const db_category = 'category' // the collection of categories
 const db_item = 'item' // the collection of items
 const db_info = 'info' // the collection of info
 const db_sale = 'sale' // the collection of sale
-const db_daily_useage = 'daily_useage' // the collection of daily useage
+const db_daily_usage = 'daily_usage' // the collection of daily usage
 
 
 /**
