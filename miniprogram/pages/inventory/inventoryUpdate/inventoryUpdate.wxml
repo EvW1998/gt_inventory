@@ -15,9 +15,10 @@
         <swiper-item>
             <view wx:for="{{i}}" wx:for-item="subitem" wx:key="_id">
                 <view class="{{subitem.item_state==1?'sub_red':'sub'}}">
-                    <view class="sub-navigator">
+
+                    <navigator url="{{detail_page}}?title={{subitem._id}}" class="sub-navigator">
                         <text>{{subitem.item_name}}</text>
-                    </view>
+                    </navigator>
 
                     <view class="stockValue">存量: {{subitem.stock_value}}</view>
                 </view>

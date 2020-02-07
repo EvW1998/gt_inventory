@@ -12,6 +12,7 @@ const registration_page = '../../user/userRegister/userRegister' // the url for 
 const info_page = '../../user/userInfo/userInfo' // the url for the info page
 const check_left_page = '../inventoryLeft/inventoryLeft' // the url for the check left page
 const refill_page = '../inventoryRefill/inventoryRefill' // the url for the refill page
+const detail_page = '../itemDetail/itemDetail' // the url for the detail page
 
 
 Page({
@@ -22,7 +23,8 @@ Page({
         category: {}, // the categories in the inventory
         item: {}, // the items in the inventory
         h: 1200, // the height for the page
-        check_left: false // whether the left in the inventory has been checked
+        check_left: false, // whether the left in the inventory has been checked
+        detail_page: detail_page
     },
 
     /***

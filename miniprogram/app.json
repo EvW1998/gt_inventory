@@ -4,6 +4,7 @@
         "pages/inventory/inventoryUpdate/inventoryUpdate",
         "pages/inventory/inventoryLeft/inventoryLeft",
         "pages/inventory/inventoryRefill/inventoryRefill",
+        "pages/inventory/itemDetail/itemDetail",
 
         "pages/user/userInfo/userInfo",
         "pages/user/userRegister/userRegister",
