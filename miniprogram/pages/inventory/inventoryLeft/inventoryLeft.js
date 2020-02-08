@@ -1,15 +1,21 @@
-const date = require('../../../utils/date.js')
-const inventory = require('../../../utils/inventory.js')
-const pAction = require('../../../utils/pageAction.js')
+/**
+ * The page to check the amount that every item is left in the inventory.
+ * After the amount is checked, the usage records will be update to the database.
+ * Managers of this app will receive a message about this checking.
+ */
+const date = require('../../../utils/date.js') // require the util of date
+const inventory = require('../../../utils/inventory.js') // require the util of inventory
+const pAction = require('../../../utils/pageAction.js') // require the util of page actions
 
-const app = getApp()
-const db = wx.cloud.database()
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
 const db_user = 'user' // the collection of users
 const db_category = 'category' // the collection of categories
 const db_item = 'item' // the collection of items
-const db_info = 'info' // the collection of info
+const db_info = 'info' // the collection of the app info
 const db_usage = { 'daily': 'daily_usage', 'weekly': 'weekly_usage', 'monthly': 'monthly_usage' } // the collections of usage
 const db_left_log = 'left_log' // the collection of left logs
+
 
 Page({
     data: {
@@ -22,14 +28,14 @@ Page({
     },
 
     /***
-     *   When loading the page
+     * When loading the page
      */
     onLoad: function () {
 
     },
 
     /***
-     *   When show the default page, set all inventory data
+     * When show the default page, set all inventory data
      */
     onShow: function () {
         wx.showLoading({
@@ -37,27 +43,35 @@ Page({
             mask: true
         })
 
+        // set the inventory data as the check left page
         inventory.setInventory(this, 'left')
     },
 
     /**
-     * When tap the tab title to switch page
+     * Tap the tab title to switch pages.
+     * 
+     * @method switchNav
+     * @param{Object} e The data from the page tapping
      */
     switchNav: function (e) {
         pAction.switchNav(this, e)
     },
 
     /**
-     * When swipe the page to switch
+     * Swipe the page to switch pages.
+     * 
+     * @method swiperChanged
+     * @param{Object} e The data from the page swiping
      */
     swiperChanged: function (e) {
         pAction.swiperChanged(this, e)
     },
 
     /**
-     * When the form of check left is filled, and the confirm button is tapped
+     * When the confirm button is tapped, confirm and upload the usage data
      * 
      * @method formSubmit
+     * @param{Object} e The data from the form submiting
      */
     formSubmit: function (e) {
         wx.showLoading({
@@ -83,9 +97,13 @@ Page({
 
 
 /**
- * Calculate the usage. Find the right date for the usage upload. Upload the data.
+ * Calculate the usage. Find the right date for the usage upload.
+ * Upload the usage records. Upload the left log for this action.
+ * Send messages to all users who has high enough permission level.
  * 
  * @method confirmUsage
+ * @param{Page} page The page
+ * @param{Object} e The data from the form submiting
  */
 async function confirmUsage(page, e) {
     // double check the check_left value in the database
@@ -95,70 +113,83 @@ async function confirmUsage(page, e) {
         // if no one has done the check before
         var stock = {}
         var item = page.data.item
-        // reorganize the stock data
+        // reformat the stock data
         for (var i in item) {
             for (var j in item[i]) {
                 stock[item[i][j]._id] = item[i][j]
             }
         }
 
-        var today_left = formatedTodayLeft(stock, e.detail.value)
+        // reformat the user input, change string to number
+        var today_left_result = formatTodayLeft(stock, e.detail.value)
+        var today_left = today_left_result.result
+        if(!today_left_result.legal) {
+            console.log('User input illegal')
+            wx.hideLoading()
+            wx.showToast({
+                title: '输入错误',
+                icon: 'none'
+            })
+        } else {
+            console.log('Usage: ')
+            // calculate the usage data
+            var usage = getUsage(stock, today_left)
+            page.setData({
+                usage: usage
+            })
 
-        console.log('Usage: ')
-        // calculate the usage data
-        var usage = getUsage(stock, today_left)
-        page.setData({
-            usage: usage
-        })
+            var today = new Date()
+            // find target date to record usage
+            var target_daily_date = date.dateInformat(date.dateInArray(today))
+            var target_weekly_date = date.dateInformat(date.getThisWeek(today))
+            var target_monthly_date = date.dateInformat(date.getThisMonth(date.dateInArray(today)))
 
-        var today = new Date()
-        // find target date to record usage
-        var target_daily_date = date.dateInformat(date.dateInArray(today))
-        var target_weekly_date = date.dateInformat(date.getThisWeek(today))
-        var target_monthly_date = date.dateInformat(date.getThisMonth(date.dateInArray(today)))
+            if (today.getHours() < 8) {
+                target_daily_date = date.dateInformat(date.getYesterday(date.dateInArray(today)))
 
-        if (today.getHours() < 8) {
-            target_daily_date = date.dateInformat(date.getYesterday(date.dateInArray(today)))
+                if (today.getDay() == 1) {
+                    var y_w = date.dateInformat(date.getYesterday(date.dateInArray(new Date(target_weekly_date))))
+                    target_weekly_date = date.dateInformat(date.getThisWeek(new Date(y_w)))
+                }
 
-            if (today.getDay() == 1) {
-                var y_w = date.dateInformat(date.getYesterday(date.dateInArray(new Date(target_weekly_date))))
-                target_weekly_date = date.dateInformat(date.getThisWeek(new Date(y_w)))
+                if (today.getDate() == 1) {
+                    var y_m = date.dateInformat(date.getYesterday(date.dateInArray(new Date(target_monthly_date))))
+                    target_monthly_date = date.dateInformat(date.getThisMonth(date.dateInArray(new Date(y_m))))
+                }
             }
 
-            if (today.getDate() == 1) {
-                var y_m = date.dateInformat(date.getYesterday(date.dateInArray(new Date(target_monthly_date))))
-                target_monthly_date = date.dateInformat(date.getThisMonth(date.dateInArray(new Date(y_m))))
-            }
+            // get all the existed record for the date
+            var daily_record = await getExistedUsage(target_daily_date, 'daily')
+            var weekly_record = await getExistedUsage(target_weekly_date, 'weekly')
+            var montly_record = await getExistedUsage(target_monthly_date, 'monthly')
+
+            // update all the record
+            var target_all_date = {}
+            target_all_date['daily'] = target_daily_date
+            target_all_date['weekly'] = target_weekly_date
+            target_all_date['monthly'] = target_monthly_date
+
+            var all_record = {}
+            all_record['daily'] = daily_record
+            all_record['weekly'] = weekly_record
+            all_record['monthly'] = montly_record
+
+            var update_result = await updateAllUsage(usage, all_record, target_all_date)
+            console.log('Finish update all usage')
+
+            await updateItem(today_left, usage)
+
+            // Add a new left log to the collection
+            await addLeftLog(today_left, update_result, stock, today)
+            // update the check_left state
+            await inventory.updateCheckLeft(true)
+            // send messages
+            sendCheckLeftMessage(today, usage)
+            // navigate the user back to the previous page
+            pAction.navigateBackUser('上传成功', 1)
         }
-
-        // get all the existed record for the date
-        var daily_record = await getExistedUsage(target_daily_date, 'daily')
-        var weekly_record = await getExistedUsage(target_weekly_date, 'weekly')
-        var montly_record = await getExistedUsage(target_monthly_date, 'monthly')
-
-        // update all the record
-        var target_all_date = {}
-        target_all_date['daily'] = target_daily_date
-        target_all_date['weekly'] = target_weekly_date
-        target_all_date['monthly'] = target_monthly_date
-
-        var all_record = {}
-        all_record['daily'] = daily_record
-        all_record['weekly'] = weekly_record
-        all_record['monthly'] = montly_record
- 
-        var update_result = await updateAllUsage(usage, all_record, target_all_date)
-        console.log('Finish update all usage')
-
-        await updateItem(today_left, usage)
-        await updateLeftLog(today_left, update_result, stock, today)
-        await inventory.updateCheckLeft(true)
-        
-        sendCheckLeftMessage(today, usage)
-
-        pAction.navigateBackUser('上传成功', 1)
-
     } else {
+        // navigate the user back to the previous page
         pAction.navigateBackUser('上传成功', 1)
     }
 }
@@ -167,23 +198,36 @@ async function confirmUsage(page, e) {
 /**
  * Format today left value from string to number.
  * 
- * @method formatedTodayLeft
+ * @method formatTodayLeft
  * @param{Object} stock The stock value
  * @param{Object} today_left The left value without formated
- * @return{Object} The formated today left value
+ * @return{Object} The formated today left value and whether the input is legal
  */
-function formatedTodayLeft(stock, today_left) {
+function formatTodayLeft(stock, today_left) {
     var formated_today_left = today_left
+    var legal_input = true
+    var format_result = {}
+
     for (var i in formated_today_left) {
         if (formated_today_left[i] == "") {
             formated_today_left[i] = stock[i].stock_value
-        }
-        else {
-            formated_today_left[i] = parseInt(formated_today_left[i])
+        } else {
+            formated_today_left[i] = parseFloat(formated_today_left[i])
+
+            if (isNaN(formated_today_left[i]) || formated_today_left[i] > stock[i].stock_value) {
+                formated_today_left[i] = stock[i].stock_value
+                legal_input = false
+            } else if (formated_today_left[i] < 0) {
+                formated_today_left[i] = 0
+                legal_input = false
+            }
         }
     }
 
-    return formated_today_left
+    format_result['legal'] = legal_input
+    format_result['result'] = formated_today_left
+
+    return format_result
 }
 
 
@@ -191,7 +235,7 @@ function formatedTodayLeft(stock, today_left) {
  * Return the usage value base on the stock value in the db and the left value user entered.
  * 
  * @method getUsage
- * @param{Object} stock the reorganize stock data
+ * @param{Object} stock the reformated stock data
  * @param{Object} today_left the left value user entered
  * @return{Object} the usage data
  */
@@ -357,36 +401,6 @@ function updateAllUsage(usage, record, target_date) {
 
 
 /**
- * Update the check_left value in the info collection
- * 
- * @method updateCheckLeft
- */
-function updateCheckLeft() {
-    return new Promise((resolve, reject) => {
-        var update_info_data = {'check_left': true}
-
-        wx.cloud.callFunction({
-            name: 'dbUpdate',
-            data: {
-                collection_name: db_info,
-                update_data: update_info_data,
-                uid: app.globalData.info_id
-            },
-            success: res => {
-                console.log('Update check left info success')
-                resolve()
-            },
-            fail: err => {
-                // if get a failed result
-                console.error('Failed to use cloud function dbUpdate()', err)
-                reject()
-            }
-        })
-    })
-}
-
-
-/**
  * Update the stock value for items.
  * 
  * @method updateItem
@@ -444,14 +458,14 @@ function updateItem(today_left, usage) {
 /**
  * Update the check left to a log collection.
  * 
- * @method updateLeftLog
+ * @method addLeftLog
  * @param{Object} today_left The today left value
  * @param{Object} update_result The update result value
  * @param{Object} item The formated item value
  * @param{Date} today The date of today
  * @return{Promise} The state of the function
  */
-function updateLeftLog(today_left, update_result, item, today) {
+function addLeftLog(today_left, update_result, item, today) {
     return new Promise((resolve, reject) => {
         var stock_info = {}
         for(var i in today_left) {
@@ -508,6 +522,8 @@ function updateLeftLog(today_left, update_result, item, today) {
  * Send the confrim left message to all the user with permission level higher than 2.
  * 
  * @method sendCheckLeftMessage
+ * @param{Date} today Date of today
+ * @param{Object} usage The usage record
  */
 function sendCheckLeftMessage(today, usage) {
     var time = date.formatTime(today)
