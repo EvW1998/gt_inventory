@@ -1,15 +1,17 @@
-const date = require('../../../utils/date.js')
-const inventory = require('../../../utils/inventory.js')
-const pAction = require('../../../utils/pageAction.js')
+/**
+ * The page to prediction the refill value and refill the inventory.
+ * After the amount is entered, update the item stock in the database.
+ * Managers of this app will receive a message about this refill.
+ */
+const date = require('../../../utils/date.js') // require the util of date
+const inventory = require('../../../utils/inventory.js') // require the util of inventory
+const pAction = require('../../../utils/pageAction.js') // require the util of page actions
 
-const app = getApp()
-const db = wx.cloud.database()
-const db_user = 'user'
-const db_category = 'category' // the collection of categories
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
+const db_user = 'user' // the collection of users
 const db_item = 'item' // the collection of items
-const db_info = 'info' // the collection of info
-const db_usage = { 'daily': 'daily_usage', 'weekly': 'weekly_usage', 'monthly': 'monthly_usage' } // the collections of usage
-const db_refill_log = 'refill_log'
+const db_refill_log = 'refill_log' // the collection of refill logs
 
 
 Page({
@@ -22,7 +24,7 @@ Page({
     },
 
     /***
-     *   When loading the page
+     * When loading the page, set all inventory data
      */
     onLoad: function () {
         wx.showLoading({
@@ -30,36 +32,50 @@ Page({
             mask: true
         })
 
+        // set the inventory data as the refill page
         inventory.setInventory(this, 'refill')
     },
 
     /***
-     *   When show the default page, set all inventory data
+     * When show the default page
      */
     onShow: function () {
         
     },
 
     /**
-     * When tap the tab title to switch page
+     * Tap the tab title to switch pages.
+     * 
+     * @method switchNav
+     * @param{Object} e The data from the page tapping
      */
     switchNav: function (e) {
         pAction.switchNav(this, e)
     },
 
     /**
-     * When swipe the page to switch
+     * Swipe the page to switch pages.
+     * 
+     * @method swiperChanged
+     * @param{Object} e The data from the page swiping
      */
     swiperChanged: function (e) {
         pAction.swiperChanged(this, e)
     },
 
+    /**
+     * When the confirm button is tapped, confirm and upload the refill
+     * 
+     * @method formSubmit
+     * @param{Object} e The data from the form submiting
+     */
     formSubmit: function (e) {
         wx.showLoading({
             title: '上传中',
             mask: true
         })
 
+        // confirm and upload the refill data
         confirmRefill(this, e.detail.value)
     },
 
@@ -76,19 +92,22 @@ Page({
 })
 
 
+/**
+ * Check whether the user input is legal.
+ * Then update the item stock value. Add a new refill log.
+ * Send messages to users with high enough permission level.
+ * 
+ * @method confirmRefill
+ * @param{Page} page The page
+ * @param{Object} user_input The user input of refilling
+ */
 async function confirmRefill(page, user_input) {
     var today = new Date()
-    var check_left = inventory.getCheckLeft()
+    // double check the check_left value in the database
+    var check_left = await inventory.getCheckLeft()
 
     if(check_left) {
-        var formated_input = {}
-        for (var i in user_input) {
-            formated_input[i] = parseInt(user_input[i])
-            if (isNaN(formated_input[i])) {
-                formated_input[i] = 0
-            }
-        }
-
+        // if someone has done the check before
         var item = page.data.item
         var formated_item = {}
         for (var i in item) {
@@ -97,19 +116,58 @@ async function confirmRefill(page, user_input) {
             }
         }
 
-        var update_result = await updateItem(formated_input, formated_item)
-        await addRefillLog(formated_input, formated_item, today)
-        await inventory.updateCheckLeft(false)
+        var legal_input = true
+        var formated_input = {}
+        for (var i in user_input) {
+            if (user_input[i] == "") {
+                // if the input is empty
+                formated_input[i] = 0
+            } else {
+                formated_input[i] = parseInt(user_input[i])
 
-        sendConfirmRefillMessage(today, update_result)
+                if (isNaN(formated_input[i]) || formated_input[i] < 0) {
+                    // if the input is not a number or the input smaller than 0
+                    formated_input[i] = 0
+                    legal_input = false
+                } else if (formated_input[i] > formated_item[i].prediction_value) {
+                    // if the input larger than the prediction value
+                    formated_input[i] = formated_item[i].prediction_value
+                    legal_input = false
+                }
+            }
+        }
 
-        pAction.navigateBackUser('上传成功', 1)
+        if(!legal_input) {
+            // if there is illegal input
+            console.log('User input illegal')
+            wx.hideLoading()
+            wx.showToast({
+                title: '输入错误',
+                icon: 'none'
+            })
+        } else {
+            var update_result = await updateItem(formated_input, formated_item)
+            await addRefillLog(formated_input, formated_item, today)
+            await inventory.updateCheckLeft(false)
+
+            sendConfirmRefillMessage(today, update_result)
+
+            pAction.navigateBackUser('上传成功', 1)
+        }
     } else {
         pAction.navigateBackUser('上传成功', 1)
     }
 }
 
 
+/**
+ * Update the stock value of each item with the user refill.
+ * For items that refill is not equal to the prediction value, state of the item will be warning.
+ * 
+ * @method updateItem
+ * @param{Object} refill The refill of items
+ * @param{Object} item The formated item
+ */
 function updateItem(refill, item) {
     return new Promise((resolve, reject) => {
         var total_amount = 0
@@ -176,6 +234,15 @@ function updateItem(refill, item) {
 }
 
 
+/**
+ * Update the refill to a log collection.
+ * 
+ * @method addRefillLog
+ * @param{Object} refill The refill
+ * @param{Object} item The formated item
+ * @param{Date} today The date of today
+ * @return{Promise} The state of the function
+ */
 function addRefillLog(refill, item, today) {
     return new Promise((resolve, reject) => {
         var formated_stock = {}
@@ -224,9 +291,11 @@ function addRefillLog(refill, item, today) {
 
 
 /**
- * Send the confrim left message to all the user with permission level higher than 2.
+ * Send the refill message to all the user with permission level higher than 2.
  * 
- * @method sendRefillMessage
+ * @method sendConfirmRefillMessage
+ * @param{Date} today Date of today
+ * @param{Object} update_result The result of refilling
  */
 function sendConfirmRefillMessage(today, update_result) {
     var time = date.formatTime(today)

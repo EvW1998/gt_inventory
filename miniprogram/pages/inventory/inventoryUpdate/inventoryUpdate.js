@@ -1,13 +1,14 @@
-const user = require('../../../utils/user.js')
-const inventory = require('../../../utils/inventory.js')
-const pAction = require('../../../utils/pageAction.js')
+/**
+ * The page to show all the items in cateogries.
+ * Entrance to check left or refill.
+ */
+const user = require('../../../utils/user.js') // require the util of user
+const inventory = require('../../../utils/inventory.js') // require the util of inventory
+const pAction = require('../../../utils/pageAction.js') // require the util of page actions
 
-const app = getApp()
-const db = wx.cloud.database()
-const db_user = 'user' // the collection for the user in db
-const db_category = 'category' // the collection of categories
-const db_item = 'item' // the collection of items
-const db_info = 'info' // the collection of info
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
+
 const registration_page = '../../user/userRegister/userRegister' // the url for the register page
 const info_page = '../../user/userInfo/userInfo' // the url for the info page
 const check_left_page = '../inventoryLeft/inventoryLeft' // the url for the check left page
@@ -24,7 +25,7 @@ Page({
         item: {}, // the items in the inventory
         h: 1200, // the height for the page
         check_left: false, // whether the left in the inventory has been checked
-        detail_page: detail_page
+        detail_page: detail_page // the page to show the detail info about an item
     },
 
     /***
@@ -64,7 +65,7 @@ Page({
     },
 
     /**
-     * Login the user and get the user's info
+     * Login the user and get the user's info.
      * 
      * @method userLogin
      */
@@ -128,14 +129,20 @@ Page({
     },
 
     /**
-     * When tap the tab title to switch page
+     * Tap the tab title to switch pages.
+     * 
+     * @method switchNav
+     * @param{Object} e The data from the page tapping
      */
     switchNav: function (e) {
         pAction.switchNav(this, e)
     },
 
     /**
-     * When swipe the page to switch
+     * Swipe the page to switch pages.
+     * 
+     * @method swiperChanged
+     * @param{Object} e The data from the page swiping
      */
     swiperChanged: function (e) {
         pAction.swiperChanged(this, e)
@@ -145,6 +152,7 @@ Page({
      * When the Left button is tapped, open the page to check left
      * 
      * @method bindLeft
+     * @param{Object} e The data from the button tapped
      */
     bindLeft: function(e) {
         console.log('Start checking the left in the inventory')
@@ -157,6 +165,7 @@ Page({
      * When the refill button is tapped, open the page to refill
      * 
      * @method bindRefill
+     * @param{Object} e The data from the button tapped
      */
     bindRefill: function (e) {
         console.log('Start refilling the inventory')

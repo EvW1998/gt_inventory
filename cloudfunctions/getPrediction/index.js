@@ -70,6 +70,7 @@ exports.main = async (event, context) => {
                     if (after_refill > item[i][j].max_capacity) {
                         // if the prediction will make the item exceed the capacity of the item
                         var new_prediction = item[i][j].max_capacity - item[i][j].stock_value
+                        new_prediction = Math.floor(new_prediction)
                         item[i][j]['prediction_value'] = new_prediction
                     }
                 }
@@ -95,6 +96,7 @@ exports.main = async (event, context) => {
                     if (after_refill > item[i][j].max_capacity) {
                         // if the prediction will make the item exceed the capacity of the item
                         var new_prediction = item[i][j].max_capacity - item[i][j].stock_value
+                        new_prediction = Math.floor(new_prediction)
                         item[i][j]['prediction_value'] = new_prediction
                     }
                 }

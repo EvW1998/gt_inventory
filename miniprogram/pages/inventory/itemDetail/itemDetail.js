@@ -1,10 +1,10 @@
 /**
- * Update the selected item or delete it
+ * Show the detail info about the given item.
  */
-const date = require('../../../utils/date.js')
+const date = require('../../../utils/date.js') // require the util of date
 
-const app = getApp()
-const db = wx.cloud.database()
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
 const db_item = 'item' // the collection of items
 const db_usage = { 'daily': 'daily_usage', 'weekly': 'weekly_usage', 'monthly': 'monthly_usage' } // the collections of usage
 
@@ -16,12 +16,12 @@ Page({
      */
     data: {
         item_id: '', // the id of the selected item
-        item_selected: {},
-        usage: {}
+        item_selected: {}, // the selected item
+        usage: {} // the usage record of the item
     },
 
     /**
-     * When the app loads the page
+     * When the page is loaded, search the seleted item in the collection
      * 
      * @param{Object} options The data passed to this page
      */
@@ -38,14 +38,14 @@ Page({
         searchItem(this, options.title)
     },
 
-    /***
-     *  When the user wants to share this miniapp
+    /**
+     * When the user wants to share this miniapp
      */
     onShareAppMessage: function () {
         return {
             title: 'GT库存',
             desc: '国泰餐厅库存管理程序',
-            path: '/usersetting/usersetting'
+            path: 'pages/inventory/inventoryUpdate/inventoryUpdate'
         }
     }
 })
@@ -75,6 +75,13 @@ async function searchItem(page, item_id) {
 }
 
 
+/**
+ * Return the item info.
+ * 
+ * @method getItem
+ * @param{String} item_id The item id
+ * @return{Promise} The state of the function. Resolve when get the item info
+ */
 function getItem(item_id) {
     return new Promise((resolve, reject) => {
         db.collection(db_item)
@@ -95,6 +102,15 @@ function getItem(item_id) {
 }
 
 
+/**
+ * Return the item usage info.
+ * The usage record of today, yesterday, the day before yesterday,
+ * this week, last week, this month and last month.
+ * 
+ * @method getUsage
+ * @param{String} item_id The item id
+ * @return{Promise} The state of the function. Resolve when get all usage records.
+ */
 function getUsage(item_id) {
     return new Promise((resolve, reject) => {
         var usage = {}

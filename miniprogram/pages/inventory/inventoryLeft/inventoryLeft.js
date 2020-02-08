@@ -10,9 +10,7 @@ const pAction = require('../../../utils/pageAction.js') // require the util of p
 const app = getApp() // the app
 const db = wx.cloud.database() // the cloud database
 const db_user = 'user' // the collection of users
-const db_category = 'category' // the collection of categories
 const db_item = 'item' // the collection of items
-const db_info = 'info' // the collection of the app info
 const db_usage = { 'daily': 'daily_usage', 'weekly': 'weekly_usage', 'monthly': 'monthly_usage' } // the collections of usage
 const db_left_log = 'left_log' // the collection of left logs
 
