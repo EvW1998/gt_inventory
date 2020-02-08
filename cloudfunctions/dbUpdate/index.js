@@ -1,15 +1,22 @@
-// 云函数入口文件
-const cloud = require('wx-server-sdk')
+/**
+ * Cloud function to update an item with the new data to the given collection in cloud database.
+ */
+const cloud = require('wx-server-sdk') // require using wx-server-sdk for using database
 
-// 初始化 cloud
+// Initialize cloud setting
 cloud.init({
-    // API 调用都保持和云函数当前所在环境一致
     env: cloud.DYNAMIC_CURRENT_ENV
 })
 
-const db = cloud.database()
+const db = cloud.database() // the cloud database
 
-// 云函数入口函数
+/**
+ * Update an item that has the given id to the given data from the given collection.
+ * 
+ * @method main
+ * @param{Object} event An object has keys that contain the collection name and item id for updating and the update data
+ * @return{Object} The result of updating data from the collection
+ */
 exports.main = async (event, context) => {
     try {
         return db.collection(event.collection_name)

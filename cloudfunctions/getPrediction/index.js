@@ -1,18 +1,27 @@
-const cloud = require('wx-server-sdk')
-
-const last_day = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+/**
+ * Cloud function to make prediction for all items for refilling the inventory.
+ */
+const cloud = require('wx-server-sdk') // require using wx-server-sdk for using database
 
 // Initialize cloud setting
 cloud.init({
     env: cloud.DYNAMIC_CURRENT_ENV
 })
 
-const db = cloud.database()
-const db_sale = 'sale'
-const collection_sale = db.collection(db_sale)
-const db_daily_usage = 'daily_usage'
-const collection_daily_usage = db.collection(db_daily_usage)
+const db = cloud.database() // the cloud database
+const collection_sale = db.collection('sale') // the collection of the sale value
+const collection_daily_usage = db.collection('daily_usage') // the collection of the daily usage records
 
+// the last day for each month in the nonleap year
+const last_day = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+/**
+ * Return an new item object that has predictions of refilling for each item in a new key prediction_value
+ * 
+ * @method main
+ * @param{Object} event An object has keys that contain the items in the inventory
+ * @return{Object} The new item object has predictions
+ */
 exports.main = async (event, context) => {
     try {
         // get yesterday sale data
@@ -50,19 +59,23 @@ exports.main = async (event, context) => {
         var item = event.item
 
         if (yesterday_sale == 0 || today_sale == 0) {
+            // if there are no sale values for yesterday or today
             for (var i in item) {
                 for (var j in item[i]) {
+                    // make the prediction value be the base number
                     item[i][j]['prediction_value'] = item[i][j].base_number
 
                     var after_refill = item[i][j].prediction_value + item[i][j].stock_value
 
                     if (after_refill > item[i][j].max_capacity) {
+                        // if the prediction will make the item exceed the capacity of the item
                         var new_prediction = item[i][j].max_capacity - item[i][j].stock_value
                         item[i][j]['prediction_value'] = new_prediction
                     }
                 }
             }
         } else {
+            // if there are sale values for both yesterday and today
             var ratio = today_sale / yesterday_sale
 
             for (var i in item) {
@@ -70,6 +83,7 @@ exports.main = async (event, context) => {
                     var today_prediction = item[i][j].base_number
 
                     if (typeof (yesterday_usage[item[i][j]._id]) != 'undefined') {
+                        // calculate the prediction value
                         today_prediction = yesterday_usage[item[i][j]._id].item_usage * ratio
                         today_prediction = Math.ceil(today_prediction)
                     }
@@ -79,6 +93,7 @@ exports.main = async (event, context) => {
                     var after_refill = item[i][j].prediction_value + item[i][j].stock_value
 
                     if (after_refill > item[i][j].max_capacity) {
+                        // if the prediction will make the item exceed the capacity of the item
                         var new_prediction = item[i][j].max_capacity - item[i][j].stock_value
                         item[i][j]['prediction_value'] = new_prediction
                     }
@@ -89,7 +104,6 @@ exports.main = async (event, context) => {
         console.log('Finish prediction of today', item)
 
         return item
-
     } catch (e) {
         console.log(e)
         return e
@@ -193,31 +207,4 @@ function previousMonth(month) {
     }
 
     return new_month
-}
-
-function getYesterdaySale() {
-    //return new Promise((resolve, reject) => {
-    var yesterday = dateInformat(getYesterday(dateInArray(new Date())))
-
-    db.collection(db_sale)
-        .where({
-            sale_date: yesterday
-        })
-        .get({
-            success: res => {
-                var yesterday_sale = 0
-                if (res.data.length == 0) {
-                    console.log('No sale data of yesterday: ', yesterday)
-                } else {
-                    yesterday_sale = res.data[0].sale_value
-                    console.log('Get yesterday ', yesterday, ' sale data: ', res.data[0].sale_value)
-                }
-                //resolve(yesterday_sale)
-            },
-            fail: err => {
-                console.error('Failed to search yesterday sale data', err)
-                //reject(0)
-            }
-        })
-    //})
 }

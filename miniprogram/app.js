@@ -1,12 +1,12 @@
 /***
- *  This is an inventory manage system for Anshan GuoTai KFC
+ * This is an inventory manage system for Anshan GuoTai KFC.
  */
 const db_info = 'info' // the collection name of the app info
 
 
 App({
     /***
-     * When launch the miniapp
+     * When launch the miniapp. Initialize cloud system and globalData.
      * 
      * @method onLaunch
      */
@@ -16,34 +16,30 @@ App({
             console.error('请使用 2.2.3 或以上的基础库以使用云能力')
         } else {
             wx.cloud.init({
-            env: 'cloud-fx0md', // unique cloud env
-            traceUser: true
+                env: 'cloud-fx0md', // unique cloud env
+                traceUser: true
             })
         }
 
         this.globalData = {}
-        this.globalData.logged = false // user's login state
-        this.globalData.registered = false // user's register state
-        this.globalData.permission_level = 0 // user's default permission level
+        this.globalData.logged = false // the user's login state
+        this.globalData.registered = false // the user's register state
+        this.globalData.permission_level = 0 // the user's default permission level
+        this.globalData.permission_too_low = false // whether the user's permission level is too low
 
-        // get the App invition code and version info from database
+        // get the App's info from database
         setInfo(this, wx.cloud.database(), db_info)
-
-        this.globalData.permission_too_low = false // whether permission level is too low
     }
 })
 
 
 /**
- * Access to the App cloud database info collection,
- * get the App's invition code and version info, then
- * set them to the App globalData.
+ * Set the App's globalData from the cloud database.
  * 
  * @method setInfo
- * @param{Object} app The application
- * @param{Object} db The database
- * @param{String} collection The collection name for searching
- * @return{Object} null
+ * @param{App} app The application
+ * @param{DB.Database} db The database
+ * @param{String} collection The collection name of the app info
  */
 function setInfo(app, db, collection) {
     db.collection(collection)
@@ -57,11 +53,11 @@ function setInfo(app, db, collection) {
         .get({
             success: res => {
                 var result = res.data[0]
-                app.globalData.info_id = result._id
-                app.globalData.invite_code = result.invite_code
-                app.globalData.version = result.version
-                app.globalData.check_left = result.check_left
-                app.globalData.upgrade_code = result.upgrade_code
+                app.globalData.info_id = result._id // the id of the info collection
+                app.globalData.invite_code = result.invite_code // the invitation code of this app
+                app.globalData.upgrade_code = result.upgrade_code // the upgrade code of this app
+                app.globalData.version = result.version // the version info of this app
+                app.globalData.check_left = result.check_left // the inventory state   
             }
         })
 }

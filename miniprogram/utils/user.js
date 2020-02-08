@@ -1,14 +1,16 @@
-const db_user = 'user' // the collection name for the user info
+/**
+ * Util functions about user login and modification.
+ */
+const db_user = 'user' // the collection of users
+
 
 /**
- * Connect to the wx server, get user's setting.
  * Return whether the user gave the app authority to use his info.
  * 
  * @method getAuthority
- * @return{Promise} A promise with resolve that has user's authorization info
+ * @return{Promise} The state of the function. Resolve with user's authorization info
  */
 function getAuthority() {
-
     return new Promise((resolve, reject) => {
         // get the user's setting for the App
         wx.getSetting({
@@ -31,13 +33,12 @@ function getAuthority() {
 
 
 /**
- * Get the user's info from the server
+ * Return the user's wechat info.
  * 
  * @method getUserInfomation
- * @return{Promise} A promise with resolve about userInfo
+ * @return{Promise} The state of the function. Resolve with user's userInfo
  */
 function getUserInfomation() {
-
     return new Promise((resolve, reject) => {
         // get the user's info from the wechat
         wx.getUserInfo({
@@ -56,18 +57,16 @@ function getUserInfomation() {
 
 
 /**
- * Use cloud function to get the user's openid.
+ * Return the user's openid.
  * 
  * @method getOpenId
- * @return{Promise} A promise with resolve about the user's openid
+ * @return{Promise} The state of the function. Resolve with user's openid
  */
 function getOpenId() {
-
     return new Promise((resolve, reject) => {
-        // use cloud function login() to get user openid
+        // use cloud function getOpenId() to get user openid
         wx.cloud.callFunction({
             name: 'getOpenId',
-            data: {},
             success: res => {
                 // return the user's openid if successed
                 resolve(res.result.openid)
@@ -83,17 +82,15 @@ function getOpenId() {
 
 
 /**
- * Check whether the user exists in the user collection in the database.
- * If the user has been registered, get the user's uid in, permission level and real name.
- * If not, return the user has not been registered.
+ * Return the user's uid, permission level and real name, if the user registered in the app.
+ * Return the user has not been registered, if not.
  * 
  * @method checkUser
  * @param{String} openid The user's openid
- * @param{Object} db The database
- * @return{Promise} A promise with resolve about the user's uid, permission level and real name
+ * @param{Object} db The cloud database
+ * @return{Promise} The state of the function. Resolve with user's uid, permission level and real name
  */
 function checkUser(openid, db) {
-
     return new Promise((resolve, reject) => {
         db.collection(db_user)
             .where({
@@ -134,14 +131,13 @@ function checkUser(openid, db) {
 
 
 /**
- * Use cloud function, add the new user to the collection
+ * Add a new user into the user collection in the database, with given user data.
  * 
  * @method addNewUser
  * @param{Object} user_data An Object includes user's openid, real name and permission level
- * @return{Promise} A promise with resolve about the returned result from the cloud function
+ * @return{Promise} The state of the function. Resolve with the returned result from the cloud function
  */
 function addNewUser(user_data) {
-
     return new Promise((resolve, reject) => {
         // call dbAdd() cloud function to add the user to the user collection
         wx.cloud.callFunction({

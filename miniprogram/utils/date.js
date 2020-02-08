@@ -1,3 +1,6 @@
+/**
+ * Util functions about the date.
+ */
 const last_day = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 
@@ -62,6 +65,7 @@ function dateInArray(date) {
 
 /**
  * Return a formated date in a string.
+ * In a formate of year-month-day
  * 
  * @method dateInformat
  * @param{Object} date_in_array The date
@@ -85,7 +89,7 @@ function dateInformat(date_in_array) {
 
 
 /**
- * Return the yesterday date in an array.
+ * Return the date of yesterday in an array.
  * 
  * @method getYesterday
  * @param{Object} date_in_array The current date
@@ -119,7 +123,7 @@ function getYesterday(date_in_array) {
 
 
 /**
- * Return the previous month.
+ * Return the previous month of the given month.
  * 
  * @method previousMonth
  * @param{Number} month

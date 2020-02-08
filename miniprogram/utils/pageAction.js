@@ -1,12 +1,17 @@
 /**
- * When tap the tab title to switch page
+ * Util functions about page actions.
+ */
+
+
+/**
+ * Tap the tab title to switch pages.
  * 
  * @method switchNav
  * @param{Page} page The page
- * @param{Object} e The return data from the page
+ * @param{Object} e The data from the page tapping
  */
 function switchNav(page, e) {
-    var id = parseInt(e.target.id)
+    var id = parseInt(e.target.id) // the new page id
 
     if (page.data.currentTab == id) {
         return false
@@ -21,12 +26,13 @@ function switchNav(page, e) {
     })
 }
 
+
 /**
- * When swipe the page to switch
+ * Swipe the page to switch pages.
  * 
  * @method swiperChanged
  * @param{Page} page The page
- * @param{Object} e The return data from the page
+ * @param{Object} e The data from the page swiping
  */
 function swiperChanged(page, e) {
     console.log('Switch navigation to: ', e.detail.current)
@@ -40,7 +46,7 @@ function swiperChanged(page, e) {
 
 
 /**
- * Hide Loading and navigate the user back to the previous page.
+ * Hide Loading and navigate the user back to the previous page with a message.
  * 
  * @method navigateBackUser
  * @param{String} message The message to show in the toast.

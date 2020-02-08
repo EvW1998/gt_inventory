@@ -1,13 +1,24 @@
-// 云函数入口文件
-const cloud = require('wx-server-sdk')
-const check_template_id = 'LJqgpHGDBW5N1A_7A3goZytqjqN-AR5ldYjSRvjFSSU'
+/**
+ * Cloud function to send a message to an user with the given openid that the checking inventory is done.
+ */
+const cloud = require('wx-server-sdk') // require using wx-server-sdk for using database
 
+// Initialize cloud setting
 cloud.init({
-    // API 调用都保持和云函数当前所在环境一致
     env: cloud.DYNAMIC_CURRENT_ENV
 })
 
-// 云函数入口函数
+// the template id for the message
+const check_template_id = 'LJqgpHGDBW5N1A_7A3goZytqjqN-AR5ldYjSRvjFSSU'
+
+
+/**
+ * Send a message to an user with the given openid that the checking inventory is done.
+ * 
+ * @method main
+ * @param{Object} event An object has keys that contain the user's openid and the detail message info
+ * @return{Object} The result of sending the message
+ */
 exports.main = async (event, context) => {
     try {
         const result = await cloud.openapi.subscribeMessage.send({
@@ -35,7 +46,6 @@ exports.main = async (event, context) => {
 
         console.log(result)
         return result
-
     } catch (e) {
         console.log(e)
         return e

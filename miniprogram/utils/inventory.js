@@ -1,16 +1,16 @@
-var date = require('date.js')
-
-const app = getApp()
-const db = wx.cloud.database()
+/**
+ * Util functions about setting the inventory data.
+ */
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
 const db_category = 'category' // the collection of categories
 const db_item = 'item' // the collection of items
-const db_info = 'info' // the collection of info
-const db_sale = 'sale' // the collection of sale
-const db_daily_usage = 'daily_usage' // the collection of daily usage
+const db_info = 'info' // the collection of the app info
+const db_sale = 'sale' // the collection of sales
 
 
 /**
- * Set all the categories and items data in the inventory.
+ * Set all the categories and items data in the inventory to the given page data.
  * 
  * @method setInventory
  * @param{Page} page The page
@@ -18,6 +18,8 @@ const db_daily_usage = 'daily_usage' // the collection of daily usage
  */
 async function setInventory(page, type) {
     if (type == 'main') {
+        // for the inventoryUpdate page
+        // get the check_left value and update to the app and page data
         var cl = await getCheckLeft()
         page.setData({
             check_left: cl
@@ -25,58 +27,63 @@ async function setInventory(page, type) {
         app.globalData.check_left = cl
         console.log('Left has been checked: ', cl)
     }
-
+    
+    // get all categories and add a nav_order key for the switch navigation
     var categories = await getCategory()
     for (var c in categories) {
         categories[c]['nav_order'] = parseInt(c)
     }
 
+    // update categories to the page data
     page.setData({
         category: categories
     })
     console.log('Get all the categories: ', page.data.category)
 
+    // get all items and update items to the page data
     var items = await getItem(page, categories)
-
     page.setData({
         item: items
     })
 
     if (type == 'main') {
+        // for the inventoryUpdate page
         wx.stopPullDownRefresh()
     } else if(type == 'refill') {
-
+        // for the inventoryRefill page, use cloud function getPrediction to predict the refill value
         wx.cloud.callFunction({
             name: 'getPrediction',
             data: {
                 item: page.data.item
             },
             success: res => {
+                // the prediction store inside items data with a key called prediction_value
                 var new_item = res.result
                 console.log('Finish prediction of today', new_item)
 
+                // update the items to the page data
                 page.setData({
                     item: new_item
                 })
-
                 wx.hideLoading()
             },
             fail: err => {
-                // if get a failed result
                 console.error('Failed to use cloud function getPrediction()', err)
             }
         })
     } 
     else {
+        // for the inventoryLeft page
         wx.hideLoading()
     }
 }
 
 
 /**
- * Get whether the left in the inventory has been checked.
+ * Return the check_left value from the app info collection.
  * 
  * @method getCheckLeft
+ * @return{Promise} The state of the function. Resolve with the check_left value.
  */
 function getCheckLeft() {
     return new Promise((resolve, reject) => {
@@ -98,9 +105,10 @@ function getCheckLeft() {
 
 
 /**
- * Get all the categories in the database.
+ * Return all the categories in the category collection.
  * 
  * @method getCategory
+ * @return{Promise} The state of the function. Resolve with all the categories.
  */
 function getCategory() {
     return new Promise((resolve, reject) => {
@@ -126,25 +134,29 @@ function getCategory() {
 
 
 /**
- * Get all the items in the database.
+ * Return all the items in the item collection.
  * 
  * @method getItem
+ * @param{Page} page The page
  * @param{Object} categories All the categories
+ * @return{Promise} The state of the function. Resolve with all the items.
  */
 function getItem(page, categories) {
     return new Promise((resolve, reject) => {
-        var total_category = categories.length
-        var curr_category = 0
-        var t = {}
+        var total_category = categories.length // the total amount of categories need to be searched
+        var curr_category = 0 // the amount of categories have done searching
+        var item = {} // the items
 
         if(total_category == 0) {
-            resolve(t)
+            // if no categories need to be searched
+            resolve(item)
         }
 
-        var height = 400
-        var sum = 0
+        var height = 400 // the height of the switch page
+        var sum = 0 // the largest amount of items in one page
 
         for (var i in categories) {
+            // for each category
             db.collection(db_item)
                 .where({
                     category_id: categories[i]._id
@@ -156,30 +168,37 @@ function getItem(page, categories) {
                         console.log('Get items ', curr_category, '/', total_category)
 
                         if (res.data.length != 0) {
+                            // if there are items under this category
+                            // find the assigned category of those items
                             var category_order = 0
                             for (var j in categories) {
                                 if (categories[j]._id == res.data[0].category_id) {
                                     category_order = categories[j].category_order
                                 }
                             }
-                            t[category_order] = res.data
+                            // store the items
+                            item[category_order] = res.data
 
                             if (res.data.length > sum) {
+                                // if the amount of items in this category is the largest so far
                                 sum = res.data.length
                             }
                         }
 
                         if (curr_category == total_category) {
+                            // if all categories finished searching items
                             height = height + sum * 150
+                            // calculate the suitable height
 
                             if (page.data.h < height) {
+                                // if the height is larger than the default height
                                 page.setData({
                                     h: height
                                 })
                             }
 
-                            console.log('Get all the items: ', t)
-                            resolve(t)
+                            console.log('Get all the items: ', item)
+                            resolve(item)
                         }
                     },
                     fail: err => {
@@ -197,6 +216,7 @@ function getItem(page, categories) {
  * 
  * @method updateCheckLeft
  * @param{Boolean} state The new state of check_left
+ * @return{Promise} The state of the function. Resolve when finish updating check_left.
  */
 function updateCheckLeft(state) {
     return new Promise((resolve, reject) => {
