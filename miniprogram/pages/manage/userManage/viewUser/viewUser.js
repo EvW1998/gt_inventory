@@ -1,12 +1,12 @@
 /**
- *  The page to show all the user in the user collection,
+ * The page to show all the user in the user collection,
  * whose permission level is lower than the current user.
  */
-const app = getApp()
-const db = wx.cloud.database()
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
 const db_user = 'user' // the collection name of the user
 
-const userSetting_page = '../userSetting/userSetting' // url for the user setting
+const userSetting_page = '../userSetting/userSetting' // the page url of the user setting
 
 
 Page({
@@ -17,22 +17,24 @@ Page({
     data: {
         user: {}, // users in the miniapp
         permission_level: 0, // the current user permission level
-        userSetting_page: userSetting_page // url for the user setting
+        userSetting_page: userSetting_page // the page url of the user setting
     },
 
     /**
-     * When load the page, update permission level
+     * When load the page
      */
     onLoad: function () {
+        
+    },
+
+    /**
+     * When show the page, update permission level and get all user info
+     */
+    onShow: function () {
         this.setData({
             permission_level: app.globalData.permission_level
         })
-    },
 
-    /**
-     * When show the page, get all user info
-     */
-    onShow: function () {
         wx.showLoading({
             title: '加载中',
             mask: true

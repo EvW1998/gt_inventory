@@ -1,13 +1,14 @@
-<!--pages/usermanage/usermanage.wxml-->
+<!--pages/manage/userManage/viewUser/viewUser.wxml-->
+
 <view class="title">员工管理</view>
 
 <view wx:for="{{user}}" wx:key="_id">
-  <block wx:if="{{permission_level > item.permission_level}}">
-    <view class="person">
-      <navigator url="{{userSetting_page}}?title={{item._id}}" class="userdetail">
-        <view class="name">{{item.true_name}}</view>
-        <view class="level">用户权限: {{item.permission_level}}</view>
-      </navigator>
-    </view>
-  </block>
+    <block wx:if="{{permission_level > item.permission_level}}">
+        <view class="person">
+            <navigator url="{{userSetting_page}}?title={{item._id}}" class="userdetail">
+                <view class="name">{{item.true_name}}</view>
+                <view class="level">用户权限: {{item.permission_level}}</view>
+            </navigator>
+        </view>
+    </block>
 </view>

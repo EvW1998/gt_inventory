@@ -1,3 +1,5 @@
+/* pages/manage/logManage/checkLogView/checkLogView.wxss */
+
 .content {
     font-size: 18px;
 }

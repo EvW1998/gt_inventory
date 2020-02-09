@@ -1,12 +1,12 @@
 /**
- *  The page to show all the category in the category collection.
+ * The page to show all the category in the category collection.
  */
-const app = getApp()
-const db = wx.cloud.database()
-const db_category = 'category' // the collection name of the category
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
+const db_category = 'category' // the collection of categories
 
-const categorySetting_page = '../categorySetting/categorySetting' // url for the category setting
-const categoryAdd_page = '../categoryAdd/categoryAdd' // url for adding a new category
+const categorySetting_page = '../categorySetting/categorySetting' // the page url of the category setting
+const categoryAdd_page = '../categoryAdd/categoryAdd' // the page url of adding a new category
 
 
 Page({
@@ -16,8 +16,8 @@ Page({
      */
     data: {
         category: {}, // categories in the miniapp
-        categorySetting_page: categorySetting_page, // url for the category setting
-        categoryAdd_page: categoryAdd_page // url for adding a new category
+        categorySetting_page: categorySetting_page, // the page url of the category setting
+        categoryAdd_page: categoryAdd_page // the page url of adding a new category
     },
 
     /**

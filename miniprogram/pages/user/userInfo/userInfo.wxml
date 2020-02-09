@@ -1,11 +1,12 @@
-<!--index.wxml-->
+<!--pages/user/userInfo/userInfo.wxml-->
+
 <view class="container">
 
     <view class="userinfo">
         <button wx:if="{{!logged}}" open-type="getUserInfo" bindgetuserinfo="onGetUserInfo" plain="true"> 点击授权登录 </button>
         <block wx:else>
-        <image class="userinfo-avatar" src="{{userInfo.avatarUrl}}" mode="cover"></image>
-        <text class="userinfo-nickname">{{userInfo.nickName}}</text>
+            <image class="userinfo-avatar" src="{{userInfo.avatarUrl}}" mode="cover"></image>
+            <text class="userinfo-nickname">{{userInfo.nickName}}</text>
         </block>
     </view>
 

@@ -3,14 +3,14 @@
  * Include the user's name, wechat openid, 
  * the uid in this miniapp, and the permission level.
  */
-const user = require('../../../utils/user.js');
+const user = require('../../../utils/user.js') //require the util of user
 
-const app = getApp()
-const db = wx.cloud.database()
-const db_user = 'user' // the collection name for the user Info
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
+const db_user = 'user' // the collection of users
 
-const registration_page = '../userRegister/userRegister' // the url for the registration page
-const upgrade_page = '../userUpgrade/userUpgrade' // the url for the upgrade page
+const registration_page = '../userRegister/userRegister' // the page url of the user registration
+const upgrade_page = '../userUpgrade/userUpgrade' // the page url of the user upgrade 
 
 
 Page({
@@ -26,7 +26,7 @@ Page({
         true_name: '', //user's registered real name
         permission_level: 0, // user's permission level
         version: '', // the version info shows at the bottom of the page
-        upgrade_page: upgrade_page
+        upgrade_page: upgrade_page // the page url of the user upgrade 
     },
 
     /***

@@ -1,3 +1,5 @@
+<!--pages/inventory/inventoryUpdate/inventoryUpdate.wxml-->
+
 <view class="bg">
     <view class="nav">
         <scroll-view class="scroll-view_H" scroll-x="true" enable-flex="true">
@@ -10,24 +12,26 @@
     </view>
 </view>
 
-<swiper current="{{currentTab}}" style="height:{{h}}rpx" bindchange="swiperChanged">
-    <view wx:for="{{item}}" wx:for-item="i" wx:key="i">
-        <swiper-item>
-            <view wx:for="{{i}}" wx:for-item="subitem" wx:key="_id">
-                <view class="{{subitem.item_state==1?'sub_red':'sub'}}">
+<block wx:if="{{item_amount != 0}}">
+    <swiper current="{{currentTab}}" style="height:{{h}}rpx" bindchange="swiperChanged">
+        <view wx:for="{{item}}" wx:for-item="i" wx:key="i">
+            <swiper-item>
+                <view wx:for="{{i}}" wx:for-item="subitem" wx:key="_id">
+                    <view class="{{subitem.item_state==1?'sub_red':'sub'}}">
 
-                    <navigator url="{{detail_page}}?title={{subitem._id}}" class="sub-navigator">
-                        <text>{{subitem.item_name}}</text>
-                    </navigator>
+                        <navigator url="{{detail_page}}?title={{subitem._id}}" class="sub-navigator">
+                            <text>{{subitem.item_name}}</text>
+                        </navigator>
 
-                    <view class="stockValue">存量: {{subitem.stock_value}}</view>
+                        <view class="stockValue">存量: {{subitem.stock_value}}</view>
+                    </view>
                 </view>
-            </view>
-        </swiper-item>
-    </view>
-</swiper>
+            </swiper-item>
+        </view>
+    </swiper>
 
-<view class="button">
-    <button class="btn" type="primary" bindtap="bindLeft" disabled="{{check_left}}">余量</button>
-    <button class="btn" type="primary" bindtap="bindRefill" disabled="{{!check_left}}">补货</button>
-</view>
+    <view class="button">
+        <button class="btn" type="primary" bindtap="bindLeft" disabled="{{check_left}}">余量</button>
+        <button class="btn" type="primary" bindtap="bindRefill" disabled="{{!check_left}}">补货</button>
+    </view>
+</block>

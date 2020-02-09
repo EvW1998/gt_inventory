@@ -1,13 +1,14 @@
-<!--pages/addmenu/addmenu.wxml-->
+<!--pages/manage/inventoryManage/categoryAdd/categoryAdd.wxml-->
+
 <view class="content">
-  <view class="title">新增品类</view>
+    <view class="title">新增品类</view>
 
-  <form bindsubmit="formSubmit">
-    <view class="item">
-      <view class="name">品类名称:  </view>
-      <view class="val"><input name="name" type="text" bindblur="checkBlur_name"/></view>
-    </view>
+    <form bindsubmit="formSubmit">
+        <view class="item">
+            <view class="name">品类名称:  </view>
+            <view class="val"><input name="name" type="text" bindblur="checkBlur_name"/></view>
+        </view>
 
-    <button class="btn" type="{{btn_state}}" form-type="submit" disabled="{{!filled}}">确认提交</button>
-  </form>
+        <button class="btn" type="{{btn_state}}" form-type="submit" disabled="{{!filled}}">确认提交</button>
+    </form>
 </view>

@@ -1,3 +1,5 @@
+<!--pages/manage/logManage/refillLogView/refillLogView.wxml-->
+
 <view class="content">
     <view class="date">补货确认时间: {{date}}</view>
     <view class="user_name">补货确认人: {{user_true_name}}</view>
@@ -7,9 +9,14 @@
         <view class="{{item.stock_value==0?'detail_red':'detail'}}">{{item.item_name}}: {{item.stock_value}}</view>
     </view>
 
-    <view class="title">本此补货量:</view>
+    <view class="title">本次实际补货量:</view>
     <view wx:for="{{refill}}" wx:key="_id">
         <view class="{{item.refill_value==0?'detail_red':'detail'}}">{{item.item_name}}: {{item.refill_value}}</view>
+    </view>
+
+    <view class="title">本次建议补货量:</view>
+    <view wx:for="{{refill}}" wx:key="_id">
+        <view class="{{item.refill_value != item.prediction_value ? 'detail_red':'detail'}}">{{item.item_name}}: {{item.prediction_value}}</view>
     </view>
 
     <view class="space"></view>

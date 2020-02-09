@@ -2,13 +2,14 @@
  * Modify the category name or delete it.
  * Also show items under this category.
  */
-const app = getApp()
-const db = wx.cloud.database()
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
 const db_category = 'category' // the collection of categories
 const db_item = 'item' // the collection of items
-const page_modify = '../categoryModify/categoryModify' // the page url to modify the category
-const page_new_item = '../itemAdd/itemAdd' // the page url to add a new item
-const page_item_setting = '../itemSetting/itemSetting' // the page url to modify the item
+
+const page_modify = '../categoryModify/categoryModify' // the page url of modifying the category
+const page_new_item = '../itemAdd/itemAdd' // the page url of adding a new item
+const page_item_setting = '../itemSetting/itemSetting' // the page url of modifying the item
 
 
 Page({
@@ -17,13 +18,13 @@ Page({
      * Data for the page
      */
     data: {
-        category_id: '', // the uid of the selected user
-        category_selected: {},
-        items: {},
-        page_modify: page_modify,
-        page_new_item: page_new_item,
-        page_item_setting: page_item_setting,
-        first_load: true
+        category_id: '', // the uid of the selected category
+        category_selected: {}, // the selected category
+        items: {}, // items under this category
+        page_modify: page_modify, // the page url of modifying the category
+        page_new_item: page_new_item, // the page url of adding a new item
+        page_item_setting: page_item_setting, // the page url of modifying the item
+        first_load: true // whether it is first time load this page
     },
 
     /**
@@ -41,8 +42,9 @@ Page({
             category_id: options.title
         })
 
+        // search and set the selected category
         searchCategory(this, this.data.category_id)
-
+        // search and set items under this category
         searchItem(this, this.data.category_id)
     },
 
@@ -55,19 +57,20 @@ Page({
                 first_load: false
             })
         } else {
+            // update the category and item info
             searchCategory(this, this.data.category_id)
             searchItem(this, this.data.category_id)
         }
     },
 
-    /***
-     *  When the user wants to share this miniapp
+    /**
+     * When the user wants to share this miniapp
      */
     onShareAppMessage: function () {
         return {
             title: 'GT库存',
             desc: '国泰餐厅库存管理程序',
-            path: '/usersetting/usersetting'
+            path: 'pages/inventory/inventoryUpdate/inventoryUpdate'
         }
     }
 })

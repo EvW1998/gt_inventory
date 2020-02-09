@@ -1,18 +1,19 @@
-<!--pages/usermanage/usermanage.wxml-->
+<!--pages/manage/inventoryManage/categorySetting/categorySetting.wxml-->
+
 <view class="title">品类: {{category_selected.category_name}}</view>
 
-<view class="person">
-  <navigator url="{{page_modify}}?title={{category_id}}" class="addnew">编辑此品类</navigator>
+<view class="item">
+    <navigator url="{{page_modify}}?title={{category_id}}" class="btn">编辑此品类</navigator>
 </view>
 
-<view class="person">
-  <navigator url="{{page_new_item}}?title={{category_id}}" class="addnew">新增子品项</navigator>
+<view class="item">
+    <navigator url="{{page_new_item}}?title={{category_id}}" class="btn">新增子品项</navigator>
 </view>
 
 <view wx:for="{{items}}" wx:key="_id">
-    <view class="person">
-        <navigator url="{{page_item_setting}}?title={{item._id}}" class="userdetail">
-        <view class="name">{{item.item_name}}</view>
+    <view class="item">
+        <navigator url="{{page_item_setting}}?title={{item._id}}" class="detail">
+            <view class="name">{{item.item_name}}</view>
         </navigator>
     </view>
 </view>

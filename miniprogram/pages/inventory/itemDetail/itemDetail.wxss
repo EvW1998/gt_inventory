@@ -1,3 +1,5 @@
+/* pages/inventory/itemDetail/itemDetail.wxss */
+
 .content {
     font-size: 18px;
 }

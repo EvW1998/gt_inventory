@@ -19,7 +19,9 @@ Page({
         currentTab: 0, // the current tab for show
         flag: 0, // the tab title to be bloded
         category: {}, // the categories in the inventory
+        category_amount: 0, // the amount of categories
         item: {}, // the items in the inventory
+        item_amount: 0, // the amount of items
         h: 1200 // the height for the page
     },
 
@@ -129,7 +131,7 @@ async function confirmRefill(page, user_input) {
                     // if the input is not a number or the input smaller than 0
                     formated_input[i] = 0
                     legal_input = false
-                } else if (formated_input[i] > formated_item[i].prediction_value) {
+                } else if (formated_input[i] + formated_item[i].stock_value > formated_item[i].max_capacity) {
                     // if the input larger than the prediction value
                     formated_input[i] = formated_item[i].prediction_value
                     legal_input = false
@@ -257,6 +259,7 @@ function addRefillLog(refill, item, today) {
             formated_refill[i] = {}
             formated_refill[i]['item_name'] = item[i].item_name
             formated_refill[i]['refill_value'] = refill[i]
+            formated_refill[i]['prediction_value'] = item[i].prediction_value
         }
 
         var refill_log = {}

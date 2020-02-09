@@ -1,11 +1,11 @@
 /**
  * Update the selected category
  */
-const pAction = require('../../../../utils/pageAction.js')
-const delInventory = require('../../../../utils/deleteInventory.js')
+const pAction = require('../../../../utils/pageAction.js') // require the util of page actions
+const delInventory = require('../../../../utils/deleteInventory.js') // require the util of deleting inventory
 
-const app = getApp()
-const db = wx.cloud.database()
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
 const db_category = 'category' // the collection of categories
 const db_item = 'item' // the collection of items
 
@@ -16,8 +16,8 @@ Page({
      * Data for the page
      */
     data: {
-        category_id: '', // the uid of the selected user
-        category_selected: {},
+        category_id: '', // the id of the selected category
+        category_selected: {}, // the selected category
         filled_name: true, // whether the name input is filled
         btn_state: "primary" // the state for the confirm button
     },
@@ -115,14 +115,14 @@ Page({
         
     },
 
-    /***
-     *  When the user wants to share this miniapp
+    /**
+     * When the user wants to share this miniapp
      */
     onShareAppMessage: function () {
         return {
             title: 'GT库存',
             desc: '国泰餐厅库存管理程序',
-            path: '/usersetting/usersetting'
+            path: 'pages/inventory/inventoryUpdate/inventoryUpdate'
         }
     }
 })
@@ -181,104 +181,6 @@ function updateCategory(update_category_data, category_id) {
             // if get a failed result
             console.error('Failed to use cloud function dbUpdate()', err)
             pAction.navigateBackUser('更改失败', 1)
-        }
-    })
-}
-
-
-/**
- * Remove the given category and all items under it from the db.
- * 
- * @method removeData
- */
-async function removeData(category_id) {
-    var items = await getItem(category_id)
-    await removeItems(items)    
-
-    wx.cloud.callFunction({
-        name: 'dbRemove',
-        data: {
-            collection_name: db_category,
-            uid: category_id
-        },
-        success: res => {
-            console.log('Remove category success')
-            pAction.navigateBackUser('删除成功', 2)
-        },
-        fail: err => {
-            // if get a failed result
-            console.error('Failed to use cloud function dbRemove()', err)
-            pAction.navigateBackUser('删除失败', 2)
-        }
-    })
-}
-
-
-/**
- * Get all the items under this category.
- * 
- * @method getItem
- * @param{String} category_id The category id
- * @return{Promise} All the items under this category
- */
-function getItem(category_id) {
-    return new Promise((resolve, reject) => {
-        db.collection(db_item)
-            .where({
-                category_id: category_id
-            })
-            .orderBy('item_order', 'asc')
-            .get({
-                success: res => {
-                    resolve(res.data)
-                },
-                fail: err => {
-                    reject()
-                }
-            })
-    })
-}
-
-
-/**
- * Remove all the items under the category.
- * 
- * @method removeItems
- * @param{Object} items All the items
- * @return{Promise} The state of the function
- */
-function removeItems(items) {
-    return new Promise((resolve, reject) => {
-        if(items.length != 0) {
-            var total_del = items.length
-            var curr_del = 0
-
-            for (var i in items) {
-                wx.cloud.callFunction({
-                    name: 'dbRemove',
-                    data: {
-                        collection_name: db_item,
-                        uid: items[i]._id
-                    },
-                    success: res => {
-                        curr_del = curr_del + 1
-                        console.log('Remove item success ', curr_del, '/', total_del)
-
-                        if (curr_del == total_del) {
-                            console.log('Finish removing all items')
-                            resolve()
-                        }
-                    },
-                    fail: err => {
-                        // if get a failed result
-                        console.error('Failed to use cloud function dbRemove()', err)
-                        reject()
-                    }
-                })
-            }
-        } else {
-            console.log('Finish removing all items')
-            resolve()
         }
     })
 }

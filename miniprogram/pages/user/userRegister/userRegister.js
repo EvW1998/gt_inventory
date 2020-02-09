@@ -2,13 +2,12 @@
  * Page for user to register in this app, require user's real name,
  * and an invition code for registration.
  */
-const user = require('../../../utils/user.js');
-const pAction = require('../../../utils/pageAction.js')
+const user = require('../../../utils/user.js'); // require the util of user
+const pAction = require('../../../utils/pageAction.js') // require the util of page actions
 
-const app = getApp()
-const db_user = 'user' // the collection for the user in db
+const app = getApp() // the app
 
-const info_page = '../userInfo/userInfo' // the url for the info page
+const info_page = '../userInfo/userInfo' // the page url of user info
 
 
 Page({
@@ -131,30 +130,40 @@ Page({
      */
     async addUser(n) {
 
-        // use an object to hold the data that plans to add to db
-        var add_user_data = {
-            user_openid: app.globalData.openid,
-            true_name: n,
-            permission_level: app.globalData.permission_level
+        var legal_input = isChinese(n)
+
+        if(legal_input) {
+            // use an object to hold the data that plans to add to db
+            var add_user_data = {
+                user_openid: app.globalData.openid,
+                true_name: n,
+                permission_level: app.globalData.permission_level
+            }
+
+            // add the user into the user collection
+            var add_result = await user.addNewUser(add_user_data)
+
+            // update the user info
+            app.globalData.registered = true
+            console.log('User registered in the App: ', app.globalData.registered)
+
+            app.globalData.uid = add_result.result._id
+            console.log('User uid: ', app.globalData.uid)
+
+            app.globalData.true_name = n
+            console.log('User real name: ', app.globalData.true_name)
+
+            app.globalData.permission_level = 0
+            console.log('User permission level: ', app.globalData.permission_level)
+
+            pAction.navigateBackUser('注册成功', 1)
+        } else {
+            wx.hideLoading()
+            wx.showToast({
+                title: '输入中文',
+                icon: 'none'
+            })
         }
-
-        // add the user into the user collection
-        var add_result = await user.addNewUser(add_user_data)
-
-        // update the user info
-        app.globalData.registered = true
-        console.log('User registered in the App: ', app.globalData.registered)
-
-        app.globalData.uid = add_result.result._id
-        console.log('User uid: ', app.globalData.uid)
-
-        app.globalData.true_name = n
-        console.log('User real name: ', app.globalData.true_name)
-
-        app.globalData.permission_level = 0
-        console.log('User permission level: ', app.globalData.permission_level)
-
-        pAction.navigateBackUser('注册成功', 1)
     },
 
     /**
@@ -168,3 +177,20 @@ Page({
         }
     }
 })
+
+
+/**
+ * Return whether the string is all Chinese characters.
+ * 
+ * @method isChinese
+ * @param{String} str The string for testing
+ * @return{Boolean} whether the string is all Chinese characters
+ */
+function isChinese(str) {
+    var reg = /^[\u4e00-\u9fa5]*$/
+    if (!reg.test(str)) {
+        return false
+    } else {
+        return true
+    }
+}

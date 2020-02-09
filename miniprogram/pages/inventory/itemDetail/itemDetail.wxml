@@ -1,3 +1,5 @@
+<!--pages/inventory/itemDetail/itemDetail.wxml-->
+
 <view class="content">
     <view class="item_name">品项: {{item_selected.item_name}}</view>
 

@@ -14,10 +14,10 @@ const db_sale = 'sale' // the collection of sales
  * 
  * @method setInventory
  * @param{Page} page The page
- * @param{String} type The type, whether main, left or refill
+ * @param{String} type The type, whether update, left or refill
  */
 async function setInventory(page, type) {
-    if (type == 'main') {
+    if (type == 'update') {
         // for the inventoryUpdate page
         // get the check_left value and update to the app and page data
         var cl = await getCheckLeft()
@@ -33,20 +33,27 @@ async function setInventory(page, type) {
     for (var c in categories) {
         categories[c]['nav_order'] = parseInt(c)
     }
+    
+    var category_amount = Object.keys(categories).length
 
     // update categories to the page data
     page.setData({
+        category_amount: category_amount,
         category: categories
     })
     console.log('Get all the categories: ', page.data.category)
 
     // get all items and update items to the page data
     var items = await getItem(page, categories)
+
+    var item_amount = Object.keys(items).length
+
     page.setData({
+        item_amount: item_amount,
         item: items
     })
 
-    if (type == 'main') {
+    if (type == 'update') {
         // for the inventoryUpdate page
         wx.stopPullDownRefresh()
     } else if(type == 'refill') {

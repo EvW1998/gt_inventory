@@ -1,11 +1,11 @@
 /**
  * The page to add new sale to the miniapp
  */
-const date = require('../../../../utils/date.js');
-const pAction = require('../../../../utils/pageAction.js')
+const date = require('../../../../utils/date.js'); //require the util of date
+const pAction = require('../../../../utils/pageAction.js') // require the util of page actions
 
-const app = getApp()
-const db = wx.cloud.database()
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
 const db_sale = 'sale' // the collection of sales
 
 
@@ -14,7 +14,7 @@ Page({
      * Data in the page
      */
     data: {
-        select_date: '',
+        select_date: '', // the selected date for the sale value
         filled: false,  // whether the input box of the sale value gets filled
         btn_state: "default" // the state for the confirm button
     },
@@ -23,24 +23,10 @@ Page({
      * When the page gets loaded
      */
     onLoad: function () {
-        var d = date.dateInArray(new Date())
-
-        var new_month = ''
-        if(d.month < 10) {
-            new_month = '0' + d.month
-        } else {
-            new_month = d.month
-        }
-
-        var new_day = ''
-        if (d.day < 10) {
-            new_day = '0' + d.day
-        } else {
-            new_day = d.day
-        }
+        var d = date.dateInformat(date.dateInArray(new Date())) 
 
         this.setData({
-            select_date: d.year + '-' + new_month + '-' + new_day,
+            select_date: d,
         })
     },
 
@@ -117,28 +103,42 @@ Page({
  */
 function addSale(value) {
     var new_sale = parseInt(value.sale)
-    var add_sale_data = {
-        sale_value: new_sale,
-        sale_date: value.date
+    var legal_input = true
+
+    if(isNaN(new_sale) || new_sale < 0) {
+        legal_input = false
     }
 
-    // call dbAdd() cloud function to add the sale to collection
-    wx.cloud.callFunction({
-        name: 'dbAdd',
-        data: {
-            collection_name: db_sale,
-            add_data: add_sale_data
-        },
-        success: res => {
-            console.log('Add new sale data to the database: ', add_sale_data)
-
-            pAction.navigateBackUser('新增成功', 1)
-        },
-        fail: err => {
-            // if get a failed result
-            console.error('Failed to use cloud function dbAdd()', err)
-            wx.hideLoading()
+    if(legal_input) {
+        var add_sale_data = {
+            sale_value: new_sale,
+            sale_date: value.date
         }
-    })
 
+        // call dbAdd() cloud function to add the sale to collection
+        wx.cloud.callFunction({
+            name: 'dbAdd',
+            data: {
+                collection_name: db_sale,
+                add_data: add_sale_data
+            },
+            success: res => {
+                console.log('Add new sale data to the database: ', add_sale_data)
+
+                pAction.navigateBackUser('新增成功', 1)
+            },
+            fail: err => {
+                // if get a failed result
+                console.error('Failed to use cloud function dbAdd()', err)
+                wx.hideLoading()
+            }
+        })
+    } else {
+        console.log('User input illegal')
+        wx.hideLoading()
+        wx.showToast({
+            title: '输入错误',
+            icon: 'none'
+        })
+    }
 }

@@ -1,12 +1,11 @@
 /**
  * Update the selected user's name and permission level
  */
-const pAction = require('../../../../utils/pageAction.js')
+const pAction = require('../../../../utils/pageAction.js') // require the util of page actions
 
-
-const app = getApp()
-const db = wx.cloud.database()
-const db_user = 'user' // the collection name of the user
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
+const db_user = 'user' // the collection of users
 
 
 Page({
@@ -16,14 +15,14 @@ Page({
      */
     data: {
         manage_id: '', // the uid of the selected user
-        manage_user: {}, 
-        max_level: 0, // the maximum level can be setted
+        manage_user: {},  // the selected user
+        max_level: 0, // the maximum level can be selected
         filled_name: true, // whether the name input is filled
         btn_state: "primary" // the state for the confirm button
     },
 
     /**
-     * When the app loads the page
+     * When the page is loaded
      * 
      * @param{Object} options The data passed to this page
      */
@@ -118,24 +117,35 @@ Page({
         }
 
         if (Object.keys(update_user_data).length != 0) {
-            // if there is a user info changed
-            // call dbUpdate() cloud function to update the userinfo
-            wx.cloud.callFunction({
-                name: 'dbUpdate',
-                data: {
-                    collection_name: db_user,
-                    update_data: update_user_data,
-                    uid: this.data.manage_id
-                },
-                success: res => {
-                    console.log('Update user info success')
-                    pAction.navigateBackUser('更改成功', 1)
-                },
-                fail: err => {
-                    // if get a failed result
-                    console.error('failed to use cloud function dbUpdate()', err)
-                }
-            })
+
+            var legal_input = isChinese(e.detail.value.name)
+
+            if(legal_input) {
+                // if there is a user info changed
+                // call dbUpdate() cloud function to update the userinfo
+                wx.cloud.callFunction({
+                    name: 'dbUpdate',
+                    data: {
+                        collection_name: db_user,
+                        update_data: update_user_data,
+                        uid: this.data.manage_id
+                    },
+                    success: res => {
+                        console.log('Update user info success')
+                        pAction.navigateBackUser('更改成功', 1)
+                    },
+                    fail: err => {
+                        // if get a failed result
+                        console.error('failed to use cloud function dbUpdate()', err)
+                    }
+                })
+            } else {
+                wx.hideLoading()
+                wx.showToast({
+                    title: '输入中文',
+                    icon: 'none'
+                })
+            }
         }
         else {
             console.log('No use info changed')
@@ -143,14 +153,31 @@ Page({
         }
     },
 
-    /***
-     *  When the user wants to share this miniapp
+    /**
+     * When the user wants to share this miniapp
      */
     onShareAppMessage: function () {
         return {
             title: 'GT库存',
             desc: '国泰餐厅库存管理程序',
-            path: '/usersetting/usersetting'
+            path: 'pages/inventory/inventoryUpdate/inventoryUpdate'
         }
     }
 })
+
+
+/**
+ * Return whether the string is all Chinese characters.
+ * 
+ * @method isChinese
+ * @param{String} str The string for testing
+ * @return{Boolean} whether the string is all Chinese characters
+ */
+function isChinese(str) {
+    var reg = /^[\u4e00-\u9fa5]*$/
+    if (!reg.test(str)) {
+        return false
+    } else {
+        return true
+    }
+}

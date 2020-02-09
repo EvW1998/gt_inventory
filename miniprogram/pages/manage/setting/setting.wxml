@@ -1,44 +1,45 @@
-<!--pages/setting/setting.wxml-->
-<view class="um">
-  <navigator url="{{user_manage_page}}" open-type="navigate" class="um-text">
-    <text>员工管理</text>
-  </navigator>
+<!--pages/manage//setting/setting.wxml-->
+
+<view class="title">
+    <navigator url="{{user_manage_page}}" open-type="navigate" class="title_text">
+        <text>员工管理</text>
+    </navigator>
 </view>
 
-<view class="pd">
-  <navigator url="{{category_manage_page}}" open-type="navigate" class="pd-text">
-    <text>品类管理</text>
-  </navigator>
+<view class="title">
+    <navigator url="{{category_manage_page}}" open-type="navigate" class="title_text">
+        <text>品类管理</text>
+    </navigator>
 </view>
 
-<view class="pd">
-  <navigator url="{{sale_manage_page}}" open-type="navigate" class="pd-text">
-    <text>营业额管理</text>
-  </navigator>
+<view class="title">
+    <navigator url="{{sale_manage_page}}" open-type="navigate" class="title_text">
+        <text>营业额管理</text>
+    </navigator>
 </view>
 
-<view class="pd">
-  <navigator url="{{check_log_manage_page}}" open-type="navigate" class="pd-text">
-    <text>查看余量确认记录</text>
-  </navigator>
+<view class="title">
+    <navigator url="{{check_log_manage_page}}" open-type="navigate" class="title_text">
+        <text>查看余量确认记录</text>
+    </navigator>
 </view>
 
-<view class="pd">
-  <navigator url="{{refill_manage_page}}" open-type="navigate" class="pd-text">
-    <text>查看补货确认记录</text>
-  </navigator>
+<view class="title">
+    <navigator url="{{refill_manage_page}}" open-type="navigate" class="title_text">
+        <text>查看补货确认记录</text>
+    </navigator>
 </view>
 
-<view class="pd">
-  <button bindtap="clearWarning">清除异常提醒</button>
+<view class="title">
+    <button bindtap="clearWarning">清除品项异常标记</button>
 </view>
 
-<view class="pd">
-  <button bindtap="getLeftSubscribed">接收余量消息提醒</button>
+<view class="title">
+    <button bindtap="getLeftSubscribed">接收余量消息提醒</button>
 </view>
 
-<view class="pd">
-  <button bindtap="getRefillSubscribed">接收补货消息提醒</button>
+<view class="title">
+    <button bindtap="getRefillSubscribed">接收补货消息提醒</button>
 </view>
 
 <view class="space"></view>

@@ -1,13 +1,12 @@
 /**
  * The page to add new item to the selected category.
  */
-const pAction = require('../../../../utils/pageAction.js')
+const pAction = require('../../../../utils/pageAction.js') // require the util of page actions
 
-
-const app = getApp()
-const db = wx.cloud.database()
-const db_category = 'category' // the collection for the category in db
-const db_item = 'item' // the collection for the item in db
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
+const db_category = 'category' // the collection of categories
+const db_item = 'item' // the collection of items
 
 
 Page({
@@ -16,12 +15,12 @@ Page({
      */
     data: {
         category_selected: {}, // The selected category
-        filled_name: false,
-        filled_base: false,
-        filled_scale: false,
-        filled_stock: false,
-        filled_capacity: false,
-        filled: false,  // whether the input box of the category name gets filled
+        filled_name: false, // whether the input box of the item name gets filled
+        filled_base: false, // whether the input box of the item base value gets filled
+        filled_scale: false, // whether the input box of the item scale value gets filled
+        filled_stock: false, // whether the input box of the item stock value filled
+        filled_capacity: false, // whether the input box of the item capacity value gets filled
+        filled: false,  // whether all input boxes are filled
         btn_state: "default" // the state for the confirm button
     },
 
@@ -285,34 +284,54 @@ async function addItem(category_selected, item_info) {
     // use an object to hold the data that plans to add to db
     var base_number = parseInt(item_info.base)
     var scale_number = parseFloat(item_info.scale)
-    var stock_value = parseInt(item_info.stock)
+    var stock_value = parseFloat(item_info.stock)
     var max_capacity = parseInt(item_info.capacity)
 
-    var add_item_data = {
-        category_id: category_selected._id,
-        item_order: category_selected.item_amount,
-        item_name: item_info.name,
-        base_number: base_number,
-        scale_number: scale_number,
-        stock_value: stock_value,
-        max_capacity: max_capacity,
-        item_state: 0
+    var legal_input = true
+    if (isNaN(base_number) || isNaN(scale_number) || isNaN(stock_value) || isNaN(max_capacity)) {
+        legal_input = false
+    }
+    if(base_number < 1 || scale_number < 1 || stock_value < 0 || max_capacity < base_number * scale_number) {
+        legal_input = false
+    }
+    if(stock_value > max_capacity) {
+        legal_input = false
     }
 
-    // add the new item to the collection
-    await addToDB(add_item_data)
-    console.log('Add the new item to the collection: ', add_item_data)
+    if(legal_input) {
+        var add_item_data = {
+            category_id: category_selected._id,
+            item_order: category_selected.item_amount,
+            item_name: item_info.name,
+            base_number: base_number,
+            scale_number: scale_number,
+            stock_value: stock_value,
+            max_capacity: max_capacity,
+            item_state: 0
+        }
 
-    // use an object to hold the data that plans to update to db
-    var update_category_data = {
-        item_amount: category_selected.item_amount + 1
+        // add the new item to the collection
+        await addToDB(add_item_data)
+        console.log('Add the new item to the collection: ', add_item_data)
+
+        // use an object to hold the data that plans to update to db
+        var update_category_data = {
+            item_amount: category_selected.item_amount + 1
+        }
+
+        // update the total amount of the items inside this category
+        await updateItemAmount(update_category_data, category_selected._id)
+        console.log('Update the total amount of the items: ', update_category_data.item_amount)
+
+        pAction.navigateBackUser('新增成功', 1)
+    } else {
+        console.log('User input illegal')
+        wx.hideLoading()
+        wx.showToast({
+            title: '输入错误',
+            icon: 'none'
+        })
     }
-
-    // update the total amount of the items inside this category
-    await updateItemAmount(update_category_data, category_selected._id)
-    console.log('Update the total amount of the items: ', update_category_data.item_amount)
-
-    pAction.navigateBackUser('新增成功', 1)
 }
 
 

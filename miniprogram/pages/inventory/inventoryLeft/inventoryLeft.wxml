@@ -1,3 +1,5 @@
+<!--pages/inventory/inventoryLeft/inventoryLeft.wxml-->
+
 <view class="bg">
     <view class="nav">
         <scroll-view class="scroll-view_H" scroll-x="true" enable-flex="true">

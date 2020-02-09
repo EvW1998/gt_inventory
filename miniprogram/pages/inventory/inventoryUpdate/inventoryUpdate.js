@@ -22,7 +22,9 @@ Page({
         flag: 0, // the tab title to be bloded
         firstLoad: true, // whether it is the first time to load the page
         category: {}, // the categories in the inventory
+        category_amount: 0, // the amount of categories
         item: {}, // the items in the inventory
+        item_amount: 0, // the amount of items
         h: 1200, // the height for the page
         check_left: false, // whether the left in the inventory has been checked
         detail_page: detail_page // the page to show the detail info about an item
@@ -53,7 +55,7 @@ Page({
             checkPermission()
         }
 
-        inventory.setInventory(this, 'main')
+        inventory.setInventory(this, 'update')
     },
 
     /**
@@ -155,10 +157,32 @@ Page({
      * @param{Object} e The data from the button tapped
      */
     bindLeft: function(e) {
-        console.log('Start checking the left in the inventory')
-        wx.navigateTo({
-            url: check_left_page
-        })
+        var legal_action = true
+
+        if (this.data.category_amount == 0) {
+            legal_action = false
+        } else {
+            legal_action = false
+
+            for (var i in this.data.item) {
+                if(Object.keys(this.data.item[i]).length != 0) {
+                    legal_action = true
+                }
+            }
+        }
+
+        if (!legal_action) {
+            console.log('No item data')
+            wx.showToast({
+                title: '无品类',
+                icon: 'none'
+            })
+        } else {
+            console.log('Start checking the left in the inventory')
+            wx.navigateTo({
+                url: check_left_page
+            })
+        }
     },
 
     /**
@@ -168,10 +192,32 @@ Page({
      * @param{Object} e The data from the button tapped
      */
     bindRefill: function (e) {
-        console.log('Start refilling the inventory')
-        wx.navigateTo({
-            url: refill_page
-        })
+        var legal_action = true
+
+        if (this.data.category_amount == 0) {
+            legal_action = false
+        } else {
+            legal_action = false
+
+            for (var i in this.data.item) {
+                if (Object.keys(this.data.item[i]).length != 0) {
+                    legal_action = true
+                }
+            }
+        }
+
+        if (!legal_action) {
+            console.log('No item data')
+            wx.showToast({
+                title: '无品类',
+                icon: 'none'
+            })
+        } else {
+            console.log('Start refilling the inventory')
+            wx.navigateTo({
+                url: refill_page
+            })
+        }
     },
 
     /**

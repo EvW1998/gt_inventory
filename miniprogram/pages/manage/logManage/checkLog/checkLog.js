@@ -1,11 +1,11 @@
 /**
- * Modify the category name or delete it.
- * Also show items under this category.
+ * Show all the check left log
  */
-const app = getApp()
-const db = wx.cloud.database()
-const db_left_log = 'left_log' // the collection of left log
-const check_log_view_page = '../checkLogView/checkLogView'
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
+const db_left_log = 'left_log' // the collection of left logs
+
+const check_log_view_page = '../checkLogView/checkLogView' // the page url of check log detail
 
 
 Page({
@@ -14,8 +14,8 @@ Page({
      * Data for the page
      */
     data: {
-        logs: {},
-        check_log_view_page: check_log_view_page
+        logs: {}, // all check left logs
+        check_log_view_page: check_log_view_page // the page url of check log detail
     },
 
     /**

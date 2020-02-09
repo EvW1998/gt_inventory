@@ -1,28 +1,30 @@
 /**
  * The page of the setting menu
  */
-const app = getApp()
-const db = wx.cloud.database()
-const db_item = 'item'
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
+const db_item = 'item' // the collection of items
 
-const info_page = '../../user/userInfo/userInfo'
-const user_manage_page = '../userManage/viewUser/viewUser'
-const category_manage_page = '../inventoryManage/categoryView/categoryView'
-const sale_manage_page = '../saleManage/saleView/saleView'
-const check_log_manage_page = '../logManage/checkLog/checkLog'
-const refill_manage_page = '../logManage/refillLog/refillLog'
+const info_page = '../../user/userInfo/userInfo' // the page url of the user info
+const user_manage_page = '../userManage/viewUser/viewUser' // the page url of the user management
+const category_manage_page = '../inventoryManage/categoryView/categoryView' // the page url of the category management
+const sale_manage_page = '../saleManage/saleView/saleView' // the page url of the sale management
+const check_log_manage_page = '../logManage/checkLog/checkLog' // the page url of the check log viewing
+const refill_manage_page = '../logManage/refillLog/refillLog' // the page url of the refill log viewing
 
-const check_left_message_id = 'LJqgpHGDBW5N1A_7A3goZytqjqN-AR5ldYjSRvjFSSU'
-const refill_message_id = 'X9BoiE_piVjqKaKsAH1KcFhOX46FFps-bWoNBK-LnYQ'
+const check_left_message_id = 'LJqgpHGDBW5N1A_7A3goZytqjqN-AR5ldYjSRvjFSSU' // the message id of checking
+const refill_message_id = 'X9BoiE_piVjqKaKsAH1KcFhOX46FFps-bWoNBK-LnYQ' // the message id of refilling
+
+const warning_state = 1
 
 
 Page({
     data: {
-        user_manage_page: user_manage_page,
-        category_manage_page: category_manage_page,
-        sale_manage_page: sale_manage_page,
-        check_log_manage_page: check_log_manage_page,
-        refill_manage_page: refill_manage_page
+        user_manage_page: user_manage_page, // the page url of the user management
+        category_manage_page: category_manage_page, // the page url of the category management
+        sale_manage_page: sale_manage_page, // the page url of the sale management
+        check_log_manage_page: check_log_manage_page, // the page url of the check log viewing
+        refill_manage_page: refill_manage_page // the page url of the refill log viewing
     },
 
     /**
@@ -33,7 +35,9 @@ Page({
     },
 
     /**
-     * When the user click the button to agree receiving messages.
+     * When the user click the button to agree receiving checking messages.
+     * 
+     * @method getLeftSubscribed
      */
     getLeftSubscribed: function () {
         console.log('Request to receive check left messages')
@@ -51,7 +55,9 @@ Page({
     },
 
     /**
-     * When the user click the button to agree receiving messages.
+     * When the user click the button to agree receiving refilling messages.
+     * 
+     * @method getRefillSubscribed
      */
     getRefillSubscribed: function () {
         console.log('Request to receive check left messages')
@@ -70,6 +76,8 @@ Page({
 
     /**
      * Clear warning items, reset them to normal.
+     * 
+     * clearWarning
      */
     clearWarning: function () {
         wx.showLoading({
@@ -100,7 +108,7 @@ Page({
  * @method checkPermission
  */
 function checkPermission() {
-    if (app.globalData.permission_level < 1) {
+    if (app.globalData.permission_level < 2) {
         console.log('User permission level too low to view this page')
         app.globalData.permission_too_low = true
         wx.switchTab({
@@ -110,11 +118,25 @@ function checkPermission() {
 }
 
 
+/**
+ * Clear the warning state of all the items with state 1
+ * 
+ * @method clearWarningState
+ */
 async function clearWarningState() {
-    var item = await getItem()
+    // get all items with the warning state
+    var item = await getWarningItem()
 
-    var total_update = Object.keys(item).length
-    var curr_update = 0
+    var total_update = Object.keys(item).length // the total amount of items need to update
+    var curr_update = 0 // the amount of items finished updating
+
+    if(total_update == 0) {
+        console.log('Finish clear all warnings')
+        wx.hideLoading()
+        wx.showToast({
+            title: '清除成功'
+        })
+    }
 
     for(var i in item) {
         var update_item_data = {}
@@ -131,6 +153,7 @@ async function clearWarningState() {
                 curr_update = curr_update + 1
                 console.log('Clear warning ', curr_update, '/', total_update)
                 if(curr_update == total_update) {
+                    // if all items have finished updating
                     console.log('Finish clear all warnings')
                     wx.hideLoading()
 
@@ -148,11 +171,17 @@ async function clearWarningState() {
 }
 
 
-function getItem() {
+/**
+ * Return all the items with the warning state
+ * 
+ * @method getWarningItem
+ * @return{Promise} The state of the function. Resolve when get items.
+ */
+function getWarningItem() {
     return new Promise((resolve, reject) => {
         db.collection(db_item)
             .where({
-                item_state: 1
+                item_state: warning_state
             })
             .get({
                 success: res => {

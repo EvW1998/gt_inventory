@@ -1,11 +1,12 @@
-<!--pages/addmenu/addmenu.wxml-->
+<!--pages/manage/saleManage/saleAdd/saleAdd.wxml-->
+
 <view class="content">
     <view class="title">新增营业额</view>
 
     <form bindsubmit="formSubmit">
         <view class="item">
             <view class="name">营业额:  </view>
-            <view class="val"><input name="sale" type="text" bindblur="checkBlur_value"/></view>
+            <view class="val"><input name="sale" type="number" bindblur="checkBlur_value"/></view>
         </view>
 
         <view class="section_date">

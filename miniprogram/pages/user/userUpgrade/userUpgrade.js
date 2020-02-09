@@ -2,11 +2,10 @@
  * Page for user to register in this app, require user's real name,
  * and an invition code for registration.
  */
-const user = require('../../../utils/user.js');
-const pAction = require('../../../utils/pageAction.js')
+const user = require('../../../utils/user.js'); // require the util of user
+const pAction = require('../../../utils/pageAction.js') // require the util of page actions
 
-const app = getApp()
-const db_info = 'info'
+const app = getApp() // the app
 const db_user = 'user' // the collection for the user in db
 
 
@@ -15,7 +14,7 @@ Page({
      * Data for this page
      */
     data: {
-        filled: false, // boolean for whether the two required info get filled
+        filled: false, // boolean for whether the input box get filled
         btn_state: "default" // the state for the confirm button
     },
 
@@ -87,6 +86,11 @@ Page({
 })
 
 
+/**
+ * Update the user's permission level to level 3 in the collection
+ * 
+ * @method upgradePermissionLevel
+ */
 function upgradePermissionLevel() {
     var update_user_data = {}
     update_user_data['permission_level'] = 3

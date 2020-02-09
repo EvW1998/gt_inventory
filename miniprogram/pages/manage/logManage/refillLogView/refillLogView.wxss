@@ -1,3 +1,5 @@
+/* pages/manage/logManage/refillLogView/refillLogView.wxss */
+
 .content {
     font-size: 18px;
 }

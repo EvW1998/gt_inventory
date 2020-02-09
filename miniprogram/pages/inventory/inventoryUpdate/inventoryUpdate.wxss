@@ -1,3 +1,5 @@
+/* pages/inventory/inventoryUpdate/inventoryUpdate.wxss */
+
 .bg{
     background-color: #FFFFFF;
     height: 50px;

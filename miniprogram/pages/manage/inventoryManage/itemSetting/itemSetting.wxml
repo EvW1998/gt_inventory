@@ -1,37 +1,46 @@
-<!--pages/usersetting/usersetting.wxml-->
+<!--pages/manage/inventoryManage/itemSetting/itemSetting.wxml-->
+
 <view class="content">
-  <view class="title">子品项设置</view>
+    <view class="title">子品项设置</view>
 
-  <form bindsubmit="formSubmit">
-    <view class="item">
-      <view class="name">子品项名称:  </view>
-      <view class="val"><input name="name" type="text" bindblur="checkBlur_name" value="{{item_selected.item_name}}"/></view>
-    </view>
+    <form bindsubmit="formSubmit">
+        <view class="item">
+            <view class="name">子品项名称:  </view>
+            <view class="val">
+                <input name="name" type="text" bindblur="checkBlur_name" value="{{item_selected.item_name}}"/>
+            </view>
+        </view>
 
-    <view class="item">
-      <view class="name">默认补货量:  </view>
-      <view class="val"><input name="base" type="number" bindblur="checkBlur_base" value="{{item_selected.base_number}}"/></view>
-    </view>
+        <view class="item">
+            <view class="name">默认补货量:  </view>
+            <view class="val">
+                <input name="base" type="number" bindblur="checkBlur_base" value="{{item_selected.base_number}}"/>
+            </view>
+        </view>
 
-    <view class="item">
-      <view class="name">备货率:  </view>
-      <view class="val"><input name="scale" type="number" bindblur="checkBlur_scale" value="{{item_selected.scale_number}}"/></view>
-    </view>
+        <view class="item">
+            <view class="name">备货率:  </view>
+            <view class="val">
+                <input name="scale" type="number" bindblur="checkBlur_scale" value="{{item_selected.scale_number}}"/>
+            </view>
+        </view>
 
-    <view class="item">
-      <view class="name">现有库存:  </view>
-      <view class="val"><input name="stock" type="number" bindblur="checkBlur_stock" value="{{item_selected.stock_value}}"/></view>
-    </view>
+        <view class="item">
+            <view class="name">现有库存:  </view>
+            <view class="val">
+                <input name="stock" type="number" bindblur="checkBlur_stock" value="{{item_selected.stock_value}}"/>
+            </view>
+        </view>
 
-    <view class="item">
-      <view class="name">最大库存容量:  </view>
-      <view class="val">
-        <input name="capacity" type="number" bindblur="checkBlur_capacity" value="{{item_selected.max_capacity}}"/>
-      </view>
-    </view>
+        <view class="item">
+            <view class="name">最大库存容量:  </view>
+            <view class="val">
+                <input name="capacity" type="number" bindblur="checkBlur_capacity" value="{{item_selected.max_capacity}}"/>
+            </view>
+        </view>
 
-    <button class="btn" type="{{btn_state}}" form-type="submit" disabled="{{!filled}}">确认更改</button>
-  </form>
+        <button class="btn" type="{{btn_state}}" form-type="submit" disabled="{{!filled}}">确认更改</button>
+    </form>
 
-  <button class="delete_btn" type="warn" bindtap="removeCategory">删除此子品项</button>
+    <button class="delete_btn" type="warn" bindtap="removeCategory">删除此子品项</button>
 </view>

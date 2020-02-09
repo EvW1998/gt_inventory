@@ -20,7 +20,9 @@ Page({
         currentTab: 0, // the current tab for show
         flag: 0, // the tab title to be bloded
         category: {}, // the categories in the inventory
+        category_amount: 0, // the amount of categories
         item: {}, // the items in the inventory
+        item_amount: 0, // the amount of items
         h: 1200, // the height for the page
         usage: {} // the usage for the day
     },

@@ -1,5 +1,4 @@
-/* pages/addmenu/addmenu.wxss */
-/* pages/setname/setname.wxss */
+/* pages/manage/inventoryManage/itemAdd/itemAdd.wxss */
 
 .content{
     font-family : 微软雅黑,宋体;
@@ -8,7 +7,6 @@
     height: 100%;
     width:100%;
     color:#333333;
-    
 }
 
 .title{
@@ -18,30 +16,30 @@
 }
 
 .item {
-  padding-top:30rpx;
-  margin:30px;
-  display: flex;
-  flex-direction: row;
+    padding-top:30rpx;
+    margin:30px;
+    display: flex;
+    flex-direction: row;
 }
 
 .name{
-  width: 100px;
-  text-align: right;
-  height: 28px;
-  line-height: 28px;
-  font-size: 15px;
+    width: 100px;
+    text-align: right;
+    height: 28px;
+    line-height: 28px;
+    font-size: 15px;
 }
 
 .val{
-  margin-left: 30rpx;
-  width: 150px;
-  height: 28px;
-  border:1px solid #cccccc;
-  border-radius: 5px;
-  font-size:13px;
+    margin-left: 30rpx;
+    width: 150px;
+    height: 28px;
+    border:1px solid #cccccc;
+    border-radius: 5px;
+    font-size:13px;
 }
 
 .btn{
-  width:220px;
-  height: 45px;
+    width:220px;
+    height: 45px;
 }

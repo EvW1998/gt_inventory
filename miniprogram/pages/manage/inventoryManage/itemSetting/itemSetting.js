@@ -1,12 +1,11 @@
 /**
  * Update the selected item or delete it
  */
-const pAction = require('../../../../utils/pageAction.js')
-const delInventory = require('../../../../utils/deleteInventory.js')
+const pAction = require('../../../../utils/pageAction.js') // require the util of page actions
+const delInventory = require('../../../../utils/deleteInventory.js') // require the util of deleting inventory
 
-
-const app = getApp()
-const db = wx.cloud.database()
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
 const db_item = 'item' // the collection of items
 
 
@@ -17,13 +16,13 @@ Page({
      */
     data: {
         item_id: '', // the id of the selected item
-        item_selected: {},
-        filled_name: true,
-        filled_base: true,
-        filled_scale: true,
-        filled_stock: true,
-        filled_capacity: true,
-        filled: true,  // whether the input box of the category name gets filled
+        item_selected: {}, // the selected item
+        filled_name: true, // whether the input box of the item name gets filled
+        filled_base: true, // whether the input box of the item base value gets filled
+        filled_scale: false, // whether the input box of the item scale value gets filled
+        filled_stock: true, // whether the input box of the item stock value filled
+        filled_capacity: true, // whether the input box of the item capacity value gets filled
+        filled: true,  // whether all input boxes are filled
         btn_state: "primary" // the state for the confirm button
     },
 
@@ -215,6 +214,8 @@ Page({
         var update_item_data = {}
         var data_changed = false
 
+        var legal_input = true
+
         if (new_data.name != old_data.item_name) {
             update_item_data['item_name'] = new_data.name
             data_changed = true
@@ -232,7 +233,7 @@ Page({
             data_changed = true
         }
 
-        var new_stock = parseInt(new_data.stock)
+        var new_stock = parseFloat(new_data.stock)
         if (new_stock != old_data.stock_value) {
             update_item_data['stock_value'] = new_stock
             data_changed = true
@@ -244,11 +245,30 @@ Page({
             data_changed = true
         }
 
-        if(data_changed) {
-            updateItem(update_item_data, this.data.item_id)
+        if (isNaN(new_base) || isNaN(new_scale) || isNaN(new_stock) || isNaN(new_capacity)) {
+            legal_input = false
+        }
+        if (new_base < 1 || new_scale < 1 || new_stock < 0 || new_capacity < new_base * new_scale) {
+            legal_input = false
+        }
+        if (new_stock > new_capacity) {
+            legal_input = false
+        }
+
+        if(legal_input) {
+            if (data_changed) {
+                updateItem(update_item_data, this.data.item_id)
+            } else {
+                console.log('No item info changed')
+                pAction.navigateBackUser('更改成功', 1)
+            }
         } else {
-            console.log('No item info changed')
-            pAction.navigateBackUser('更改成功', 1)
+            console.log('User input illegal')
+            wx.hideLoading()
+            wx.showToast({
+                title: '输入错误',
+                icon: 'none'
+            })
         }
     },
 

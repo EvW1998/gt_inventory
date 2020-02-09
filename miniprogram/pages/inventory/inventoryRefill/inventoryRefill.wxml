@@ -1,3 +1,5 @@
+<!--pages/inventory/inventoryRefill/inventoryRefill.wxml-->
+
 <view class="bg">
     <view class="nav">
         <scroll-view class="scroll-view_H" scroll-x="true" enable-flex="true">
@@ -30,5 +32,5 @@
         </view>
     </swiper>
 
-  <button class="btn" type="primary" form-type="submit">确认补货</button>
+    <button class="btn" type="primary" form-type="submit">确认补货</button>
 </form>

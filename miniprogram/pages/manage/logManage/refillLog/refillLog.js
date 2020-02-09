@@ -1,11 +1,11 @@
 /**
- * Modify the category name or delete it.
- * Also show items under this category.
+ * Show all the refill log
  */
-const app = getApp()
-const db = wx.cloud.database()
-const db_refill_log = 'refill_log' // the collection of left log
-const refill_log_view_page = '../refillLogView/refillLogView'
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
+const db_refill_log = 'refill_log' // the collection of refill logs
+
+const refill_log_view_page = '../refillLogView/refillLogView' // the page url of refill detail
 
 
 Page({
@@ -14,8 +14,8 @@ Page({
      * Data for the page
      */
     data: {
-        logs: {},
-        refill_log_view_page: refill_log_view_page
+        logs: {}, // all the refill log
+        refill_log_view_page: refill_log_view_page // the page url of refill detail
     },
 
     /**

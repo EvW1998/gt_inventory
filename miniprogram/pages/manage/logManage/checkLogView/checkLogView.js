@@ -1,25 +1,23 @@
 /**
- * Modify the category name or delete it.
- * Also show items under this category.
+ * View the detail of a check left log
  */
-const app = getApp()
-const db = wx.cloud.database()
-const db_left_log = 'left_log' // the collection of left log
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
+const db_left_log = 'left_log' // the collection of left logs
 
 
 Page({
-
     /**
      * Data for the page
      */
     data: {
-        logs: {},
-        date: '',
-        user_true_name: '',
-        stock: {},
-        usage_daily: {},
-        usage_weekly: {},
-        usage_monthly: {}
+        logs: {}, // the selected log
+        date: '', // the date of the log
+        user_true_name: '', // the user real name of the log
+        stock: {}, // the stock info of the log
+        usage_daily: {}, // the daily usage records of the log
+        usage_weekly: {}, // the weekly usage records of the log
+        usage_monthly: {} // the montly usage records of the log
     },
 
     /**

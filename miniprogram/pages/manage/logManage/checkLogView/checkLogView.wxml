@@ -1,3 +1,5 @@
+<!--pages/manage/logManage/checkLogView/checkLogView.wxml-->
+
 <view class="content">
     <view class="date">余量确认时间: {{date}}</view>
     <view class="user_name">余量确认人: {{user_true_name}}</view>

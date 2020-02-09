@@ -1,16 +1,16 @@
 /**
- * The page to add new category to the miniapp
+ * The page to add new category to database
  */
-const pAction = require('../../../../utils/pageAction.js')
+const pAction = require('../../../../utils/pageAction.js') // require the util of page actions
 
-
-const app = getApp()
-const db = wx.cloud.database()
-const db_category = 'category' // the collection for the category in db
-const db_info = 'info' // the collection for the info in db
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
+const db_category = 'category' // the collection of categories
+const db_info = 'info' // the collection of the app info
 
 
 Page({
+
     /**
      * Data in the page
      */
@@ -58,7 +58,7 @@ Page({
     },
 
     /**
-     * When the confirm button triggered
+     * When the confirm button tapped
      * 
      * @method formSubmit
      * @param e The return val from the form submit

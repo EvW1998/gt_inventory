@@ -1,8 +1,7 @@
 /**
  * Update the selected sale info, or delete it.
  */
-const date = require('../../../../utils/date.js');
-const pAction = require('../../../../utils/pageAction.js')
+const pAction = require('../../../../utils/pageAction.js') // require the util of page actions
 
 const app = getApp()
 const db = wx.cloud.database()
@@ -15,8 +14,8 @@ Page({
      * Data for the page
      */
     data: {
-        sale_id: '', // the uid of the selected sale info
-        sale_selected: {},
+        sale_id: '', // the id of the selected sale value
+        sale_selected: {}, // the selected sale value
         filled: true, // whether the input is filled
         btn_state: "primary" // the state for the confirm button
     },
@@ -78,7 +77,21 @@ Page({
             var update_sale_data = {} // the new user info needs to be updated
             update_sale_data['sale_value'] = parseInt(e.detail.value.sale)
 
-            updateSale(update_sale_data, this.data.sale_id)
+            var legal_input = true
+            if (isNaN(update_sale_data['sale_value']) || update_sale_data['sale_value'] < 0) {
+                legal_input = false
+            }
+
+            if(legal_input) {
+                updateSale(update_sale_data, this.data.sale_id)
+            } else {
+                console.log('User input illegal')
+                wx.hideLoading()
+                wx.showToast({
+                    title: '输入错误',
+                    icon: 'none'
+                })
+            }
 
         } else {
             console.log('No sale info changed')
@@ -112,14 +125,14 @@ Page({
         })
     },
 
-    /***
-     *  When the user wants to share this miniapp
+    /**
+     * When the user wants to share this miniapp
      */
     onShareAppMessage: function () {
         return {
             title: 'GT库存',
             desc: '国泰餐厅库存管理程序',
-            path: '/usersetting/usersetting'
+            path: 'pages/inventory/inventoryUpdate/inventoryUpdate'
         }
     }
 })

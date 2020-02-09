@@ -1,12 +1,12 @@
 /**
- *  The page to show all the sale info in the sale collection.
+ * The page to show all the sale info in the sale collection.
  */
-const app = getApp()
-const db = wx.cloud.database()
-const db_sale = 'sale' // the collection name of the sale
+const app = getApp() // the app
+const db = wx.cloud.database() // the cloud database
+const db_sale = 'sale' // the collection of sale values
 
-const saleSetting_page = '../saleSetting/saleSetting' // url for the sale setting
-const saleAdd_page = '../saleAdd/saleAdd' // url for adding a new category
+const saleSetting_page = '../saleSetting/saleSetting' // the page url of sale value setting
+const saleAdd_page = '../saleAdd/saleAdd' // the page url of adding a new sale value
 
 
 Page({
@@ -16,8 +16,8 @@ Page({
      */
     data: {
         sales: {}, // sales in the miniapp
-        saleSetting_page: saleSetting_page, // url for the sale setting
-        saleAdd_page: saleAdd_page // url for adding a new sale
+        saleSetting_page: saleSetting_page, // the page url of sale value setting
+        saleAdd_page: saleAdd_page // the page url of adding a new sale value
     },
 
     /**
