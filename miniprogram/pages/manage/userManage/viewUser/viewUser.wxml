@@ -1,14 +1,62 @@
 <!--pages/manage/userManage/viewUser/viewUser.wxml-->
 
-<view class="title">员工管理</view>
+<view class="page">
+    <view class="page__hd">
+        <view class="page__title">员工管理</view>
+        <view class="page__desc">点击员工更改姓名及权限</view>
+    </view>
 
-<view wx:for="{{user}}" wx:key="_id">
-    <block wx:if="{{permission_level > item.permission_level}}">
-        <view class="person">
-            <navigator url="{{userSetting_page}}?title={{item._id}}" class="userdetail">
-                <view class="name">{{item.true_name}}</view>
-                <view class="level">用户权限: {{item.permission_level}}</view>
-            </navigator>
+    <block wx:if="{{search_state == 'searching'}}">
+        <view class="weui-loadmore">
+            <view class="weui-loading"></view>
+            <view class="weui-loadmore__tips">正在加载</view>
         </view>
     </block>
+
+    <block wx:if="{{search_state == 'noUsers'}}">
+        <view class="weui-loadmore weui-loadmore_line">
+            <view class="weui-loadmore__tips weui-loadmore__tips_in-line no-data">暂无数据</view>
+        </view>
+    </block>
+
+    <block wx:if="{{search_state == 'foundUsers'}}">
+        <block wx:if="{{user_level_2_amount != 0}}">
+            <view class="weui-cells__title">权限2级</view>
+            <view class="weui-cells weui-cells_after-title">
+                <block wx:for="{{user_level_2}}" wx:key="_id">
+                    <navigator url="{{userSetting_page}}?title={{item._id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
+                        <view class="weui-cell__bd">{{item.true_name}}</view>
+                        <view class="weui-cell__ft weui-cell__ft_in-access"></view>
+                    </navigator>
+                </block>
+            </view>
+        </block>
+
+        <block wx:if="{{user_level_1_amount != 0}}">
+            <view class="weui-cells__title">权限1级</view>
+            <view class="weui-cells weui-cells_after-title">
+                <block wx:for="{{user_level_1}}" wx:key="_id">
+                    <navigator url="{{userSetting_page}}?title={{item._id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
+                        <view class="weui-cell__bd">{{item.true_name}}</view>
+                        <view class="weui-cell__ft weui-cell__ft_in-access"></view>
+                    </navigator>
+                </block>
+            </view>
+        </block>
+
+        <block wx:if="{{user_level_0_amount != 0}}">
+            <view class="weui-cells__title">权限0级</view>
+            <view class="weui-cells weui-cells_after-title">
+                <block wx:for="{{user_level_0}}" wx:key="_id">
+                    <navigator url="{{userSetting_page}}?title={{item._id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
+                        <view class="weui-cell__bd">{{item.true_name}}</view>
+                        <view class="weui-cell__ft weui-cell__ft_in-access"></view>
+                    </navigator>
+                </block>
+            </view>
+        </block>
+    </block>
 </view>
+
+
+

@@ -15,7 +15,15 @@ Page({
      * Data for this page
      */
     data: {
+        search_state: 'searching', // the state of the searching users
         user: {}, // users in the miniapp
+        user_amount: 0, // the amount of users
+        user_level_2: {}, // users have permission level 2
+        user_level_2_amount: 0, // the amount of users have permission level 2
+        user_level_1: {}, // users have permission level 1
+        user_level_1_amount: 0, // the amount of users have permission level 1
+        user_level_0: {}, // users have permission level 0
+        user_level_0_amount: 0, // the amount of users have permission level 0
         permission_level: 0, // the current user permission level
         userSetting_page: userSetting_page // the page url of the user setting
     },
@@ -33,11 +41,6 @@ Page({
     onShow: function () {
         this.setData({
             permission_level: app.globalData.permission_level
-        })
-
-        wx.showLoading({
-            title: '加载中',
-            mask: true
         })
 
         setAllUserInfo(this)
@@ -81,17 +84,56 @@ function setAllUserInfo(page) {
         .orderBy('permission_level', 'desc')
         .get({
             success: res => {
-                page.setData({
-                    user: res.data
-                })
+                var user_result = res.data
+                
+                if(user_result.length == 0) {
+                    page.setData({
+                        search_state: 'noUsers'
+                    })
+                } else {
+                    var user_level_2 = {}
+                    var user_level_2_amount = 0
+                    var user_level_1 = {}
+                    var user_level_1_amount = 0
+                    var user_level_0 = {}
+                    var user_level_0_amount = 0
+                    
+                    for(var i in user_result) {
+                        if (user_result[i].permission_level == 2 && app.globalData.permission_level > 2) {
+                            user_level_2[user_result[i]._id] = user_result[i]
+                            user_level_2_amount ++
+                        } else if (user_result[i].permission_level == 1) {
+                            user_level_1[user_result[i]._id] = user_result[i]
+                            user_level_1_amount ++
+                        } else if (user_result[i].permission_level == 0) {
+                            user_level_0[user_result[i]._id] = user_result[i]
+                            user_level_0_amount ++
+                        }
+                    }
 
-                console.log('Get all users info', res.data)
-                wx.hideLoading()
+                    if (user_level_2_amount == 0 && user_level_1_amount == 0 && user_level_0_amount == 0) {
+                        page.setData({
+                            search_state: 'noUsers'
+                        })
+                    } else {
+                        page.setData({
+                            user_level_2: user_level_2,
+                            user_level_2_amount: user_level_2_amount,
+                            user_level_1: user_level_1,
+                            user_level_1_amount: user_level_1_amount,
+                            user_level_0: user_level_0,
+                            user_level_0_amount: user_level_0_amount,
+                            search_state: 'foundUsers'
+                        })
+
+                    }
+                }
+
+                console.log('Get all users info', user_result)
                 wx.stopPullDownRefresh()
             },
             fail: err => {
                 console.error('Failed to search users in database', err)
-                wx.hideLoading()
                 wx.stopPullDownRefresh()
             }
         })

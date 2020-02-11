@@ -1,45 +1,46 @@
 <!--pages/manage//setting/setting.wxml-->
 
-<view class="title">
-    <navigator url="{{user_manage_page}}" open-type="navigate" class="title_text">
-        <text>员工管理</text>
-    </navigator>
-</view>
+<view class="page">
+    <view class="page__bd">
+        <view class="weui-cells__title">数据管理</view>
+        <view class="weui-cells weui-cells_after-title">
+            <navigator url="{{user_manage_page}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
+                <view class="weui-cell__bd">员工管理</view>
+                <view class="weui-cell__ft weui-cell__ft_in-access"></view>
+            </navigator>
 
-<view class="title">
-    <navigator url="{{category_manage_page}}" open-type="navigate" class="title_text">
-        <text>品类管理</text>
-    </navigator>
-</view>
+            <navigator url="{{category_manage_page}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
+                <view class="weui-cell__bd">品类管理</view>
+                <view class="weui-cell__ft weui-cell__ft_in-access"></view>
+            </navigator>
 
-<view class="title">
-    <navigator url="{{sale_manage_page}}" open-type="navigate" class="title_text">
-        <text>营业额管理</text>
-    </navigator>
-</view>
+            <navigator url="{{sale_manage_page}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
+                <view class="weui-cell__bd">营业额管理</view>
+                <view class="weui-cell__ft weui-cell__ft_in-access"></view>
+            </navigator>
+        </view>
 
-<view class="title">
-    <navigator url="{{check_log_manage_page}}" open-type="navigate" class="title_text">
-        <text>查看余量确认记录</text>
-    </navigator>
-</view>
+        <view class="weui-cells__title">查看记录</view>
+        <view class="weui-cells weui-cells_after-title">
+            <navigator url="{{check_log_manage_page}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
+                <view class="weui-cell__bd">余量确认记录</view>
+                <view class="weui-cell__ft weui-cell__ft_in-access"></view>
+            </navigator>
 
-<view class="title">
-    <navigator url="{{refill_manage_page}}" open-type="navigate" class="title_text">
-        <text>查看补货确认记录</text>
-    </navigator>
-</view>
+            <navigator url="{{refill_manage_page}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
+                <view class="weui-cell__bd">补货确认记录</view>
+                <view class="weui-cell__ft weui-cell__ft_in-access"></view>
+            </navigator>
+        </view>
 
-<view class="title">
-    <button bindtap="clearWarning">清除品项异常标记</button>
+        <view class="weui-cells__title">其他</view>
+        <view class="weui-cells weui-cells_after-title">
+            <view class="weui-cell">
+                <button bindtap="clearWarning" class="weui-cell__bd setting-button">清除品项异常标记</button>
+            </view>
+            <view class="weui-cell">
+                <button bindtap="getSubscribed" class="weui-cell__bd setting-button">接收消息提醒</button>
+            </view>
+        </view>
+    </view>
 </view>
-
-<view class="title">
-    <button bindtap="getLeftSubscribed">接收余量消息提醒</button>
-</view>
-
-<view class="title">
-    <button bindtap="getRefillSubscribed">接收补货消息提醒</button>
-</view>
-
-<view class="space"></view>

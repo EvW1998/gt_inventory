@@ -22,7 +22,7 @@ exports.main = async (event, context) => {
     try {
         const result = await cloud.openapi.subscribeMessage.send({
             touser: event.openid,
-            page: 'inventory/inventoryUpdate/inventoryUpdate',
+            page: 'pages/inventory/inventoryUpdate/inventoryUpdate',
             data: {
                 time1: {
                     value: event.time

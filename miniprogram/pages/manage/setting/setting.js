@@ -35,41 +35,21 @@ Page({
     },
 
     /**
-     * When the user click the button to agree receiving checking messages.
+     * When the user click the button to agree receiving messages.
      * 
-     * @method getLeftSubscribed
+     * @method getSubscribed
      */
-    getLeftSubscribed: function () {
-        console.log('Request to receive check left messages')
+    getSubscribed: function () {
+        console.log('Request to receive both messages')
 
         wx.requestSubscribeMessage({
-            tmplIds: [check_left_message_id],
+            tmplIds: [check_left_message_id, refill_message_id],
             success(res) {
                 wx.showToast({
                     title: '同意接收',
                 })
 
-                console.log('User agree to receive check left messages')
-            }
-        })
-    },
-
-    /**
-     * When the user click the button to agree receiving refilling messages.
-     * 
-     * @method getRefillSubscribed
-     */
-    getRefillSubscribed: function () {
-        console.log('Request to receive check left messages')
-
-        wx.requestSubscribeMessage({
-            tmplIds: [refill_message_id],
-            success(res) {
-                wx.showToast({
-                    title: '同意接收',
-                })
-
-                console.log('User agree to receive check left messages')
+                console.log('User agree to receive both messages')
             }
         })
     },
