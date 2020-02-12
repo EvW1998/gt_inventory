@@ -17,8 +17,8 @@ Page({
         manage_id: '', // the uid of the selected user
         manage_user: {},  // the selected user
         max_level: 0, // the maximum level can be selected
-        filled_name: true, // whether the name input is filled
-        btn_state: "primary" // the state for the confirm button
+        button_enable: true, // whether the sumbit button is enabled
+        warn_enable: false // whether the warning icon should display
     },
 
     /**
@@ -64,27 +64,20 @@ Page({
             })
     },
 
-    /**
-     * Check whether the real name val get filled
-     * 
-     * @method checkBlur_name
-     * @param{Object} e The value returned from the input text
-     */
-    checkBlur_name: function(e) {
-        if (e.detail.value != "") {
-            // if the name input text get filled with something
-            this.setData({
-                filled_name: true,
-                btn_state: "primary"
-            })
+    nameInput: function(event) {
+        var button_enable = true
+        var warn_enable = false
+        var new_name = event.detail.value
+
+        if (new_name.length == 0 || !isChinese(new_name)) {
+            button_enable = false
+            warn_enable = true
         }
-        else {
-            // if the name input text get filled with nothing
-            this.setData({
-                filled_name: false,
-                btn_state: "default"
-            })
-        }
+
+        this.setData({
+            button_enable: button_enable,
+            warn_enable: warn_enable
+        })
     },
 
     /**
@@ -117,35 +110,24 @@ Page({
         }
 
         if (Object.keys(update_user_data).length != 0) {
-
-            var legal_input = isChinese(e.detail.value.name)
-
-            if(legal_input) {
-                // if there is a user info changed
-                // call dbUpdate() cloud function to update the userinfo
-                wx.cloud.callFunction({
-                    name: 'dbUpdate',
-                    data: {
-                        collection_name: db_user,
-                        update_data: update_user_data,
-                        uid: this.data.manage_id
-                    },
-                    success: res => {
-                        console.log('Update user info success')
-                        pAction.navigateBackUser('更改成功', 1)
-                    },
-                    fail: err => {
-                        // if get a failed result
-                        console.error('failed to use cloud function dbUpdate()', err)
-                    }
-                })
-            } else {
-                wx.hideLoading()
-                wx.showToast({
-                    title: '输入中文',
-                    icon: 'none'
-                })
-            }
+            // if there is a user info changed
+            // call dbUpdate() cloud function to update the userinfo
+            wx.cloud.callFunction({
+                name: 'dbUpdate',
+                data: {
+                    collection_name: db_user,
+                    update_data: update_user_data,
+                    uid: this.data.manage_id
+                },
+                success: res => {
+                    console.log('Update user info success')
+                    pAction.navigateBackUser('更改成功', 1)
+                },
+                fail: err => {
+                    // if get a failed result
+                    console.error('failed to use cloud function dbUpdate()', err)
+                }
+            })
         }
         else {
             console.log('No use info changed')

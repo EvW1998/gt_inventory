@@ -81,7 +81,7 @@ function setAllUserInfo(page) {
             user_openid: true,
             _id: true
         })
-        .orderBy('permission_level', 'desc')
+        .orderBy('true_name', 'desc')
         .get({
             success: res => {
                 var user_result = res.data

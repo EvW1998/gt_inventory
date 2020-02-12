@@ -35,11 +35,12 @@
 
         <view class="weui-cells__title">其他</view>
         <view class="weui-cells weui-cells_after-title">
-            <view class="weui-cell">
-                <button bindtap="clearWarning" class="weui-cell__bd setting-button">清除品项异常标记</button>
+            <view class="weui-cell" hover-class="weui-cell_active">
+                <view class="weui-cell__bd" bindtap="clearWarning">清除品项异常标记</view>
             </view>
-            <view class="weui-cell">
-                <button bindtap="getSubscribed" class="weui-cell__bd setting-button">接收消息提醒</button>
+
+            <view class="weui-cell" hover-class="weui-cell_active">
+                <view class="weui-cell__bd" bindtap="getSubscribed">接收消息提醒</view>
             </view>
         </view>
     </view>
