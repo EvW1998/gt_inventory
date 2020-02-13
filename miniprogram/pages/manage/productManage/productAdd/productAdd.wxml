@@ -1,0 +1,58 @@
+<!--pages/manage/productManage/productAdd/productAdd.wxml-->
+
+<view class="page">
+    <view class="weui-form">
+        <view class="weui-form__text-area">
+            <view class="weui-form__title">新增产品</view>
+            <view class="weui-form__desc">产品名称及所用材料</view>
+        </view>
+
+        <form bindsubmit="formSubmit">
+            <view class="weui-form__control-area">
+                <view class="weui-cells__group weui-cells__group_form">
+                    <view class="weui-cells__title">产品信息</view>
+                    <view class="weui-cells weui-cells_form weui-cells_after-title">
+                        <view class="{{warn_enable ? 'weui-cell weui-cell_warn' : 'weui-cell'}}">
+                            <view class="weui-cell__hd"><label class="weui-label">名称</label></view>
+                            <view class="weui-cell__bd">
+                                <input class="weui-input" name="name" type="text" bindinput="nameInput" placeholder="请输入产品名称"/>
+                            </view>
+                            <view wx:if="{{warn_enable}}" class="weui-cell__ft">
+                                <icon type="warn" size="23" color="#E64340"></icon>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+
+                <view class="weui-cells__group weui-cells__group_form">
+                    <view class="weui-cells__title">所用材料</view>
+                    <view class="weui-cells weui-cells_form weui-cells_after-title">
+                        <view class="weui-cell">
+                            <view class="weui-cell__hd"><label class="weui-label" bindtap="tap">名称</label></view>
+                            <view class="weui-cell__bd">
+                                <text>sample</text>
+                            </view>
+                        </view>
+
+                        <view class="weui-cell">
+                            <view class="weui-cell__hd weui-cell_link">
+                                <picker mode="multiSelector" bindchange="addItem" bindcolumnchange="changeCategory" value="{{multiIndex}}" range="{{multiArray}}">
+                                    <label class="weui-label">添加材料</label>
+                                </picker>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+            </view>
+
+            <view class="weui-form__tips-area">
+                <view class="weui-form__tips">点击确定新增产品</view>
+            </view>
+
+            <view class="weui-form__opr-area">
+                <button type="primary" form-type="submit" disabled="{{!button_enable}}">确定</button>
+            </view>
+        </form>
+    </view>
+</view>
+

@@ -1,0 +1,5 @@
+/* pages/manage/productManage/productView/productView.wxss */
+
+.no-data {
+    background-color:#ececec;
+}

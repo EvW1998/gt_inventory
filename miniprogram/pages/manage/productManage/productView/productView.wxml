@@ -1,0 +1,33 @@
+<!--pages/manage/userManage/viewUser/viewUser.wxml-->
+
+<view class="page">
+    <view class="page__hd">
+        <view class="page__title">产品管理</view>
+        <view class="page__desc">查看，新增或修改产品</view>
+    </view>
+
+    <view class="page__bd">
+        <view class="weui-cells__title">新增产品</view>
+        <view class="weui-cells weui-cells_after-title">
+            <navigator url="{{product_add_page}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
+                <view class="weui-cell__bd">添加新的产品</view>
+                <view class="weui-cell__ft weui-cell__ft_in-access"></view>
+            </navigator>
+        </view>
+
+        <view class="weui-cells__title">查看或修改产品</view>
+        
+        <block wx:if="{{search_state == 'searching'}}">
+            <view class="weui-loadmore">
+                <view class="weui-loading"></view>
+                <view class="weui-loadmore__tips">正在加载</view>
+            </view>
+        </block>
+
+        <block wx:if="{{search_state == 'noData'}}">
+            <view class="weui-loadmore weui-loadmore_line">
+                <view class="weui-loadmore__tips weui-loadmore__tips_in-line no-data">暂无数据</view>
+            </view>
+        </block>
+    </view>
+</view>

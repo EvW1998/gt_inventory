@@ -1,0 +1,3 @@
+/* pages/manage/productManage/productAdd/productAdd.wxss */
+
+page,.page{height:100%;}
