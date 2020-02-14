@@ -67,27 +67,29 @@ Page({
  * @param{Page} page The page
  */
 function setAllSaleInfo(page) {
-    db.collection(db_sale)
-        .field({
-            _id: true,
-            sale_date: true,
-            sale_value: true
-        })
-        .orderBy('sale_date', 'desc')
-        .get({
-            success: res => {
-                page.setData({
-                    sales: res.data
-                })
+    wx.cloud.callFunction({
+        name: 'dbGet',
+        data: {
+            collection_name: db_sale,
+            collection_limit: 30,
+            collection_field: {},
+            collection_where: {},
+            collection_orderby_key: 'sale_date',
+            collection_orderby_order: 'desc'
+        },
+        success: res => {
+            page.setData({
+                sales: res.result
+            })
 
-                console.log('Get all sales info', res.data)
-                wx.hideLoading()
-                wx.stopPullDownRefresh()
-            },
-            fail: err => {
-                console.error('Failed to search sales in database', err)
-                wx.hideLoading()
-                wx.stopPullDownRefresh()
-            }
-        })
+            console.log('Get all sales info', page.data.sales)
+            wx.hideLoading()
+            wx.stopPullDownRefresh()
+        },
+        fail: err => {
+            console.error('Failed to search sales in database', err)
+            wx.hideLoading()
+            wx.stopPullDownRefresh()
+        }
+    })
 }
