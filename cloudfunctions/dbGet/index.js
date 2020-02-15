@@ -29,6 +29,8 @@ exports.main = async (event, context) => {
         } else {
             console.log('Collection where is normal')
             collection_where = event.collection_where
+
+            console.log(collection_where)
         }
         
         var get_result = []

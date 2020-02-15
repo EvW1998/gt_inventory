@@ -1,5 +1,5 @@
 /**
- * Update the selected user's name and permission level
+ * Add a new product to the cloud database
  */
 const pAction = require('../../../../utils/pageAction.js') // require the util of page actions
 
@@ -7,6 +7,7 @@ const app = getApp() // the app
 const db = wx.cloud.database() // the cloud database
 const db_category = 'category' // the collection of categories
 const db_item = 'item' // the collection of items
+const db_product = 'product' // the collection of products
 
 
 Page({
@@ -15,22 +16,33 @@ Page({
      * Data for the page
      */
     data: {
-        multiArray: [[], []], // the choices in the multiSelector
+        multiArray: [], // the choices in the multiSelector
         multiIndex: [0, 0], // the index of the multiSelector
-        search_state: 'searching', // the state of searching items
         categories: {}, // the categories in the category collection
         items: {}, // the items in the item collection
+        formated_item: {}, // the items in an Object that the key is the item name
+        category_array: [], // the categories in an array
+        item_array: {}, // the items in an array
+        picked_item: {}, // the items are picked
+        set_picker: false, // whether the picker is set
         button_enable: false, // whether the sumbit button is enabled
         warn_enable: false // whether the warning icon should display
     },
 
     /**
-     * When the page is loaded
+     * When the page is loaded, set the picker for items
      */
     onLoad: function () {
         setPicker(this)
     },
 
+    /**
+     * Check the input, enable the confirm button if the length is greater than 0,
+     * enable the warning icon if the length is 0
+     * 
+     * @method nameInput
+     * @param{Object} event The event of the input
+     */
     nameInput: function (event) {
         var button_enable = true
         var warn_enable = false
@@ -47,43 +59,114 @@ Page({
         })
     },
 
+    /**
+     * Add a selected item in the picker to the list
+     * 
+     * @method addItem
+     * @param{Object} event The confirm event
+     */
     addItem: function (event) {
-        console.log(event)
-        console.log(this.data.picked_item)
-    },
+        var picker_index = event.detail.value
+        var picked = this.data.item_array[this.data.category_array[picker_index[0]]][picker_index[1]]
+        console.log('Picked index: ', picker_index)
+        console.log('Picked item: ', picked)
 
-    changeCategory: function (e) {
-        console.log('修改的列为', e.detail.column, '，值为', e.detail.value);
-        var data = {
-            multiArray: this.data.multiArray,
-            multiIndex: this.data.multiIndex
-        };
-        data.multiIndex[e.detail.column] = e.detail.value;
-        switch (e.detail.column) {
-            case 0:
-                switch (data.multiIndex[0]) {
-                    case 0:
-                        data.multiArray[1] = ['扁性动物', '线形动物', '环节动物', '软体动物', '节肢动物'];
-                        break;
-                    case 1:
-                        data.multiArray[1] = ['鱼', '两栖动物', '爬行动物'];
-                        break;
-                }
-                data.multiIndex[1] = 0;
-                break;
+        var picked_item = this.data.picked_item
+
+        if (this.data.formated_item[picked]._id in picked_item) {
+            // if the item is already in the list
+            console.log('Picked item already picked before')
+            wx.showToast({
+                title: '选择重复',
+                icon: 'none'
+            })
+        } else {
+            // if the item is not in the list
+            picked_item[this.data.formated_item[picked]._id] = this.data.formated_item[picked]
+
+            console.log('New picked item array: ', picked_item)
+            this.setData({
+                picked_item: picked_item
+            })
         }
-        console.log(data.multiIndex);
-        this.setData(data);
     },
 
     /**
-     * When the confirm button triggered, update the selected user info
+     * When slide the column in the picker, change the value and index
+     * 
+     * @method changePicker
+     * @param{Object} e The change event
+     */
+    changePicker: function (e) {
+        console.log('Add material: column: ', e.detail.column, ' change to: ', e.detail.value)
+        var data = {
+            multiArray: this.data.multiArray,
+            multiIndex: this.data.multiIndex
+        }
+        data.multiIndex[e.detail.column] = e.detail.value
+
+        if (e.detail.column == 0) {
+            data.multiArray[1] = this.data.item_array[this.data.category_array[e.detail.value]]
+            data.multiIndex[1] = 0
+        }
+
+        console.log('After changing the index: ', data.multiIndex)
+        console.log('After changing the array: ', data.multiArray)
+        this.setData(data)
+    },
+
+    /**
+     * Remove the selected item from the list
+     * 
+     * @method deleteItem
+     * @param{Object} e The delete event
+     */
+    deleteItem: function(e) {
+        var item_id = e.currentTarget.id
+        console.log('Try to delete item id: ', item_id, ' name: ', this.data.picked_item[item_id].item_name)
+
+        var new_picked_item = this.data.picked_item
+        delete new_picked_item[item_id]
+        console.log('New picked item: ', new_picked_item)
+
+        this.setData({
+            picked_item: new_picked_item
+        })
+    },
+
+    /**
+     * Add a new product to the cloud database, with its name and items that the product requires
      * 
      * @method formSubmit
-     * @param{Object} e The return val from the form submit
+     * @param{Object} e The submit event
      */
     formSubmit: function (e) {
+        wx.showLoading({
+            title: '上传中',
+            mask: true
+        })
 
+        var add_product_data = {
+            product_name: e.detail.value.name,
+            product_material: this.data.picked_item
+        }
+
+        // call dbAdd() cloud function to add the product
+        wx.cloud.callFunction({
+            name: 'dbAdd',
+            data: {
+                collection_name: db_product,
+                add_data: add_product_data
+            },
+            success: res => {
+                console.log('Add new product data to the database: ', add_product_data)
+                pAction.navigateBackUser('新增成功', 1)
+            },
+            fail: err => {
+                console.error('Failed to use cloud function dbAdd()', err)
+                wx.hideLoading()
+            }
+        })
     },
 
     /**
@@ -99,59 +182,117 @@ Page({
 })
 
 
+/**
+ * Get categories and items from database, then format the data to an array to setup the picker
+ * 
+ * @method setPicker
+ * @param{Page} page The page
+ */
 async function setPicker(page) {
     var categories = await getCategory()
-
-    page.setData({
-        categories: categories
-    })
-    console.log('Get all categories: ', page.data.categories)
+    console.log('Get all categories: ', categories)
 
     var items = await getItem()
+    console.log('Get all items: ', items)
+    var formated_item = {}
+    for (var i in items) {
+        formated_item[items[i].item_name] = items[i]
+    }
+    console.log('Set the formated_item: ', formated_item)
+
+    var category_array = []
+    var item_array = {}
+
+    for (var i in categories) {
+        category_array.push(categories[i].category_name)
+
+        var i_array = []
+        for (var j in items) {
+            if (items[j].category_id == categories[i]._id) {
+                i_array.push(items[j].item_name)
+            }
+        }
+
+        item_array[categories[i].category_name] = i_array
+    }
+    console.log('Set the category_array: ', category_array)
+    console.log('Set the item_array: ', item_array)
+
+    var multiArray = [category_array, item_array[category_array[0]]]
+    console.log('Set the multiArray: ', multiArray)
 
     page.setData({
-        items: items
+        categories: categories,
+        items: items,
+        formated_item: formated_item,
+        category_array: category_array,
+        item_array: item_array,
+        multiArray: multiArray,
+        set_picker: true
     })
-    console.log('Get all items: ', page.data.items)
 }
 
 
+/**
+ * Get categories from the database
+ * 
+ * @method getCategory
+ */
 function getCategory() {
     return new Promise((resolve, reject) => {
-        db.collection(db_category)
-            .field({
-                _id: true,
-                category_name: true
-            })
-            .get({
-                success: res => {
-                    resolve(res.data)
+        wx.cloud.callFunction({
+            name: 'dbGet',
+            data: {
+                collection_name: db_category,
+                collection_limit: 100,
+                collection_field: {
+                    _id: true,
+                    category_name: true
                 },
-                fail: err => {
-                    console.error('Failed to search categories in the collection', err)
-                    reject()
-                }
-            })
+                collection_where: {},
+                collection_orderby_key: 'category_order',
+                collection_orderby_order: 'asc'
+            },
+            success: res => {
+                resolve(res.result)
+            },
+            fail: err => {
+                console.error('Failed to search categories in the collection', err)
+                reject()
+            }
+        })
     })
 }
 
 
+/**
+ * Get items from the database
+ * 
+ * @method getItem
+ */
 function getItem() {
     return new Promise((resolve, reject) => {
-        db.collection(db_item)
-            .field({
-                _id: true,
-                category_id: true,
-                item_name: true
-            })
-            .get({
-                success: res => {
-                    resolve(res.data)
+        wx.cloud.callFunction({
+            name: 'dbGet',
+            data: {
+                collection_name: db_item,
+                collection_limit: 100,
+                collection_field: {
+                    _id: true,
+                    category_id: true,
+                    item_name: true
                 },
-                fail: err => {
-                    console.error('Failed to search items in the collection', err)
-                    reject()
-                }
-            })
+                collection_where: {},
+                collection_orderby_key: 'category_id',
+                collection_orderby_order: 'asc'
+            },
+            success: res => {
+                resolve(res.result)
+            },
+            fail: err => {
+                console.error('Failed to search items in the collection', err)
+                reject()
+            }
+        })
     })
 }

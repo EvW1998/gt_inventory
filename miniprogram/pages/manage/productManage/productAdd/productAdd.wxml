@@ -27,17 +27,22 @@
                 <view class="weui-cells__group weui-cells__group_form">
                     <view class="weui-cells__title">所用材料</view>
                     <view class="weui-cells weui-cells_form weui-cells_after-title">
-                        <view class="weui-cell">
-                            <view class="weui-cell__hd"><label class="weui-label" bindtap="tap">名称</label></view>
-                            <view class="weui-cell__bd">
-                                <text>sample</text>
+                        <block wx:for="{{picked_item}}" wx:key="_id">
+                            <view class="weui-cell">
+                                <view class="weui-cell__hd">
+                                    <label id="{{item._id}}" class="weui-label red_label" bindtap="deleteItem">删除</label>
+                                </view>
+
+                                <view class="weui-cell__bd">
+                                    <text>{{item.item_name}}</text>
+                                </view>
                             </view>
-                        </view>
+                        </block>
 
                         <view class="weui-cell">
                             <view class="weui-cell__hd weui-cell_link">
-                                <picker mode="multiSelector" bindchange="addItem" bindcolumnchange="changeCategory" value="{{multiIndex}}" range="{{multiArray}}">
-                                    <label class="weui-label">添加材料</label>
+                                <picker mode="multiSelector" bindchange="addItem" bindcolumnchange="changePicker" value="{{multiIndex}}" range="{{multiArray}}" disabled="{{!set_picker}}">
+                                    <label class="{{set_picker ? 'weui-label' : 'weui-label grey_label'}}">添加材料</label>
                                 </picker>
                             </view>
                         </view>
