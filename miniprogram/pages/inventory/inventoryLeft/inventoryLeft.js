@@ -261,25 +261,26 @@ function getUsage(stock, today_left) {
  */
 function getExistedUsage(target_date, usage_type) {
     return new Promise((resolve, reject) => {
-        db.collection(db_usage[usage_type])
-            .where({
-                date: target_date
-            })
-            .field({
-                _id: true,
-                date: true,
-                item_id: true,
-                item_usage: true
-            })
-            .get({
-                success: res => {
-                    resolve(res.data)
+        wx.cloud.callFunction({
+            name: 'dbGet',
+            data: {
+                collection_name: db_usage[usage_type],
+                collection_limit: 100,
+                collection_field: {},
+                collection_where: {
+                    date: target_date
                 },
-                fail: err => {
-                    console.error('Failed to get weekly usage from database', err)
-                    reject()
-                }
-            })
+                collection_orderby_key: 'date',
+                collection_orderby_order: 'desc'
+            },
+            success: res => {
+                resolve(res.result)
+            },
+            fail: err => {
+                console.error('Failed to get usage from database', err)
+                reject()
+            }
+        })
     })
 }
 
@@ -538,41 +539,46 @@ function sendCheckLeftMessage(today, usage) {
         }
     }
 
-    for(var i = 2; i < 4; i++) {
-        console.log('Send confirm left message to uses with permission level: ', i)
-        
-        db.collection(db_user)
-            .where({
-                permission_level: i
-            })
-            .get({
-                success: user_res => {
-                    for (var u in user_res.data) {
-                        console.log('Send confirm left message to: ', user_res.data[u].true_name)
-                        wx.cloud.callFunction({
-                            name: 'sendCheckMessage',
-                            data: {
-                                openid: user_res.data[u].user_openid,
-                                time: time,
-                                user: app.globalData.true_name,
-                                normal_amount: total_amount - not_checked_amount,
-                                unfilled_amount: not_checked_amount,
-                                comment: '具体信息请查看余量确认记录'
-                            },
-                            success: res => {
-                    
-                            },
-                            fail: err => {
-                                // if get a failed result
-                                console.error('failed to use cloud function sendMessage()', err)
-                            }
-                        })
+    console.log('Send confirm left message to uses with permission level greater than 1')
+
+    wx.cloud.callFunction({
+        name: 'dbGet',
+        data: {
+            collection_name: db_user,
+            collection_limit: 100,
+            collection_field: {},
+            collection_gt: true,
+            collection_where_key: 'permission_level',
+            collection_gt_value: 1,
+            collection_orderby_key: 'permission_level',
+            collection_orderby_order: 'desc'
+        },
+        success: user_res => {
+            for (var u in user_res.result) {
+                console.log('Send confirm left message to: ', user_res.result[u].true_name)
+                wx.cloud.callFunction({
+                    name: 'sendCheckMessage',
+                    data: {
+                        openid: user_res.result[u].user_openid,
+                        time: time,
+                        user: app.globalData.true_name,
+                        normal_amount: total_amount - not_checked_amount,
+                        unfilled_amount: not_checked_amount,
+                        comment: '具体信息请查看余量确认记录'
+                    },
+                    success: message_res => {
+
+                    },
+                    fail: message_err => {
+                        // if get a failed result
+                        console.error('failed to use cloud function sendCheckMessage()', message_err)
                     }
-                },
-                fail: user_err => {
-                    // if get a failed result
-                    console.error('failed to search users in the collection', user_err)
-                }
-            })
-    }
+                })
+            }
+        },
+        fail: user_err => {
+            // if get a failed result
+            console.error('Failed to search users in the collection', user_err)
+        }
+    })
 }

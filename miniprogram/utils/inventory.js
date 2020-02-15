@@ -119,23 +119,24 @@ function getCheckLeft() {
  */
 function getCategory() {
     return new Promise((resolve, reject) => {
-        db.collection(db_category)
-            .field({
-                _id: true,
-                category_order: true,
-                category_name: true,
-                item_amount: true
-            })
-            .orderBy('category_order', 'asc')
-            .get({
-                success: res => {
-                    resolve(res.data)
-                },
-                fail: err => {
-                    console.error('Failed to get categories from database', err)
-                    reject()
-                }
-            })
+        wx.cloud.callFunction({
+            name: 'dbGet',
+            data: {
+                collection_name: db_category,
+                collection_limit: 100,
+                collection_field: {},
+                collection_where: {},
+                collection_orderby_key: 'category_order',
+                collection_orderby_order: 'asc'
+            },
+            success: res => {
+                resolve(res.result)
+            },
+            fail: err => {
+                console.error('Failed to get categories from database', err)
+                reject()
+            }
+        })
     })
 }
 
@@ -164,55 +165,61 @@ function getItem(page, categories) {
 
         for (var i in categories) {
             // for each category
-            db.collection(db_item)
-                .where({
-                    category_id: categories[i]._id
-                })
-                .orderBy('item_order', 'asc')
-                .get({
-                    success: res => {
-                        curr_category = curr_category + 1
-                        console.log('Get items ', curr_category, '/', total_category)
-
-                        if (res.data.length != 0) {
-                            // if there are items under this category
-                            // find the assigned category of those items
-                            var category_order = 0
-                            for (var j in categories) {
-                                if (categories[j]._id == res.data[0].category_id) {
-                                    category_order = categories[j].category_order
-                                }
-                            }
-                            // store the items
-                            item[category_order] = res.data
-
-                            if (res.data.length > sum) {
-                                // if the amount of items in this category is the largest so far
-                                sum = res.data.length
-                            }
-                        }
-
-                        if (curr_category == total_category) {
-                            // if all categories finished searching items
-                            height = height + sum * 150
-                            // calculate the suitable height
-
-                            if (page.data.h < height) {
-                                // if the height is larger than the default height
-                                page.setData({
-                                    h: height
-                                })
-                            }
-
-                            console.log('Get all the items: ', item)
-                            resolve(item)
-                        }
+            wx.cloud.callFunction({
+                name: 'dbGet',
+                data: {
+                    collection_name: db_item,
+                    collection_limit: 100,
+                    collection_field: {},
+                    collection_where: {
+                        category_id: categories[i]._id
                     },
-                    fail: err => {
-                        console.error('Failed to search items', err)
-                        reject()
+                    collection_orderby_key: 'item_order',
+                    collection_orderby_order: 'asc'
+                },
+                success: res => {
+                    curr_category = curr_category + 1
+                    console.log('Get items ', curr_category, '/', total_category)
+
+                    if (res.result.length != 0) {
+                        // if there are items under this category
+                        // find the assigned category of those items
+                        var category_order = 0
+                        for (var j in categories) {
+                            if (categories[j]._id == res.result[0].category_id) {
+                                category_order = categories[j].category_order
+                            }
+                        }
+                        // store the items
+                        item[category_order] = res.result
+
+                        if (res.result.length > sum) {
+                            // if the amount of items in this category is the largest so far
+                            sum = res.result.length
+                        }
                     }
-                })
+
+                    if (curr_category == total_category) {
+                        // if all categories finished searching items
+                        height = height + sum * 150
+                        // calculate the suitable height
+
+                        if (page.data.h < height) {
+                            // if the height is larger than the default height
+                            page.setData({
+                                h: height
+                            })
+                        }
+
+                        console.log('Get all the items: ', item)
+                        resolve(item)
+                    }
+                },
+                fail: err => {
+                    console.error('Failed to search items', err)
+                    reject()
+                }
+            })
         }
     })
 }

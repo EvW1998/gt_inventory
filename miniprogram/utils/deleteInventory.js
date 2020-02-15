@@ -55,31 +55,38 @@ function getUsage(item_id) {
 
         for (var i in db_usage) {
             // for every usage collection, search the record with the given item id
-            db.collection(db_usage[i])
-                .where({
-                    item_id: item_id
-                })
-                .get({
-                    success: res => {
-                        // if the search gets a success result, add the result to the usage record
-                        usage[curr_get] = res.data
-                        curr_get = curr_get + 1
-                        console.log('Get usage ', curr_get, '/', total_get)
 
-                        if(curr_get == total_get) { 
-                            // if all collections finished searching, resolve the function
-                            resolve(usage)
-                        }                        
+            wx.cloud.callFunction({
+                name: 'dbGet',
+                data: {
+                    collection_name: db_usage[i],
+                    collection_limit: 100,
+                    collection_field: {},
+                    collection_where: {
+                        item_id: item_id
                     },
-                    fail: err => {
-                        // if the search gets a fail result, reject the function
-                        console.error("Failed to get usage ", err)
-                        reject(usage)
+                    collection_orderby_key: 'date',
+                    collection_orderby_order: 'desc'
+                },
+                success: res => {
+                    // if the search gets a success result, add the result to the usage record
+                    usage[curr_get] = res.result
+                    curr_get = curr_get + 1
+                    console.log('Get usage ', curr_get, '/', total_get)
+
+                    if (curr_get == total_get) {
+                        // if all collections finished searching, resolve the function
+                        resolve(usage)
                     }
-                })
+                },
+                fail: err => {
+                    // if the search gets a fail result, reject the function
+                    console.error("Failed to get usage ", err)
+                    reject(usage)
+                }
+            })
         }
     })
-
 }
 
 
@@ -212,20 +219,27 @@ async function removeSelectedCategory(category_id) {
  */
 function getItems(category_id) {
     return new Promise((resolve, reject) => {
-        db.collection(db_item)
-            .where({
-                category_id: category_id
-            })
-            .get({
-                success: res => {
-                    console.log('Get all items under ', category_id)
-                    resolve(res.data)
+        wx.cloud.callFunction({
+            name: 'dbGet',
+            data: {
+                collection_name: db_item,
+                collection_limit: 100,
+                collection_field: {},
+                collection_where: {
+                    category_id: category_id
                 },
-                fail: err => {
-                    console.error("Failed to get items ", err)
-                    reject()
-                }
-            })
+                collection_orderby_key: 'item_order',
+                collection_orderby_order: 'asc'
+            },
+            success: res => {
+                console.log('Get all items under ', category_id)
+                resolve(res.result)
+            },
+            fail: err => {
+                console.error("Failed to get items ", err)
+                reject()
+            }
+        })
     })
 }
 
@@ -252,26 +266,33 @@ function getAllUsage(items) {
             // for each item
             for (var j in db_usage) {
                 // for each usage collection
-                db.collection(db_usage[j])
-                    .where({
-                        item_id: i
-                    })
-                    .get({
-                        success: res => {
-                            usage[curr_get] = res.data
-                            curr_get = curr_get + 1
-                            console.log('Get usage ', curr_get, '/', total_get)
-
-                            if (curr_get == total_get) {
-                                // if all the searching is done
-                                resolve(usage)
-                            }
+                wx.cloud.callFunction({
+                    name: 'dbGet',
+                    data: {
+                        collection_name: db_usage[j],
+                        collection_limit: 100,
+                        collection_field: {},
+                        collection_where: {
+                            item_id: i
                         },
-                        fail: err => {
-                            console.error("Failed to get usage ", err)
-                            reject(usage)
+                        collection_orderby_key: 'date',
+                        collection_orderby_order: 'desc'
+                    },
+                    success: res => {
+                        usage[curr_get] = res.result
+                        curr_get = curr_get + 1
+                        console.log('Get usage ', curr_get, '/', total_get)
+
+                        if (curr_get == total_get) {
+                            // if all the searching is done
+                            resolve(usage)
                         }
-                    })
+                    },
+                    fail: err => {
+                        console.error("Failed to get usage ", err)
+                        reject(usage)
+                    }
+                })
             }
         }
     })

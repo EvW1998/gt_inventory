@@ -13,13 +13,25 @@ const db = cloud.database() // the cloud database
 exports.main = async (event, context) => {
     try {
         var collection_name = event.collection_name
-        var collection_where = event.collection_where
         var collection_field = event.collection_field
         var collection_limit = event.collection_limit
         var collection_orderby_key = event.collection_orderby_key
         var collection_orderby_order = event.collection_orderby_order
+
+        var collection_where = {}
+        var collection_gt = event.collection_gt
+
+        if(collection_gt) {
+            console.log('Collection where has greater than enable')
+            var collection_where_key = event.collection_where_key
+            var collection_gt_value = event.collection_gt_value
+            collection_where[collection_where_key] = db.command.gt(collection_gt_value)
+        } else {
+            console.log('Collection where is normal')
+            collection_where = event.collection_where
+        }
         
-        var get_result = {}
+        var get_result = []
         var total_amount = 0
         var result_amount = collection_limit
 
@@ -40,7 +52,7 @@ exports.main = async (event, context) => {
             for (var i in new_result) {
                 total_amount ++
 
-                get_result[total_amount - 1] = new_result[i]
+                get_result.push(new_result[i])
             }
         }
 

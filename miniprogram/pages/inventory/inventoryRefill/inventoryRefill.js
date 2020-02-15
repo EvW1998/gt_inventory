@@ -305,41 +305,46 @@ function sendConfirmRefillMessage(today, update_result) {
     var total_amount = update_result.total
     var warning_amount = update_result.warning
 
-    for (var i = 2; i < 4; i++) {
-        console.log('Send confirm refill message to uses with permission level: ', i)
+    console.log('Send confirm refill message to uses with permission level greater than 1')
 
-        db.collection(db_user)
-            .where({
-                permission_level: i
-            })
-            .get({
-                success: user_res => {
-                    for (var u in user_res.data) {
-                        console.log('Send confirm refill message to: ', user_res.data[u].true_name)
-                        wx.cloud.callFunction({
-                            name: 'sendRefillMessage',
-                            data: {
-                                openid: user_res.data[u].user_openid,
-                                time: time,
-                                user: app.globalData.true_name,
-                                normal_amount: total_amount - warning_amount,
-                                warning_amount: warning_amount,
-                                comment: '具体信息请查看补货确认记录'
-                            },
-                            success: res => {
+    wx.cloud.callFunction({
+        name: 'dbGet',
+        data: {
+            collection_name: db_user,
+            collection_limit: 100,
+            collection_field: {},
+            collection_gt: true,
+            collection_where_key: 'permission_level',
+            collection_gt_value: 1,
+            collection_orderby_key: 'permission_level',
+            collection_orderby_order: 'desc'
+        },
+        success: user_res => {
+            for (var u in user_res.result) {
+                console.log('Send confirm refill message to: ', user_res.result[u].true_name)
+                wx.cloud.callFunction({
+                    name: 'sendRefillMessage',
+                    data: {
+                        openid: user_res.result[u].user_openid,
+                        time: time,
+                        user: app.globalData.true_name,
+                        normal_amount: total_amount - warning_amount,
+                        warning_amount: warning_amount,
+                        comment: '具体信息请查看补货确认记录'
+                    },
+                    success: message_res => {
 
-                            },
-                            fail: err => {
-                                // if get a failed result
-                                console.error('failed to use cloud function sendMessage()', err)
-                            }
-                        })
+                    },
+                    fail: message_err => {
+                        // if get a failed result
+                        console.error('Failed to use cloud function sendRefillMessage()', message_err)
                     }
-                },
-                fail: user_err => {
-                    // if get a failed result
-                    console.error('failed to search users in the collection', user_err)
-                }
-            })
-    }
+                })
+            }
+        },
+        fail: user_err => {
+            // if get a failed result
+            console.error('Failed to search users in the collection', user_err)
+        }
+    })
 }
