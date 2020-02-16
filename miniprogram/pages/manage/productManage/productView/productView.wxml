@@ -7,7 +7,7 @@
     </view>
 
     <view class="page__bd">
-        <view class="weui-cells__title">新增产品</view>
+        <view class="weui-cells__title">点击新增产品</view>
         <view class="weui-cells weui-cells_after-title">
             <navigator url="{{product_add_page}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
                 <view class="weui-cell__bd">添加新的产品</view>
@@ -15,7 +15,7 @@
             </navigator>
         </view>
 
-        <view class="weui-cells__title">查看，修改产品或长按删除产品</view>
+        <view class="weui-cells__title">点击查看，修改产品或长按删除产品</view>
         
         <block wx:if="{{search_state == 'searching'}}">
             <view class="weui-loadmore">
@@ -34,7 +34,7 @@
             <view class="weui-cells weui-cells_after-title">
                 <block wx:for="{{products}}" wx:key="_id">
                     <navigator url="{{product_modify_page}}?product_id={{item._id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active" bindlongpress="openRemoveDialog" id="{{item._id}}">
-                        <view class="weui-cell__bd">{{item.product_name}}</view>
+                        <view class="weui-cell__bd">{{item.product_order}}. {{item.product_name}}</view>
                         <view class="weui-cell__ft weui-cell__ft_in-access"></view>
                     </navigator>
                 </block>

@@ -163,9 +163,29 @@ function setAllProductInfo(page) {
                     search_state: 'noData'
                 })
             } else {
+                var products = []
+                var order = 1
+                for (var i in product_result) {
+                    var new_product = product_result[i]
+                    var new_order = order.toString()
+
+                    if (product_amount > 9 && order < 10) {
+                        new_order = '0' + new_order
+                    }
+
+                    if (product_amount > 99 && order < 100) {
+                        new_order = '0' + new_order
+                    }
+
+                    new_product['product_order'] = new_order
+                    products.push(new_product)
+
+                    order++
+                }
+
                 page.setData({
                     search_state: 'found',
-                    products: product_result,
+                    products: products,
                     product_amount: product_amount
                 })
             }
