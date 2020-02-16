@@ -28,9 +28,9 @@
         "pages/manage/promotionTypeManage/promotionTypeView/promotionTypeView",
         "pages/manage/promotionTypeManage/promotionTypeAdd/promotionTypeAdd",
         "pages/manage/promotionTypeManage/promotionTypeModify/promotionTypeModify",
-        "pages/manage/promotionManage/promotionView/promotionView",
-        "pages/manage/promotionManage/promotionAdd/promotionAdd",
-        "pages/manage/promotionManage/promotionModify/promotionModify",
+        "pages/manage/promotionEventManage/promotionEventView/promotionEventView",
+        "pages/manage/promotionEventManage/promotionEventAdd/promotionEventAdd",
+        "pages/manage/promotionEventManage/promotionEventModify/promotionEventModify",
 
         "pages/user/userInfo/userInfo",
         "pages/user/userRegister/userRegister",

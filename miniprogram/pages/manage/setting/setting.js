@@ -13,7 +13,7 @@ const check_log_manage_page = '../logManage/checkLog/checkLog' // the page url o
 const refill_manage_page = '../logManage/refillLog/refillLog' // the page url of the refill log viewing
 const product_manage_page = '../productManage/productView/productView' // the page url of the product management
 const promotion_type_manage_page = '../promotionTypeManage/promotionTypeView/promotionTypeView' // the page url of the promotion type management
-const promotion_manage_page = '../promotionManage/promotionView/promotionView' // the page url of the promotion management
+const promotion_event_manage_page = '../promotionEventManage/promotionEventView/promotionEventView' // the page url of the promotion event management
 
 const check_left_message_id = 'LJqgpHGDBW5N1A_7A3goZytqjqN-AR5ldYjSRvjFSSU' // the message id of checking
 const refill_message_id = 'X9BoiE_piVjqKaKsAH1KcFhOX46FFps-bWoNBK-LnYQ' // the message id of refilling
@@ -30,7 +30,7 @@ Page({
         refill_manage_page: refill_manage_page, // the page url of the refill log viewing
         product_manage_page: product_manage_page, // the page url of the product management
         promotion_type_manage_page: promotion_type_manage_page, // the page url of the promotion type management
-        promotion_manage_page: promotion_manage_page // the page url of the promotion management
+        promotion_event_manage_page: promotion_event_manage_page // the page url of the promotion event management
     },
 
     /**
