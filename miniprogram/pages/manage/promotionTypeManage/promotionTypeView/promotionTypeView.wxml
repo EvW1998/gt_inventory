@@ -1,30 +1,21 @@
-<!--pages/manage/userManage/viewUser/viewUser.wxml-->
+<!--pages/manage/promotionTypeManage/promotionTypeView/promotionTypeView.wxml-->
 
 <view class="page">
     <view class="page__hd">
-        <view class="page__title">在售产品管理</view>
-        <view class="page__desc link-text" bindtap="tipChange">{{show_tip ? '点击收起帮助' : '点击查看帮助'}}</view>
-
-        <block wx:if="{{show_tip}}">
-            <view class="page__desc">在售产品包含 '产品名称' 及制作产品 '所需材料'</view>
-            <view class="page__desc">所需材料将从已添加的 '补货品类' 中选择</view>
-            <view class="page__desc">如需添加新的补货品类，请在 '补货品类管理' 中添加</view>
-            <view class="page__desc">在售产品举例：</view>
-            <view class="page__desc">产品名称：中杯热美式</view>
-            <view class="page__desc">所需材料：12oz波纹咖啡杯、黑色咖啡杯盖、黑色咖啡杯盖塞、黄糖包、奶精球、搅拌棒</view>
-        </block>
+        <view class="page__title">促销类别管理</view>
+        <view class="page__desc">促销类别</view>
     </view>
 
     <view class="page__bd">
-        <view class="weui-cells__title">点击新增在售产品</view>
+        <view class="weui-cells__title">点击新增促销类别</view>
         <view class="weui-cells weui-cells_after-title">
-            <navigator url="{{product_add_page}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
-                <view class="weui-cell__bd">添加新的在售产品</view>
+            <navigator url="{{promotion_type_add_page}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
+                <view class="weui-cell__bd">添加新的促销类别</view>
                 <view class="weui-cell__ft weui-cell__ft_in-access"></view>
             </navigator>
         </view>
 
-        <view class="weui-cells__title">点击查看，修改在售产品或长按删除在售产品</view>
+        <view class="weui-cells__title">点击查看，修改促销类别或长按删除促销类别</view>
         
         <block wx:if="{{search_state == 'searching'}}">
             <view class="weui-loadmore">
@@ -64,11 +55,7 @@
 
                 <view class="weui-half-screen-dialog__bd">
                     <view class="weui-half-screen-dialog__desc red-text">
-                        将要删除在售产品：{{selected_product.product_name}}
-                    </view>
-
-                    <view class="weui-half-screen-dialog__tips red-text">
-                        此操作无法恢复！
+                        将要删除产品：{{selected_product.product_name}}，此操作无法恢复！
                     </view>
                 </view>
 
@@ -80,3 +67,4 @@
         </view>
     </view>
 </view>
+

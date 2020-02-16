@@ -22,8 +22,8 @@
                             <text>{{subitem.item_name}}</text>
                         </view>
                         
-                        <view class="stockValue">存量: {{subitem.stock_value}}</view>
-                        <view class="stockLeft">剩余: </view>
+                        <view class="stockValue">上次统计: {{subitem.stock_value}}</view>
+                        <view class="stockLeft">现有剩余: </view>
                         <view class="val"><input name="{{subitem._id}}" type="number" placeholder="{{subitem.stock_value}}"/></view>
                     </view>
                 </view>
@@ -31,5 +31,5 @@
         </view>
     </swiper>
 
-  <button class="btn" type="primary" form-type="submit">确认余量</button>
+  <button class="btn" type="primary" form-type="submit" size="mini">确认提交</button>
 </form>

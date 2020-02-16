@@ -1,4 +1,4 @@
-/* pages/manage/productManage/productView/productView.wxss */
+/* pages/manage/promotionTypeManage/promotionTypeView/promotionTypeView.wxss */
 
 .no-data {
     background-color:#ececec;
@@ -6,10 +6,6 @@
 
 .red-text {
     color: #F25438;
-}
-
-.link-text {
-    color: #576b95;
 }
 
 .weui-demo-dialog{

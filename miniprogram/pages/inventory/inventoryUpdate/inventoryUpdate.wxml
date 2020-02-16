@@ -23,7 +23,7 @@
                             <text>{{subitem.item_name}}</text>
                         </navigator>
 
-                        <view class="stockValue">存量: {{subitem.stock_value}}</view>
+                        <view class="stockValue">上次统计后存量: {{subitem.stock_value}}</view>
                     </view>
                 </view>
             </swiper-item>
@@ -31,7 +31,7 @@
     </swiper>
 
     <view class="button">
-        <button class="btn" type="primary" bindtap="bindLeft" disabled="{{check_left}}" size="mini">余量</button>
-        <button class="btn" type="primary" bindtap="bindRefill" disabled="{{!check_left}}" size="mini">补货</button>
+        <button class="btn" type="primary" bindtap="bindLeft" disabled="{{check_left}}" size="mini">统计现有剩余量</button>
+        <button class="btn" type="primary" bindtap="bindRefill" disabled="{{!check_left}}" size="mini">补充存量</button>
     </view>
 </block>

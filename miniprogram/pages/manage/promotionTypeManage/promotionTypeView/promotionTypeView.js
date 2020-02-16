@@ -1,12 +1,12 @@
 /**
- * The page to show all the products in the product collection.
+ * The page to show all the promotion types in the database.
  */
 const app = getApp() // the app
 const db = wx.cloud.database() // the cloud database
-const db_product = 'product' // the collection of products
+const db_promotion_type = 'promotion_type' // the collection of promotion types
 
-const product_add_page = '../productAdd/productAdd' // the page url of adding a new product
-const product_modify_page = '../productModify/productModify' // the page url of modifying a product
+const promotion_type_add_page = '../promotionTypeAdd/promotionTypeAdd' // the page url of adding a new promotion type
+const promotion_type_modify_page = '../promotionTypeModify/promotionTypeModify' // the page url of modifying a promotion type
 
 
 Page({
@@ -16,13 +16,12 @@ Page({
      */
     data: {
         search_state: 'searching', // the state of the searching products
-        products: {}, // the products in the product collection
+        promotion_types: {}, // the promotion types in the database
         product_amount: 0, // the amount of products
         selected_product: '', // the selected product for removing
-        show_tip: false, // whether to show the tip of product management
         show_remove: false, // whether to show the dialog to remove a product
-        product_add_page: product_add_page, // the page url of adding a new product
-        product_modify_page: product_modify_page // the page url of modifying a product
+        promotion_type_add_page: promotion_type_add_page, // the page url of adding a new promotion type
+        promotion_type_modify_page: promotion_type_modify_page // the page url of modifying a promotion type
     },
 
     /**
@@ -33,27 +32,10 @@ Page({
     },
 
     /**
-     * When show the page, get all products info
+     * When show the page, get all promotion types
      */
     onShow: function () {
-        setAllProductInfo(this)
-    },
-
-    /**
-     * When tapping, show the tip or hide the tip
-     * 
-     * @method tipChange
-     */
-    tipChange: function (e) {
-        if (this.data.show_tip) {
-            this.setData({
-                show_tip: false
-            })
-        } else {
-            this.setData({
-                show_tip: true
-            })
-        }
+        setAllPromotionType(this)
     },
 
     /**
@@ -87,7 +69,7 @@ Page({
      * 
      * @method closeRemoveDialog
      */
-    closeRemoveDialog: function() {
+    closeRemoveDialog: function () {
         console.log('Close the half screen dialog of removing')
         this.setData({
             show_remove: false
@@ -99,7 +81,7 @@ Page({
      * 
      * @method removeProduct
      */
-    removeProduct: function() {
+    removeProduct: function () {
         wx.showLoading({
             title: '删除中',
             mask: true
@@ -156,62 +138,62 @@ Page({
 
 
 /**
- * Set all the product info into the page data.
+ * Set all the promotion types into the page data.
  * 
- * @method setAllProductInfo
+ * @method setAllPromotionType
  * @param{Page} page The page
  */
-function setAllProductInfo(page) {
+function setAllPromotionType(page) {
     wx.cloud.callFunction({
         name: 'dbGet',
         data: {
-            collection_name: db_product,
+            collection_name: db_promotion_type,
             collection_limit: 100,
             collection_field: {},
             collection_where: {},
-            collection_orderby_key: 'product_name',
+            collection_orderby_key: 'promotion_type_name',
             collection_orderby_order: 'asc'
         },
         success: res => {
-            var product_result = res.result
-            var product_amount = product_result.length
+            var promotion_type_result = res.result
+            var promotion_type_amount = promotion_type_result.length
 
-            if (product_amount == 0) {
+            if (promotion_type_amount == 0) {
                 page.setData({
                     search_state: 'noData'
                 })
             } else {
-                var products = []
+                var promotion_types = []
                 var order = 1
-                for (var i in product_result) {
-                    var new_product = product_result[i]
+                for (var i in promotion_type_result) {
+                    var new_promotion_type = promotion_type_result[i]
                     var new_order = order.toString()
 
-                    if (product_amount > 9 && order < 10) {
+                    if (promotion_type_amount > 9 && order < 10) {
                         new_order = '0' + new_order
                     }
 
-                    if (product_amount > 99 && order < 100) {
+                    if (promotion_type_amount > 99 && order < 100) {
                         new_order = '0' + new_order
                     }
 
-                    new_product['product_order'] = new_order
-                    products.push(new_product)
+                    new_promotion_type['product_order'] = new_order
+                    promotion_types.push(new_promotion_type)
 
                     order++
                 }
 
                 page.setData({
                     search_state: 'found',
-                    products: products,
-                    product_amount: product_amount
+                    promotion_types: promotion_types,
+                    promotion_type_amount: promotion_type_amount
                 })
             }
 
-            console.log('Get all products info', res.result)
+            console.log('Get all promotion types', res.result)
         },
         fail: err => {
-            console.error('Failed to search sales in database', err)
+            console.error('Failed to search promotion types in database', err)
         }
     })
 }

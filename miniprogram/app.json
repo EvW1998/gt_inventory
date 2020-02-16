@@ -6,10 +6,6 @@
         "pages/inventory/inventoryRefill/inventoryRefill",
         "pages/inventory/itemDetail/itemDetail",
 
-        "pages/user/userInfo/userInfo",
-        "pages/user/userRegister/userRegister",
-        "pages/user/userUpgrade/userUpgrade",
-        
         "pages/manage/setting/setting",
         "pages/manage/userManage/viewUser/viewUser",
         "pages/manage/userManage/userSetting/userSetting",
@@ -28,7 +24,17 @@
         "pages/manage/logManage/refillLogView/refillLogView",
         "pages/manage/productManage/productView/productView",
         "pages/manage/productManage/productAdd/productAdd",
-        "pages/manage/productManage/productModify/productModify"
+        "pages/manage/productManage/productModify/productModify",
+        "pages/manage/promotionTypeManage/promotionTypeView/promotionTypeView",
+        "pages/manage/promotionTypeManage/promotionTypeAdd/promotionTypeAdd",
+        "pages/manage/promotionTypeManage/promotionTypeModify/promotionTypeModify",
+        "pages/manage/promotionManage/promotionView/promotionView",
+        "pages/manage/promotionManage/promotionAdd/promotionAdd",
+        "pages/manage/promotionManage/promotionModify/promotionModify",
+
+        "pages/user/userInfo/userInfo",
+        "pages/user/userRegister/userRegister",
+        "pages/user/userUpgrade/userUpgrade"
     ],
     "window": {
         "backgroundColor": "#F6F6F6",
