@@ -34,7 +34,7 @@
                                 </view>
 
                                 <view class="weui-cell__bd">
-                                    <text>{{item.item_name}}</text>
+                                    <text>{{item_key_id[item.item_id].item_name}}</text>
                                 </view>
                             </view>
                         </block>

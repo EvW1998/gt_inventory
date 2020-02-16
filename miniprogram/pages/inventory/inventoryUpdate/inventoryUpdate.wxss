@@ -81,13 +81,9 @@
 .button{
     display: flex;
     flex-direction: row;
+    justify-content: space-around;
     position: fixed;
-    bottom: 10rpx;
+    bottom: 20rpx;
     left: 0;
     right: 0;
-}
-
-.btn{
-    width: 50%;
-    height: 45px;
 }

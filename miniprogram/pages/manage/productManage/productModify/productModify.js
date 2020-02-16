@@ -22,6 +22,7 @@ Page({
         categories: {}, // the categories in the category collection
         items: {}, // the items in the item collection
         formated_item: {}, // the items in an Object that the key is the item name
+        item_key_id: {}, // the items in an Object that the key is the item id
         category_array: [], // the categories in an array
         item_array: {}, // the items in an array
         picked_item: {}, // the items are picked
@@ -84,7 +85,7 @@ Page({
             })
         } else {
             // if the item is not in the list
-            picked_item[this.data.formated_item[picked]._id] = this.data.formated_item[picked]
+            picked_item[this.data.formated_item[picked]._id] = { 'item_id': this.data.formated_item[picked]._id }
 
             console.log('New picked item array: ', picked_item)
             this.setData({
@@ -200,10 +201,13 @@ async function setPicker(page) {
     var items = await getItem()
     console.log('Get all items: ', items)
     var formated_item = {}
+    var item_key_id = {}
     for (var i in items) {
         formated_item[items[i].item_name] = items[i]
+        item_key_id[items[i]._id] = items[i]
     }
     console.log('Set the formated_item: ', formated_item)
+    console.log('Set the item_key_id: ', item_key_id)
 
     var category_array = []
     var item_array = {}
@@ -230,6 +234,7 @@ async function setPicker(page) {
         categories: categories,
         items: items,
         formated_item: formated_item,
+        item_key_id: item_key_id,
         category_array: category_array,
         item_array: item_array,
         multiArray: multiArray,

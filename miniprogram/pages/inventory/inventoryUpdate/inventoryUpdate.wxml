@@ -31,7 +31,7 @@
     </swiper>
 
     <view class="button">
-        <button class="btn" type="primary" bindtap="bindLeft" disabled="{{check_left}}">余量</button>
-        <button class="btn" type="primary" bindtap="bindRefill" disabled="{{!check_left}}">补货</button>
+        <button class="btn" type="primary" bindtap="bindLeft" disabled="{{check_left}}" size="mini">余量</button>
+        <button class="btn" type="primary" bindtap="bindRefill" disabled="{{!check_left}}" size="mini">补货</button>
     </view>
 </block>
