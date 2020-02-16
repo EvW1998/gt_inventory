@@ -19,7 +19,7 @@ const db = cloud.database() // the cloud database
  */
 exports.main = async (event, context) => {
     try{
-        return db.collection(event.collection_name)
+        return await db.collection(event.collection_name)
             .add({
                 data: event.add_data
             })
