@@ -3,9 +3,9 @@
 page,.page{height:100%;}
 
 .grey_label {
-    color: #b2b2b2
+    color: #b2b2b2;
 }
 
 .red_label {
-    color: #F25438
+    color: #F25438;
 }

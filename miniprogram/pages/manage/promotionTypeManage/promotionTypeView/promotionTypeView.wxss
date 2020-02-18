@@ -8,6 +8,10 @@
     color: #F25438;
 }
 
+.link-text {
+    color: #576b95;
+}
+
 .weui-demo-dialog{
     visibility:hidden;
     opacity:0;

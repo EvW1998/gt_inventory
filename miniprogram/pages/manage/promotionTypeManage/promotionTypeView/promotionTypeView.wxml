@@ -2,20 +2,28 @@
 
 <view class="page">
     <view class="page__hd">
-        <view class="page__title">促销类别管理</view>
-        <view class="page__desc">促销类别</view>
+        <view class="page__title">促销类型管理</view>
+        <view class="page__desc link-text" bindtap="tipChange">{{show_tip ? '点击收起帮助' : '点击查看帮助'}}</view>
+
+        <block wx:if="{{show_tip}}">
+            <view class="page__desc">促销类型包含 '类型名称' 及制作产品 '默认销售倍数'</view>
+            <view class="page__desc">默认销售倍数指在促销中，销售量会达到平日的几倍</view>
+            <view class="page__desc">促销类型举例：</view>
+            <view class="page__desc">类型名称：买一送一</view>
+            <view class="page__desc">默认销售倍数：2</view>
+        </block>
     </view>
 
     <view class="page__bd">
-        <view class="weui-cells__title">点击新增促销类别</view>
+        <view class="weui-cells__title">点击新增促销类型</view>
         <view class="weui-cells weui-cells_after-title">
             <navigator url="{{promotion_type_add_page}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
-                <view class="weui-cell__bd">添加新的促销类别</view>
+                <view class="weui-cell__bd">添加新的促销类型</view>
                 <view class="weui-cell__ft weui-cell__ft_in-access"></view>
             </navigator>
         </view>
 
-        <view class="weui-cells__title">点击查看，修改促销类别或长按删除促销类别</view>
+        <view class="weui-cells__title">点击查看，修改促销类型或长按删除促销类型</view>
         
         <block wx:if="{{search_state == 'searching'}}">
             <view class="weui-loadmore">
@@ -32,9 +40,9 @@
 
         <block wx:elif="{{search_state == 'found'}}">
             <view class="weui-cells weui-cells_after-title">
-                <block wx:for="{{products}}" wx:key="_id">
-                    <navigator url="{{product_modify_page}}?product_id={{item._id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active" bindlongpress="openRemoveDialog" id="{{item._id}}">
-                        <view class="weui-cell__bd">{{item.product_order}}. {{item.product_name}}</view>
+                <block wx:for="{{promotion_types}}" wx:key="_id">
+                    <navigator url="{{promotion_type_modify_page}}?promotion_type_id={{item._id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active" bindlongpress="openRemoveDialog" id="{{item._id}}">
+                        <view class="weui-cell__bd">{{item.promotion_type_order}}. {{item.promotion_type_name}}</view>
                         <view class="weui-cell__ft weui-cell__ft_in-access"></view>
                     </navigator>
                 </block>
@@ -55,13 +63,17 @@
 
                 <view class="weui-half-screen-dialog__bd">
                     <view class="weui-half-screen-dialog__desc red-text">
-                        将要删除产品：{{selected_product.product_name}}，此操作无法恢复！
+                        将要删除促销类型：{{selected_promotion_type.promotion_type_name}}
+                    </view>
+
+                    <view class="weui-half-screen-dialog__tips red-text">
+                        此操作无法恢复！
                     </view>
                 </view>
 
                 <view class="weui-half-screen-dialog__ft">
                     <button type="default" class="weui-btn" bindtap="closeRemoveDialog">取消</button>
-                    <button type="warn" class="weui-btn" bindtap="removeProduct">删除</button>
+                    <button type="warn" class="weui-btn" bindtap="removePromotionType">删除</button>
                 </view>
             </view>
         </view>

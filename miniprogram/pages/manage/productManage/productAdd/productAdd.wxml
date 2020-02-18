@@ -22,6 +22,9 @@
                             </view>
                         </view>
                     </view>
+                    <view class="weui-cells__tips" wx:if="{{warn_enable}}">
+                        <label class="red_label">名称不能为空</label>
+                    </view>
                 </view>
 
                 <view class="weui-cells__group weui-cells__group_form">

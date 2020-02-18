@@ -15,11 +15,12 @@ Page({
      * Data for this page
      */
     data: {
-        search_state: 'searching', // the state of the searching products
+        search_state: 'searching', // the state of the searching promotion types
         promotion_types: {}, // the promotion types in the database
-        product_amount: 0, // the amount of products
-        selected_product: '', // the selected product for removing
-        show_remove: false, // whether to show the dialog to remove a product
+        promotion_type_amount: 0, // the amount of promotion types
+        selected_promotion_type: {}, // the selected promotion type for removing
+        show_tip: false, // whether to show the tip of promotion types
+        show_remove: false, // whether to show the dialog to remove a promotion type
         promotion_type_add_page: promotion_type_add_page, // the page url of adding a new promotion type
         promotion_type_modify_page: promotion_type_modify_page // the page url of modifying a promotion type
     },
@@ -39,33 +40,50 @@ Page({
     },
 
     /**
-     * Open the half screen dialog of removing product.
+     * When tapping, show the tip or hide the tip
+     * 
+     * @method tipChange
+     */
+    tipChange: function (e) {
+        if (this.data.show_tip) {
+            this.setData({
+                show_tip: false
+            })
+        } else {
+            this.setData({
+                show_tip: true
+            })
+        }
+    },
+
+    /**
+     * Open the half screen dialog of removing promotion_type.
      * 
      * @method openRemoveDialog
      * @param{Object} e The longpress event
      */
     openRemoveDialog: function (e) {
-        var product_id = e.currentTarget.id
+        var promotion_type_id = e.currentTarget.id
         console.log('Open the half screen dialog of removing')
-        console.log('Selected product: ', product_id)
+        console.log('Selected promotion type: ', promotion_type_id)
 
-        var product = ''
+        var promotion_type = ''
 
-        for (var i in this.data.products) {
-            if (this.data.products[i]._id == product_id) {
-                product = this.data.products[i]
+        for (var i in this.data.promotion_types) {
+            if (this.data.promotion_types[i]._id == promotion_type_id) {
+                promotion_type = this.data.promotion_types[i]
                 break
             }
         }
 
         this.setData({
-            selected_product: product,
+            selected_promotion_type: promotion_type,
             show_remove: true
         })
     },
 
     /**
-     * Close the half screen of removing product.
+     * Close the half screen of removing promotion_type.
      * 
      * @method closeRemoveDialog
      */
@@ -77,27 +95,27 @@ Page({
     },
 
     /**
-     * Remove the selected product from the database.
+     * Remove the selected promotion_type from the database.
      * 
-     * @method removeProduct
+     * @method removePromotionType
      */
-    removeProduct: function () {
+    removePromotionType: function () {
         wx.showLoading({
             title: '删除中',
             mask: true
         })
 
-        var product = this.data.selected_product
-        console.log('Try to remove the selected product: ', product)
+        var promotion_type = this.data.selected_promotion_type
+        console.log('Try to remove the selected promotion_type: ', promotion_type)
 
         wx.cloud.callFunction({
             name: 'dbRemove',
             data: {
-                collection_name: db_product,
-                uid: product._id
+                collection_name: db_promotion_type,
+                uid: promotion_type._id
             },
             success: res => {
-                console.log('Remove product success: ', res)
+                console.log('Remove promotion_type success: ', res)
 
                 this.setData({
                     show_remove: false
@@ -111,7 +129,7 @@ Page({
                 })
             },
             fail: err => {
-                console.error('Failed to remove product: ', err)
+                console.error('Failed to remove promotion_type: ', err)
 
                 this.onShow()
 
@@ -177,7 +195,7 @@ function setAllPromotionType(page) {
                         new_order = '0' + new_order
                     }
 
-                    new_promotion_type['product_order'] = new_order
+                    new_promotion_type['promotion_type_order'] = new_order
                     promotion_types.push(new_promotion_type)
 
                     order++

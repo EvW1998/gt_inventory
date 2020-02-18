@@ -18,7 +18,7 @@ Page({
         search_state: 'searching', // the state of the searching products
         products: {}, // the products in the product collection
         product_amount: 0, // the amount of products
-        selected_product: '', // the selected product for removing
+        selected_product: {}, // the selected product for removing
         show_tip: false, // whether to show the tip of product management
         show_remove: false, // whether to show the dialog to remove a product
         product_add_page: product_add_page, // the page url of adding a new product

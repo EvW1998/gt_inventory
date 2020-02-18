@@ -1,1 +1,11 @@
 /* pages/manage/promotionTypeManage/promotionTypeAdd/promotionTypeAdd.wxss */
+
+page,.page{height:100%;}
+
+.grey_label {
+    color: #b2b2b2
+}
+
+.red_label {
+    color: #F25438
+}
