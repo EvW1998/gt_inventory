@@ -32,7 +32,7 @@
                         <view class="{{multiple_warn_enable ? 'weui-cell weui-cell_warn' : 'weui-cell'}}">
                             <view class="weui-cell__hd"><view class="weui-label">销售倍数</view></view>
                             <view class="weui-cell__bd">
-                                <input class="weui-input" name="multiple" type="number" bindinput="multipleInput" placeholder="请输入默认促销倍数"/>
+                                <input class="weui-input" name="multiple" type="digit" bindinput="multipleInput" placeholder="请输入默认促销倍数"/>
                             </view>
                             <view wx:if="{{multiple_warn_enable}}" class="weui-cell__ft">
                                 <icon type="warn" size="23" color="#E64340"></icon>
