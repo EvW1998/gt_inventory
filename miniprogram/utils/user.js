@@ -1,6 +1,7 @@
 /**
  * Util functions about user login and modification.
  */
+const realTimeLog = require('log.js') // require the util of real time log
 const db_user = 'user' // the collection of users
 
 
@@ -160,10 +161,32 @@ function addNewUser(user_data) {
 }
 
 
+/**
+ * Get the system info.
+ * 
+ * @method getSystem
+ * @return{Promise} The state of the function. Resolve with the returned result from system info
+ */
+function getSystem() {
+    return new Promise((resolve, reject) => {
+        wx.getSystemInfo({
+            success: res => {
+                resolve(res)
+            },
+            fail: err => {
+                realTimeLog.error('Failed to get system info.', err)
+                reject(err)
+            }
+        })
+    })
+}
+
+
 module.exports = {
     getAuthority: getAuthority,
     getUserInfomation: getUserInfomation,
     getOpenId: getOpenId,
     checkUser: checkUser,
-    addNewUser: addNewUser
+    addNewUser: addNewUser,
+    getSystem: getSystem
 }

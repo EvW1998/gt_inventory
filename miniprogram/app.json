@@ -40,7 +40,7 @@
         "backgroundColor": "#F6F6F6",
         "backgroundTextStyle": "light",
         "navigationBarBackgroundColor": "#F6F6F6",
-        "navigationBarTitleText": "GT库存",
+        "navigationBarTitleText": "国泰餐厅耗品存量管理",
         "navigationBarTextStyle": "black"
     },
     "tabBar": {
@@ -56,5 +56,6 @@
         }]
     },
     "sitemapLocation": "sitemap.json",
-    "style": "v2"
+    "style": "v2",
+    "debug": false
 }

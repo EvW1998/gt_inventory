@@ -43,14 +43,41 @@
         </block>
 
         <block wx:elif="{{search_state == 'found'}}">
-            <view class="weui-cells weui-cells_after-title">
-                <block wx:for="{{promotion_events}}" wx:key="_id">
-                    <navigator url="{{promotion_event_modify_page}}?promotion_event_id={{item._id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active" bindlongpress="openRemoveDialog" id="{{item._id}}">
-                        <view class="weui-cell__bd">{{item.promotion_event_order}}. {{item.promotion_event_name}}</view>
-                        <view class="weui-cell__ft weui-cell__ft_in-access"></view>
-                    </navigator>
-                </block>
-            </view>
+            <block wx:if="{{promotion_events_future.length > 0}}">
+                <view class="weui-cells__title">未开始的促销事件</view>
+                <view class="weui-cells weui-cells_after-title">
+                    <block wx:for="{{promotion_events_future}}" wx:key="_id">
+                        <navigator url="{{promotion_event_modify_page}}?promotion_event_id={{item._id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active" bindlongpress="openRemoveDialog" id="{{item._id}}">
+                            <view class="weui-cell__bd">{{item.promotion_event_order}}. {{item.promotion_event_name}}</view>
+                            <view class="weui-cell__ft weui-cell__ft_in-access">开始: {{item.start_date}}</view>
+                        </navigator>
+                    </block>
+                </view>
+            </block>
+            
+            <block wx:if="{{promotion_events_current.length > 0}}">
+                <view class="weui-cells__title">正在进行的促销事件</view>
+                <view class="weui-cells weui-cells_after-title">
+                    <block wx:for="{{promotion_events_current}}" wx:key="_id">
+                        <navigator url="{{promotion_event_modify_page}}?promotion_event_id={{item._id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active" bindlongpress="openRemoveDialog" id="{{item._id}}">
+                            <view class="weui-cell__bd">{{item.promotion_event_order}}. {{item.promotion_event_name}}</view>
+                            <view class="weui-cell__ft weui-cell__ft_in-access">结束: {{item.end_date}}</view>
+                        </navigator>
+                    </block>
+                </view>
+            </block>
+            
+            <block wx:if="{{promotion_events_past.length > 0}}">
+                <view class="weui-cells__title">已结束的促销事件</view>
+                <view class="weui-cells weui-cells_after-title">
+                    <block wx:for="{{promotion_events_past}}" wx:key="_id">
+                        <navigator url="{{promotion_event_modify_page}}?promotion_event_id={{item._id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active" bindlongpress="openRemoveDialog" id="{{item._id}}">
+                            <view class="weui-cell__bd">{{item.promotion_event_order}}. {{item.promotion_event_name}}</view>
+                            <view class="weui-cell__ft weui-cell__ft_in-access">结束: {{item.end_date}}</view>
+                        </navigator>
+                    </block>
+                </view>
+            </block>
         </block>
 
         <view class="weui-demo-dialog {{show_remove ? 'weui-demo-dialog_show' : ''}}">
