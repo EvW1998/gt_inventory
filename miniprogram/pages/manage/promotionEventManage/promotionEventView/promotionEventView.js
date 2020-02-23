@@ -225,6 +225,11 @@ function setAllPromotionEvent(page) {
         },
         fail: err => {
             realTimeLog.error('Failed to get promotion events.', err)
+
+            wx.showToast({
+                title: '网络错误，请重试',
+                icon: 'none'
+            })
         }
     })
 }

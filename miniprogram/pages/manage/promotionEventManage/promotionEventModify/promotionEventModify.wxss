@@ -1,1 +1,19 @@
-/* pages/manage/promotionManage/promotionModify/promotionModify.wxss */
+/* pages/manage/promotionEventManage/promotionEventModify/promotionEventModify.wxss */
+
+page,.page{height:100%;}
+
+.grey_label {
+    color: #b2b2b2
+}
+
+.dark_grey_label {
+    color: #767676
+}
+
+.red_label {
+    color: #F25438
+}
+
+.link_label {
+    color: #576b95;
+}

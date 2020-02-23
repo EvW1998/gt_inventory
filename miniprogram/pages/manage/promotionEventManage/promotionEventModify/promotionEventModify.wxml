@@ -1,2 +1,148 @@
-<!--pages/manage/promotionManage/promotionModify/promotionModify.wxml-->
-<text>pages/manage/promotionManage/promotionModify/promotionModify.wxml</text>
+<!--pages/manage/promotionEventManage/promotionEventModify/promotionEventModify.wxml-->
+
+<view class="page">
+    <view class="weui-form">
+        <view class="weui-form__text-area">
+            <view class="weui-form__title">修改促销事件</view>
+            <view class="weui-form__desc">促销事件名称，促销产品，促销类型，开始日期和结束日期</view>
+        </view>
+
+        <form bindsubmit="formSubmit">
+            <view class="weui-form__control-area">
+                <view class="weui-cells__group weui-cells__group_form">
+                    <view class="weui-cells__title">促销事件名称</view>
+                    <view class="weui-cells weui-cells_form weui-cells_after-title">
+                        <view class="{{name_warn_enable ? 'weui-cell weui-cell_warn' : 'weui-cell'}}">
+                            <view class="weui-cell__hd">
+                                <view class="weui-label">名称</view>
+                            </view>
+                            <view class="weui-cell__bd">
+                                    <input class="weui-input" name="name" type="text" bindinput="nameInput" placeholder="请输入促销事件名称" value="{{promotion_event.promotion_event_name}}"/>
+                            </view>
+                            <view wx:if="{{name_warn_enable}}" class="weui-cell__ft">
+                                <icon type="warn" size="23" color="#E64340"></icon>
+                            </view>
+                        </view>
+                    </view>
+                    <view class="weui-cells__tips" wx:if="{{name_warn_enable}}">
+                        <label class="red_label">名称不能为空</label>
+                    </view>
+                </view>
+
+                <view class="weui-cells__group weui-cells__group_form">
+                    <view class="weui-cells__title">促销产品</view>
+                    <view class="weui-cells weui-cells_form weui-cells_after-title">
+                        <block wx:for="{{product_picked}}" wx:key="_id">
+                            <view class="weui-cell">
+                                <view class="weui-cell__hd">
+                                    <view id="{{item}}" class="weui-label red_label" bindtap="removeProduct">删除</view>
+                                </view>
+
+                                <view class="weui-cell__bd">
+                                    <label>{{products_key_id[item].product_name}}</label>
+                                </view>
+                            </view>
+                        </block>
+
+                        <view class="{{product_warn_enable ? 'weui-cell weui-cell_warn' : 'weui-cell'}}">
+                            <view class="weui-cell__hd weui-cell_link">
+                                <picker bindchange="addProduct" value="{{product_index}}" range="{{product_array}}" disabled="{{!product_picker_enable}}">
+                                    <view class="{{product_picker_enable ? 'weui-label' : 'weui-label grey_label'}}">添加产品</view>
+                                </picker>
+                            </view>
+
+                            <view class="weui-cell__bd">
+                                <label></label>
+                            </view>
+
+                            <view wx:if="{{product_warn_enable}}" class="weui-cell__ft">
+                                <icon type="warn" size="23" color="#E64340"></icon>
+                            </view>
+                        </view>
+                    </view>
+
+                    <view class="weui-cells__tips" wx:if="{{product_warn_enable}}">
+                        <label class="red_label">请选择至少一个产品</label>
+                    </view>
+                </view>
+
+                <view class="weui-cells__group weui-cells__group_form">
+                    <view class="weui-cells__title">促销类型</view>
+
+                    <view class="weui-cells weui-cells_form weui-cells_after-title">
+                        <view class="weui-cell">
+                            <view class="weui-cell__hd">
+                                <view class="weui-label">促销类型</view>
+                            </view>
+                            <view class="weui-cell__bd">
+                                <picker bindchange="changeType" value="{{type_index}}" range="{{type_array}}" disabled="{{!type_picker_enable}}">
+                                    <block wx:if="{{type_filled}}">
+                                        <label class="weui-label">{{types_key_id[type_picked].promotion_type_name}}</label>
+                                    </block>
+                                    <block wx:else>
+                                        <label class="{{type_picker_enable ? 'weui-label link_label' : 'weui-label dark_grey_label'}}">请点击选择促销类型</label>
+                                    </block>
+                                </picker>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+
+                <view class="weui-cells__group weui-cells__group_form">
+                    <view class="weui-cells__title">促销日期</view>
+
+                    <view class="weui-cells weui-cells_form weui-cells_after-title">
+                        <view class="weui-cell">
+                            <view class="weui-cell__hd">
+                                <view class="weui-label">开始日期</view>
+                            </view>
+                            <view class="weui-cell__bd">
+                                <picker mode="date" bindchange="changeStartDate" value="{{start_date}}" start="{{today}}">
+                                    <block wx:if="{{start_date_filled}}">
+                                        <label class="weui-label">{{start_date}}</label>
+                                    </block>
+                                    <block wx:else>
+                                        <label class="weui-label link_label">请点击选择开始日期</label>
+                                    </block>
+                                </picker>
+                            </view>
+                        </view>
+
+                        <view class="weui-cell">
+                            <view class="weui-cell__hd">
+                                <view class="weui-label">结束日期</view>
+                            </view>
+                            <view class="weui-cell__bd">
+                                <picker mode="date" bindchange="changeEndDate" value="{{end_date}}" start="{{start_date}}">
+                                    <block wx:if="{{end_date_filled}}">
+                                        <label class="weui-label">{{end_date}}</label>
+                                    </block>
+                                    <block wx:else>
+                                        <label class="weui-label link_label">请点击选择结束日期</label>
+                                    </block>
+                                </picker>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+            </view>
+
+            <view wx:if="{{progress_enable}}" class="page__bd page__bd_spacing weui-progress">
+                <view class="weui-progress__bar">
+                    <progress percent="{{progress}}" stroke-width="6" />
+                </view>
+                <view class="weui-progress__opr">
+                    <icon type="waiting" size="22"></icon>
+                </view>
+             </view>
+
+            <view class="weui-form__tips-area">
+                <view class="weui-form__tips">点击确定修改促销事件</view>
+            </view>
+
+            <view class="weui-form__opr-area">
+                <button type="primary" form-type="submit" disabled="{{!button_enable}}">确定</button>
+            </view>
+        </form>
+    </view>
+</view>

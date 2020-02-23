@@ -35,11 +35,11 @@
                         <block wx:for="{{product_picked}}" wx:key="_id">
                             <view class="weui-cell">
                                 <view class="weui-cell__hd">
-                                    <label id="{{item}}" class="weui-label red_label" bindtap="removeProduct">删除</label>
+                                    <view id="{{item}}" class="weui-label red_label" bindtap="removeProduct">删除</view>
                                 </view>
 
                                 <view class="weui-cell__bd">
-                                    <text>{{products_key_id[item].product_name}}</text>
+                                    <label>{{products_key_id[item].product_name}}</label>
                                 </view>
                             </view>
                         </block>
@@ -47,8 +47,12 @@
                         <view class="{{product_warn_enable ? 'weui-cell weui-cell_warn' : 'weui-cell'}}">
                             <view class="weui-cell__hd weui-cell_link">
                                 <picker bindchange="addProduct" value="{{product_index}}" range="{{product_array}}" disabled="{{!product_picker_enable}}">
-                                    <label class="{{product_picker_enable ? 'weui-label' : 'weui-label grey_label'}}">添加产品</label>
+                                    <view class="{{product_picker_enable ? 'weui-label' : 'weui-label grey_label'}}">添加产品</view>
                                 </picker>
+                            </view>
+
+                            <view class="weui-cell__bd">
+                                <label></label>
                             </view>
 
                             <view wx:if="{{product_warn_enable}}" class="weui-cell__ft">

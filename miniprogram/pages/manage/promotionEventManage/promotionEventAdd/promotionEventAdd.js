@@ -382,6 +382,11 @@ function setPicker(page) {
         },
         fail: err => {
             realTimeLog.error('Failed to get products for adding a promotion event.', err)
+
+            wx.showToast({
+                title: '网络错误，请重试',
+                icon: 'none'
+            })
         }
     })
 
@@ -416,6 +421,11 @@ function setPicker(page) {
         },
         fail: err => {
             realTimeLog.error('Failed to get promotion types for adding a promotion event.', err)
+
+            wx.showToast({
+                title: '网络错误，请重试',
+                icon: 'none'
+            })
         }
     })
 
