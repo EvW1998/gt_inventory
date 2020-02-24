@@ -53,7 +53,7 @@ function isRepeated(c, i) {
             .where(i)
             .get({
                 success: res => {
-                    if (res.data.length == 0) {
+                    if (res.data.length === 0) {
                         resolve(false)
                     } else {
                         resolve(true)

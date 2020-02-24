@@ -140,6 +140,8 @@ function checkUser(openid, db) {
  */
 function addNewUser(user_data) {
     return new Promise((resolve, reject) => {
+        var add_result = {}
+
         // call dbAdd() cloud function to add the user to the user collection
         wx.cloud.callFunction({
             name: 'dbAdd',
@@ -149,12 +151,15 @@ function addNewUser(user_data) {
             },
             success: res => {
                 // return the result if successed
-                resolve(res)
+                add_result['stat'] = 'success'
+                add_result['result'] = res
+                resolve(add_result)
             },
             fail: err => {
                 // if failed to use cloud function dbAdd
-                console.error('Failed to use cloud function dbAdd()', err)
-                reject(err)
+                add_result['stat'] = 'fail'
+                realTimeLog.error('Failed to add a new user to the database by using dbAdd().', err)
+                resolve(add_result)
             }
         })
     })

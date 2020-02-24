@@ -54,8 +54,6 @@ function setInfo(app, db, collection) {
             success: res => {
                 var result = res.data[0]
                 app.globalData.info_id = result._id // the id of the info collection
-                app.globalData.invite_code = result.invite_code // the invitation code of this app
-                app.globalData.upgrade_code = result.upgrade_code // the upgrade code of this app
                 app.globalData.version = result.version // the version info of this app
                 app.globalData.check_left = result.check_left // the inventory state   
             }
