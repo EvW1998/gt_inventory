@@ -3,7 +3,8 @@
  * Include the user's name, wechat openid, 
  * the uid in this miniapp, and the permission level.
  */
-const user = require('../../../utils/user.js') //require the util of user
+const user = require('../../../utils/user.js') // require the util of user
+const realTimeLog = require('../../../utils/log.js') // require the util of real time logs
 
 const app = getApp() // the app
 const db = wx.cloud.database() // the cloud database
@@ -20,11 +21,13 @@ Page({
     data: {
         logged: true, // user's login state
         registered: true, // user's registered state
+        loginSuccess: true, // whether the login process succeeds
         userInfo: {}, // user's infomation
-        openid: '', // user openid
-        uid: '', // user's uid in this inventory
-        true_name: '', //user's registered real name
+        user_name: '', //user's registered real name
         permission_level: 0, // user's permission level
+        restaurant_name: '', // the name of the restaurant selected
+        restaurant_array: [], // the items of the restaurant picker
+        restaurant_index: 0, // the index of the restaurant picker
         version: '', // the version info shows at the bottom of the page
         upgrade_page: upgrade_page // the page url of the user upgrade 
     },
@@ -35,7 +38,6 @@ Page({
      * If registered, update name and permission level.
      */
     onLoad: function () {
-
         this.setData({
             logged: app.globalData.logged,
             registered: app.globalData.registered,
@@ -45,10 +47,23 @@ Page({
         if (app.globalData.logged) {
             // if the user logged in
             this.setData({
-                userInfo: app.globalData.userInfo,
-                openid: app.globalData.openid
+                userInfo: app.globalData.userInfo
             })
-        }
+
+            if (app.globalData.registered) {
+                // if the user registered
+                this.setData({
+                    user_name: app.globalData.user_name,
+                    permission_level: app.globalData.permission_level,
+                    restaurant_name: app.globalData.restaurant_name
+                })
+
+                if (app.globalData.loginSuccess) {
+                    // set up the restaurtant picker
+                    setPicker(this)
+                }
+            }
+        }  
     },
 
     /**
@@ -58,12 +73,34 @@ Page({
      * is too low, show the message.
      */
     onShow: function () {
-        if (!app.globalData.logged) {
+        this.setData({
+            loginSuccess: app.globalData.loginSuccess
+        })
+
+        console.log('Login success', app.globalData.loginSuccess)
+
+        if (!app.globalData.loginSuccess && !app.globalData.logged) {
+            wx.showToast({
+                title: '登陆失败，请重新授权微信登录',
+                icon: 'none'
+            })
+        } else if (!app.globalData.loginSuccess) {
+            wx.showToast({
+                title: '登陆失败，请点击重新登录',
+                icon: 'none'
+            })
+        } else if (!app.globalData.logged) {
             // if the user didn't login, show the message
             wx.showToast({
-                title: '请登录',
-                icon: 'none',
-                duration: 1500
+                title: '请点击授权微信登录',
+                icon: 'none'
+            })
+        } else if (app.globalData.permission_too_low) {
+            // if the user is navigated to this page, because permission level is too low
+            app.globalData.permission_too_low = false
+            wx.showToast({
+                title: '权限不足, 无法查看该页面',
+                icon: 'none'
             })
         }
 
@@ -71,30 +108,12 @@ Page({
             // if user just registered from the registration page
             this.setData({
                 registered: app.globalData.registered,
-                true_name: app.globalData.true_name,
-                uid: app.globalData.uid,
-                permission_level: app.globalData.permission_level
+                user_name: app.globalData.user_name,
+                permission_level: app.globalData.permission_level,
+                restaurant_name: app.globalData.restaurant_name
             })
-        }
-        
-        if (app.globalData.registered) {
-            // if the user registered
-            this.setData({
-                uid: app.globalData.uid,
-                true_name: app.globalData.true_name,
-                permission_level: app.globalData.permission_level
-            })
-        }
 
-        if (app.globalData.permission_too_low) {
-            // if the user is navigated to this page, because permission level is too low
-            app.globalData.permission_too_low = false
-
-            wx.showToast({
-                title: '权限不足',
-                icon: 'none',
-                duration: 1500
-            })
+            setPicker(this)
         }
     },
 
@@ -103,8 +122,10 @@ Page({
      * Refresh the user's name and permission level from the db
      */
     onPullDownRefresh: function() {
-        if(app.globalData.registered) {
+        if (app.globalData.registered && app.globalData.logged && app.globalData.loginSuccess) {
             refreshInfo(this)
+        } else {
+            wx.stopPullDownRefresh()
         }
     },
 
@@ -113,91 +134,85 @@ Page({
      * Update login state and userinfo.
      * 
      * @method onGetUserInfo
-     * @param{Object} e The return val from log in button.
+     * @param{Object} e The getuserinfo event
      */
     onGetUserInfo: function (e) {
-        if (!this.data.logged && e.detail.userInfo) {
-            // if the login button got triggereed, and user didn't login
-            wx.showLoading({
-                title: '登陆中',
-                mask: true
-            })
+        wx.showLoading({
+            title: '登陆中',
+            mask: true
+        })
 
-            // get the user's info
-            this.userLogin(e)
-        }
+        app.globalData.loginSuccess = true
+        this.setData({
+            loginSuccess: true
+        })
+
+        // get the user's info
+        userLogin(e, this)
     },
 
     /**
-     * Update the login state, get the user's info and openid.
-     * Check whether the user is registered in the App.
-     * If registered, get the user's uid, real name and permission level.
-     * If not, navigate the user to the registration page.
+     * Retry to login the user.
      * 
-     * @method userLogin
-     * @param{Object} e The return val from log in button.
+     * @method retryLogin
      */
-    async userLogin(e) {
-        app.globalData.logged = true
-        console.log('User logged in: ', app.globalData.logged)
-
-        app.globalData.userInfo = e.detail.userInfo
-        console.log('UserInfo: ', app.globalData.userInfo)
-
-        // get user's openid
-        app.globalData.openid = await user.getOpenId()
-        console.log('User openid: ', app.globalData.openid)
-
-        // get user's registration state
-        var check_result = await user.checkUser(app.globalData.openid, db)
-        app.globalData.registered = check_result.registered
-        console.log('User registered in the App: ', app.globalData.registered)
-
-        this.setData({
-            logged: app.globalData.logged,
-            userInfo: app.globalData.userInfo,
-            openid: app.globalData.openid,
-            registered: app.globalData.registered
+    retryLogin: async function () {
+        wx.showLoading({
+            title: '登陆中',
+            mask: true
         })
 
-        if (check_result.registered) {
-            // if the user registered before
-            app.globalData.uid = check_result.uid
-            app.globalData.true_name = check_result.true_name
-            app.globalData.permission_level = check_result.permission_level
+        app.globalData.loginSuccess = true
+        this.setData({
+            loginSuccess: true
+        })
 
-            console.log('User uid: ', app.globalData.uid)
-            console.log('User real name: ', app.globalData.true_name)
-            console.log('User permission level: ', app.globalData.permission_level)
+        console.log('Retry user login process.')
 
-            this.setData({
-                uid: app.globalData.uid,
-                true_name: app.globalData.true_name,
-                permission_level: app.globalData.permission_level
-            })
+        var log_info = {}
 
-            wx.hideLoading()
-
+        // get user's info
+        var info_res = await user.getUserInfomation()
+        if (info_res.stat) {
+            app.globalData.userInfo = info_res.result
+            console.log('UserInfo: ', info_res.result)
+            log_info.userInfo = info_res.result
         } else {
-            // if the user hasn't registered
-            wx.hideLoading()
-
-            // navigate to the registration page
-            wx.navigateTo({
-                url: registration_page
+            // if failed in the process to get user's info
+            app.globalData.loginSuccess = false
+            page.setData({
+                loginSuccess: false
             })
+
+            realTimeLog.warn('User login failed.', log_info)
+            wx.hideLoading()
+            wx.showToast({
+                title: '网络错误，请重新登录',
+                icon: 'none'
+            })
+            return
         }
+
+        this.setData({
+            userInfo: app.globalData.userInfo
+        })
+
+        userLoginProcess(this, log_info)
     },
 
     /**
      * When the register button get triggered, 
      * navigate to the registration page
      */
-    registerUser: function () {
+    userRegister: function () {
         // navigate to the page to register
         wx.navigateTo({
             url: registration_page
         })
+    },
+
+    changeRestaurant: function (e) {
+        console.log(e)
     },
 
     /**
@@ -250,4 +265,205 @@ function refreshInfo(page) {
                 wx.stopPullDownRefresh()
             }
         })
+}
+
+
+/**
+ * Login the user and get the user's info.
+ * 
+ * @method userLogin
+ * @param{Object} e The getuserinfo event
+ * @param{Page} page The page
+ */
+function userLogin(e, page) {
+    console.log('Start user login process.')
+
+    var log_info = {}
+
+    app.globalData.logged = true
+    console.log('User logged in: ', true)
+    log_info.logged = true
+
+    app.globalData.userInfo = e.detail.userInfo
+    console.log('UserInfo: ', e.detail.userInfo)
+    log_info.userInfo = e.detail.userInfo
+
+    page.setData({
+        logged: app.globalData.logged,
+        userInfo: app.globalData.userInfo
+    })
+    
+    userLoginProcess(page, log_info)
+}
+
+
+async function userLoginProcess(page, log_info) {
+    // get user's openid
+    var open_res = await user.getOpenId()
+    if (open_res.stat) {
+        app.globalData.openid = open_res.result
+        console.log('User openid: ', open_res.result)
+        log_info.openid = open_res.result
+    } else {
+        // if failed in the process to get user's openid
+        app.globalData.loginSuccess = false
+        page.setData({
+            loginSuccess: false
+        })
+
+        realTimeLog.warn('User login failed in the process to get user openid.', log_info)
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重新登录',
+            icon: 'none'
+        })
+        return
+    }
+
+    // get user's registration info
+    var registration_res = await user.getUserRegistration(open_res.result)
+    if (registration_res.stat) {
+        app.globalData.registered = registration_res.result.registered
+        console.log('User registered: ', registration_res.result.registered)
+        log_info.registered = registration_res.result.registered
+
+        if (!registration_res.result.registered) {
+            // if the user did not register in the app
+            console.log('Redirect to user registration page.')
+            realTimeLog.info('User did not register', log_info)
+            wx.hideLoading()
+            wx.navigateTo({
+                url: registration_page
+            })
+            return
+        }
+    } else {
+        // if failed in the process to get user's registration info
+        app.globalData.loginSuccess = false
+        page.setData({
+            loginSuccess: false
+        })
+
+        realTimeLog.warn('User login failed in the process to get user registration info.', log_info)
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重新登录',
+            icon: 'none'
+        })
+        return
+    }
+
+    page.setData({
+        registered: app.globalData.registered
+    })
+
+    // set the user id
+    app.globalData.uid = registration_res.result.registration._id
+    console.log('User uid: ', registration_res.result.registration._id)
+    log_info.uid = registration_res.result.registration._id
+
+    // set the restaurant registered
+    app.globalData.restaurant_registered = registration_res.result.registration.restaurant_registered
+    console.log('User restaurant registered: ', registration_res.result.registration.restaurant_registered)
+    log_info.restaurant_registered = registration_res.result.registration.restaurant_registered
+
+    // set the restaurant info
+    app.globalData.restaurant_id = registration_res.result.registration.recent_restaurant
+    log_info.restaurant_id = registration_res.result.registration.recent_restaurant
+
+    // set the user name
+    app.globalData.user_name = registration_res.result.registration[app.globalData.restaurant_id].name
+    console.log('User name: ', app.globalData.user_name)
+    log_info.user_name = app.globalData.user_name
+
+    // set the user permission level
+    app.globalData.permission_level = registration_res.result.registration[app.globalData.restaurant_id].permission_level
+    console.log('User permission level: ', app.globalData.permission_level)
+    log_info.permission_level = app.globalData.permission_level
+
+    // get the restaurant name
+    var restaurant_res = await user.getRestaurantInfo(registration_res.result.registration.recent_restaurant)
+    if (restaurant_res.stat) {
+        app.globalData.restaurant_name = restaurant_res.result.name
+        console.log('Selected restaurant: ', restaurant_res.result.name, ' id: ', app.globalData.restaurant_id)
+        log_info.restaurant_name = restaurant_res.result.name
+    } else {
+        // if failed in the process to get restaurant info
+        app.globalData.loginSuccess = false
+        page.setData({
+            loginSuccess: false
+        })
+
+        realTimeLog.warn('User login failed in the process to get restaurant info.', log_info)
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重新登录',
+            icon: 'none'
+        })
+        return
+    }
+
+    // get all the restaurants info
+    var all_restaurant_res = await user.getAllRestaurant()
+    if (all_restaurant_res.stat) {
+        app.globalData.restaurant_info = all_restaurant_res.result
+        console.log('Get all the restaurants info: ', all_restaurant_res.result)
+        log_info.restaurant_info = all_restaurant_res.result
+    } else {
+        // if failed in the process to get all the restaurant info
+        app.globalData.loginSuccess = false
+        page.setData({
+            loginSuccess: false
+        })
+
+        realTimeLog.warn('User login failed in the process to get all the restaurant info.', log_info)
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重新登录',
+            icon: 'none'
+        })
+        return
+    }
+
+    console.log('User login process completed.')
+    realTimeLog.info('User login succeeded.', log_info)
+
+    page.setData({
+        user_name: app.globalData.user_name,
+        permission_level: app.globalData.permission_level,
+        restaurant_name: app.globalData.restaurant_name
+    })
+
+    setPicker(page)
+
+    wx.hideLoading()
+}
+
+
+function setPicker(page) {
+    var restaurants = app.globalData.restaurant_info
+    var formated_restaurants = {}
+    for (var i in restaurants) {
+        formated_restaurants[restaurants[i]._id] = restaurants[i]
+    }
+    
+    var restaurant_registered = app.globalData.restaurant_registered
+    var restaurant_array = []
+    var restaurant_index = 0
+
+    for (var i in restaurant_registered) {
+        restaurant_array.push(formated_restaurants[i].name)
+
+        if (formated_restaurants[i].name === app.globalData.restaurant_name) {
+            restaurant_index = restaurant_array.length - 1
+        }
+    }
+
+    page.setData({
+        restaurant_array: restaurant_array,
+        restaurant_index: restaurant_index
+    })
+
+    console.log('Set up the restaurant picker: ', restaurant_array)
+    console.log('Set up the restaurant picker index: ', restaurant_index)
 }

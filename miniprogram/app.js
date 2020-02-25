@@ -22,13 +22,22 @@ App({
         }
 
         this.globalData = {}
+        this.globalData.loginSuccess = true // whether the login process succeeds
         this.globalData.logged = false // the user's login state
         this.globalData.registered = false // the user's register state
-        this.globalData.permission_level = 0 // the user's default permission level
+        this.globalData.restaurant_registered = {}, // the restaurants that the user registered
+        this.globalData.restaurant_id = '' // the restaurant id of the current restaurant selected
+        this.globalData.restaurant_name = '' // the restaurant name of the current restaurant selected
+        this.globalData.user_name = '' // the user registered name in the selected restaurant
+        this.globalData.permission_level = 0 // the user permission level in the selected restaurant
         this.globalData.permission_too_low = false // whether the user's permission level is too low
+        this.globalData.restaurant_info = {} // the all restaurants info
+        this.globalData.check_left = false // the inventory state
+        this.globalData.info_id = '157bd19b-1943-4998-886f-5c6bb3f0bb78' // the id of the info collection
+        this.globalData.version = 'Copyright © 开发所属：国泰肯德基 王智健' // the version info of this app
 
         // get the App's info from database
-        setInfo(this, wx.cloud.database(), db_info)
+        setInfo(this, wx.cloud.database())
     }
 })
 
@@ -39,23 +48,13 @@ App({
  * @method setInfo
  * @param{App} app The application
  * @param{DB.Database} db The database
- * @param{String} collection The collection name of the app info
  */
-function setInfo(app, db, collection) {
-    db.collection(collection)
-        .field({
-            _id: true,
-            invite_code: true,
-            version: true,
-            check_left: true,
-            upgrade_code: true
-        })
+function setInfo(app, db) {
+    db.collection(db_info)
         .get({
             success: res => {
                 var result = res.data[0]
-                app.globalData.info_id = result._id // the id of the info collection
                 app.globalData.version = result.version // the version info of this app
-                app.globalData.check_left = result.check_left // the inventory state   
             }
         })
 }

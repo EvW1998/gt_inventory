@@ -2,7 +2,10 @@
  * Util functions about user login and modification.
  */
 const realTimeLog = require('log.js') // require the util of real time log
+
+const db = wx.cloud.database() // the cloud database
 const db_user = 'user' // the collection of users
+const db_restaurant = 'restaurant' // the collection of restaurants
 
 
 /**
@@ -13,20 +16,25 @@ const db_user = 'user' // the collection of users
  */
 function getAuthority() {
     return new Promise((resolve, reject) => {
+        var result = {}
         // get the user's setting for the App
         wx.getSetting({
             success: res => {
+                result['stat'] = true
+
+                var authority = false
                 if (res.authSetting['scope.userInfo']) {
-                    // if get user authorization
-                    resolve(true)
+                    authority = true
                 }
-                // if the user didn't give authorization before
-                resolve(false)
+
+                result['result'] = authority
+                resolve(result)
             },
             fail: err => {
-                // if failed to call getSetting
-                console.error('Failed to use getSetting()', err)
-                reject(err)
+                result['stat'] = false
+
+                realTimeLog.error('Failed to get the user wechat authorization of using the user info by using getSetting().', err)
+                resolve(result)
             }
         })
     })
@@ -41,16 +49,18 @@ function getAuthority() {
  */
 function getUserInfomation() {
     return new Promise((resolve, reject) => {
+        var result = {}
         // get the user's info from the wechat
         wx.getUserInfo({
             success: res => {
-                // return the userInfo if successed
-                resolve(res.userInfo)
+                result['stat'] = true
+                result['result'] = res.userInfo
+                resolve(result)
             },
             fail: err => {
-                // if failed to use getUserInfo
-                console.error('Failed to use getUserInfo()', err)
-                reject(err)
+                result['stat'] = false
+                realTimeLog.error('Failed to get user wechat info by using getUserInfomation().', err)
+                resolve(result)
             }
         })
     })
@@ -65,17 +75,19 @@ function getUserInfomation() {
  */
 function getOpenId() {
     return new Promise((resolve, reject) => {
+        var result = {}
         // use cloud function getOpenId() to get user openid
         wx.cloud.callFunction({
             name: 'getOpenId',
             success: res => {
-                // return the user's openid if successed
-                resolve(res.result.openid)
+                result['stat'] = true
+                result['result'] = res.result.openid
+                resolve(result)
             },
             fail: err => {
-                // if failed to use cloud funtion getOpenId
-                console.error('Failed to use cloud function getOpenId()', err)
-                reject(err)
+                result['stat'] = false
+                realTimeLog.error('Failed to get user openid by using getOpenId().', err)
+                resolve(result)
             }
         })
     })
@@ -86,45 +98,36 @@ function getOpenId() {
  * Return the user's uid, permission level and real name, if the user registered in the app.
  * Return the user has not been registered, if not.
  * 
- * @method checkUser
+ * @method getUserRegistration
  * @param{String} openid The user's openid
- * @param{Object} db The cloud database
  * @return{Promise} The state of the function. Resolve with user's uid, permission level and real name
  */
-function checkUser(openid, db) {
+function getUserRegistration(openid) {
     return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+
         db.collection(db_user)
             .where({
-                // use the user's openid to search in the collection
                 user_openid: openid
-            })
-            .field({
-                true_name: true,
-                permission_level: true,
-                user_openid: true
             })
             .get({
                 success: res => {
-                    if (res.data.length == 0) {
-                        // if no user is found with the openid
-                        resolve({
-                            registered: false
-                        })
+                    result['stat'] = true
+                    var registration = {}
+                    registration['registered'] = false
 
-                    } else {
-                        // if found a user
-                        resolve({
-                            registered: true,
-                            uid: res.data[0]._id,
-                            permission_level: res.data[0].permission_level,
-                            true_name: res.data[0].true_name
-                        })
+                    if (res.data.length === 1) {
+                        registration['registered'] = true
+                        registration['registration'] = res.data[0]
                     }
+
+                    result['result'] = registration
+                    resolve(result)
                 },
                 fail: err => {
-                    // if failed to search in the collection
-                    console.error('Failed to search the given openid in the user collection', err)
-                    reject(err)
+                    realTimeLog.error('Failed to get user registration info with the given openid in the database.', err)
+                    resolve(result)
                 }
             })
     })
@@ -167,7 +170,7 @@ function addNewUser(user_data) {
 
 
 /**
- * Get the system info.
+ * Return the system info.
  * 
  * @method getSystem
  * @return{Promise} The state of the function. Resolve with the returned result from system info
@@ -179,8 +182,76 @@ function getSystem() {
                 resolve(res)
             },
             fail: err => {
-                realTimeLog.error('Failed to get system info.', err)
-                reject(err)
+                realTimeLog.error('Failed to system info by using getSystemInfo().', err)
+                resolve()
+            }
+        })
+    })
+}
+
+
+/**
+ * Return the restaurant info with the given restaurant id.
+ * 
+ * @method getRestaurantInfo
+ * @param{String} r_id The id of the restaurant
+ * @return{Promise} The state of the function. Resolve with the restaurant info.
+ */
+function getRestaurantInfo(r_id) {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+
+        db.collection(db_restaurant)
+            .where({
+                _id: r_id
+            })
+            .get({
+                success: res => {
+                    result['stat'] = true
+                    result['result'] = res.data[0]
+
+                    resolve(result)
+                },
+                fail: err => {
+                    realTimeLog.error('Failed to get the restaurant info with the given id in the database.', err)
+                    resolve(result)
+                }
+            })
+    })
+}
+
+
+/**
+ * Get all restaurants info.
+ * 
+ * @method getAllRestaurant
+ * @return{Promise} The state of the function. Resolve with the all restaurant info.
+ */
+function getAllRestaurant() {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+
+        wx.cloud.callFunction({
+            name: 'dbGet',
+            data: {
+                collection_name: db_restaurant,
+                collection_limit: 100,
+                collection_field: {},
+                collection_where: {},
+                collection_orderby_key: 'name',
+                collection_orderby_order: 'desc'
+            },
+            success: res => {
+                result['stat'] = true
+                result['result'] = res.result
+
+                resolve(result)
+            },
+            fail: err => {
+                realTimeLog.error('Failed to get all restaurants info by using dbGet().', err)
+                resolve(result)
             }
         })
     })
@@ -191,7 +262,9 @@ module.exports = {
     getAuthority: getAuthority,
     getUserInfomation: getUserInfomation,
     getOpenId: getOpenId,
-    checkUser: checkUser,
+    getUserRegistration: getUserRegistration,
     addNewUser: addNewUser,
-    getSystem: getSystem
+    getSystem: getSystem,
+    getRestaurantInfo: getRestaurantInfo,
+    getAllRestaurant: getAllRestaurant
 }

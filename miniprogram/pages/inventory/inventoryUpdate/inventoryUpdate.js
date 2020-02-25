@@ -8,7 +8,6 @@ const pAction = require('../../../utils/pageAction.js') // require the util of p
 const realTimeLog = require('../../../utils/log.js') // require the util of real time logs
 
 const app = getApp() // the app
-const db = wx.cloud.database() // the cloud database
 
 const registration_page = '../../user/userRegister/userRegister' // the url for the register page
 const info_page = '../../user/userInfo/userInfo' // the url for the info page
@@ -21,7 +20,7 @@ Page({
     data: {
         currentTab: 0, // the current tab for show
         flag: 0, // the tab title to be bloded
-        firstLoad: true, // whether it is the first time to load the page
+        first_load: true, // whether it is the first time to load the page
         category: {}, // the categories in the inventory
         category_amount: 0, // the amount of categories
         item: {}, // the items in the inventory
@@ -42,8 +41,9 @@ Page({
                 mask: true
             })
 
-            // login the user
-            this.userLogin()
+            checkUpdate()
+
+            userLogin()
         }
     },
 
@@ -51,9 +51,13 @@ Page({
      * When show the default page, get the inventory info.
      */
     onShow: function () {
-        if (!this.data.firstLoad) {
-            // check whether the user's permission level is high enough to view the page
+        console.log('First load: ', this.data.first_load)
+        if (!this.data.first_load) {
             checkPermission()
+        } else {
+            this.setData({
+                first_load: false
+            })
         }
 
         inventory.setInventory(this, 'update')
@@ -65,106 +69,6 @@ Page({
      */
     onPullDownRefresh: function () {
         this.onShow()
-    },
-
-    /**
-     * Login the user and get the user's info.
-     * 
-     * @method userLogin
-     */
-    async userLogin() {
-        var log_info = {}
-        // get system info
-        app.globalData.system = await user.getSystem()
-        console.log('System Info', app.globalData.system)
-        log_info.system = app.globalData.system
-
-        // get user's authorization to use his info
-        app.globalData.logged = await user.getAuthority()
-        console.log('User logged in: ', app.globalData.logged)
-        log_info.logged = app.globalData.logged
-        
-        if(app.globalData.logged) {
-            // if got the user's authorization
-            // get user's info
-            app.globalData.userInfo = await user.getUserInfomation()
-            console.log('UserInfo: ', app.globalData.userInfo)
-            log_info.userInfo = app.globalData.userInfo
-            
-            // get user's openid
-            app.globalData.openid = await user.getOpenId()
-            console.log('User openid: ', app.globalData.openid)
-            log_info.openid = app.globalData.openid
-
-            // get user's registration state
-            var check_result = await user.checkUser(app.globalData.openid, db)
-            app.globalData.registered = check_result.registered
-            console.log('User registered in the App: ', app.globalData.registered)
-            log_info.registered = app.globalData.registered
-
-            if (check_result.registered) {
-                // if the user registered before
-                app.globalData.uid = check_result.uid
-                app.globalData.true_name = check_result.true_name
-                app.globalData.permission_level = check_result.permission_level
-
-                console.log('User uid: ', app.globalData.uid)
-                console.log('User real name: ', app.globalData.true_name)
-                console.log('User permission level: ', app.globalData.permission_level)
-                log_info.uid = app.globalData.uid
-                log_info.true_name = app.globalData.true_name
-                log_info.permission_level = app.globalData.permission_level
-
-                realTimeLog.info('Log in', log_info)
-
-                wx.hideLoading()
-                
-                // check whether the user's permission level is high enough to view the page
-                checkPermission()
-
-                const updateManager = wx.getUpdateManager()
-                updateManager.onCheckForUpdate(function (res) {
-                    console.log('The mini app has a new version: ', res)
-                })
-
-                updateManager.onUpdateReady(function () {
-                    wx.showModal({
-                        title: '更新提示',
-                        content: '新版本已经准备好，请重启应用',
-                        showCancel: false,
-                        success(res) {
-                            if (res.confirm) {
-                                updateManager.applyUpdate()
-                            }
-                        }
-                    })
-                })
-            } else {
-                realTimeLog.info('Log in', log_info)
-
-                // if the user hasn't registered
-                wx.hideLoading()
-
-                // navigate to the registration page
-                wx.navigateTo({
-                    url: registration_page
-                })
-            }
-            
-        } else {
-            realTimeLog.info('Log in', log_info)
-            
-            // if didn't get the user's authorization
-            wx.hideLoading()
-
-            wx.switchTab({
-                url: info_page
-            })
-        }
-
-        this.setData({
-            firstLoad: false
-        })
     },
 
     /**
@@ -278,10 +182,208 @@ Page({
  */
 function checkPermission() {
     if (app.globalData.permission_level < 1) {
-        console.log('User permission level too low to view this page')
+        console.log('User permission level too low to view the inventory page.')
         app.globalData.permission_too_low = true
         wx.switchTab({
             url: info_page
         })
     }
+}
+
+
+/**
+ * Login the user and get the user's info.
+ * 
+ * @method userLogin
+ */
+async function userLogin() {
+    console.log('Start user login process.')
+
+    var log_info = {}
+    // get system info
+    app.globalData.system = await user.getSystem()
+    console.log('System Info', app.globalData.system)
+    log_info.system = app.globalData.system
+
+    // get user's authorization to use his info
+    var authority_res = await user.getAuthority()
+    if (authority_res.stat) {
+        app.globalData.logged = authority_res.result
+        console.log('User logged in: ', authority_res.result)
+        log_info.logged = authority_res.result
+
+        if (!authority_res.result) {
+            // if didn't get the user's authorization of wechat login
+            console.log('Redirect to user info page.')
+            realTimeLog.info('User did not login.', log_info)
+
+            wx.hideLoading()
+            wx.switchTab({
+                url: info_page
+            })
+            return
+        }
+    } else {
+        // if failed in the process to get user's authorization
+        app.globalData.loginSuccess = false
+        realTimeLog.warn('User login failed in the process to get user authorization.', log_info)
+        wx.hideLoading()
+        wx.switchTab({
+            url: info_page
+        })
+        return
+    }
+
+    // get user's info
+    var info_res = await user.getUserInfomation()
+    if (info_res.stat) {
+        app.globalData.userInfo = info_res.result
+        console.log('UserInfo: ', info_res.result)
+        log_info.userInfo = info_res.result
+    } else {
+        // if failed in the process to get user's info
+        app.globalData.loginSuccess = false
+        realTimeLog.warn('User login failed in the process to get user info.', log_info)
+        wx.hideLoading()
+        wx.switchTab({
+            url: info_page
+        })
+        return
+    }
+    
+    // get user's openid
+    var open_res = await user.getOpenId()
+    if (open_res.stat) {
+        app.globalData.openid = open_res.result
+        console.log('User openid: ', open_res.result)
+        log_info.openid = open_res.result
+    } else {
+        // if failed in the process to get user's openid
+        app.globalData.loginSuccess = false
+        realTimeLog.warn('User login failed in the process to get user openid.', log_info)
+        wx.hideLoading()
+        wx.switchTab({
+            url: info_page
+        })
+        return
+    }
+    
+    // get user's registration info
+    var registration_res = await user.getUserRegistration(open_res.result)
+    if (registration_res.stat) {
+        app.globalData.registered = registration_res.result.registered
+        console.log('User registered: ', registration_res.result.registered)
+        log_info.registered = registration_res.result.registered
+
+        if (!registration_res.result.registered) {
+            // if the user did not register in the app
+            console.log('Redirect to user registration page.')
+            realTimeLog.info('User did not register', log_info)
+
+            wx.hideLoading()
+            wx.navigateTo({
+                url: registration_page
+            })
+            return
+        }
+    } else {
+        // if failed in the process to get user's registration info
+        app.globalData.loginSuccess = false
+        realTimeLog.warn('User login failed in the process to get user registration info.', log_info)
+        wx.hideLoading()
+        wx.switchTab({
+            url: info_page
+        })
+        return
+    }
+
+    // set the user id
+    app.globalData.uid = registration_res.result.registration._id
+    console.log('User uid: ', registration_res.result.registration._id)
+    log_info.uid = registration_res.result.registration._id
+
+    // set the restaurant registered
+    app.globalData.restaurant_registered = registration_res.result.registration.restaurant_registered
+    console.log('User restaurant registered: ', registration_res.result.registration.restaurant_registered)
+    log_info.restaurant_registered = registration_res.result.registration.restaurant_registered
+
+    // set the restaurant info
+    app.globalData.restaurant_id = registration_res.result.registration.recent_restaurant
+    log_info.restaurant_id = registration_res.result.registration.recent_restaurant
+
+    // set the user name
+    app.globalData.user_name = registration_res.result.registration[app.globalData.restaurant_id].name
+    console.log('User name: ', app.globalData.user_name)
+    log_info.user_name = app.globalData.user_name
+
+    // set the user permission level
+    app.globalData.permission_level = registration_res.result.registration[app.globalData.restaurant_id].permission_level
+    console.log('User permission level: ', app.globalData.permission_level)
+    log_info.permission_level = app.globalData.permission_level
+
+    // get the restaurant info
+    var restaurant_res= await user.getRestaurantInfo(registration_res.result.registration.recent_restaurant)
+    if (restaurant_res.stat) {
+        app.globalData.restaurant_name = restaurant_res.result.name
+        console.log('Selected restaurant: ', restaurant_res.result.name, ' id: ', app.globalData.restaurant_id)
+        log_info.restaurant_name = restaurant_res.result.name
+    } else {
+        // if failed in the process to get restaurant info
+        app.globalData.loginSuccess = false
+        realTimeLog.warn('User login failed in the process to get restaurant info.', log_info)
+        wx.hideLoading()
+        wx.switchTab({
+            url: info_page
+        })
+        return
+    }
+
+    // get all the restaurants info
+    var all_restaurant_res = await user.getAllRestaurant()
+    if (all_restaurant_res.stat) {
+        app.globalData.restaurant_info = all_restaurant_res.result
+        console.log('Get all the restaurants info: ', all_restaurant_res.result)
+        log_info.restaurant_info = all_restaurant_res.result
+    } else {
+        // if failed in the process to get all the restaurant info
+        app.globalData.loginSuccess = false
+        realTimeLog.warn('User login failed in the process to get all restaurant info.', log_info)
+        wx.hideLoading()
+        wx.switchTab({
+            url: info_page
+        })
+        return
+    }
+
+    console.log('User login process completed.')
+    realTimeLog.info('User login succeeded.', log_info)
+
+    wx.hideLoading()
+    checkPermission()
+}
+
+
+/**
+ * Check whether there is a new version for the mini app.
+ * 
+ * @method checkUpdate
+ */
+function checkUpdate() {
+    const updateManager = wx.getUpdateManager()
+    updateManager.onCheckForUpdate(function (res) {
+        console.log('The mini app has a new version: ', res.hasUpdate)
+    })
+
+    updateManager.onUpdateReady(function () {
+        wx.showModal({
+            title: '更新提示',
+            content: '新版本已经准备好，请重启应用',
+            showCancel: false,
+            success(res) {
+                if (res.confirm) {
+                    updateManager.applyUpdate()
+                }
+            }
+        })
+    })
 }
