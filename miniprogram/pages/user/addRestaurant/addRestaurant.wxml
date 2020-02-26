@@ -1,9 +1,9 @@
-<!--pages/user/userRegister/userRegister.wxml-->
+<!--pages/user/addRestaurant/addRestaurant.wxml-->
 
 <view class="page">
     <view class="weui-form">
         <view class="weui-form__text-area">
-            <view class="weui-form__title">用户注册</view>
+            <view class="weui-form__title">添加餐厅</view>
             <view class="weui-form__desc">姓名及邀请码</view>
         </view>
 
@@ -15,7 +15,7 @@
                         <view class="{{name_warn_enable ? 'weui-cell weui-cell_warn' : 'weui-cell'}}">
                             <view class="weui-cell__hd"><view class="weui-label">姓名</view></view>
                             <view class="weui-cell__bd">
-                                <input class="weui-input" name="name" type="text" maxlength="10" bindinput="nameInput" placeholder="请输入中文姓名"/>
+                                <input class="weui-input" name="name" type="text" maxlength="10" bindinput="nameInput" value="{{name}}" placeholder="请输入中文姓名"/>
                             </view>
                             <view class="weui-cell__ft">
                                 <icon wx:if="{{name_warn_enable}}" type="warn" size="23" color="#E64340"></icon>
@@ -28,12 +28,12 @@
                 </view>
 
                 <view class="weui-cells__group weui-cells__group_form">
-                    <view class="weui-cells__title">餐厅邀请码</view>
+                    <view class="weui-cells__title">新增餐厅邀请码</view>
                     <view class="weui-cells weui-cells_form weui-cells_after-title">
                         <view class="{{code_warn_enable ? 'weui-cell weui-cell_warn' : 'weui-cell'}}">
                             <view class="weui-cell__hd"><view class="weui-label">邀请码</view></view>
                             <view class="weui-cell__bd">
-                                <input class="weui-input" name="code" type="text" bindinput="codeInput" placeholder="请输入餐厅邀请码"/>
+                                <input class="weui-input" name="code" type="text" bindinput="codeInput" placeholder="请输入新增餐厅邀请码"/>
                             </view>
                             <view wx:if="{{code_warn_enable}}" class="weui-cell__ft">
                                 <icon type="warn" size="23" color="#E64340"></icon>
@@ -65,7 +65,7 @@
             </view>
 
             <view class="weui-form__tips-area">
-                <view class="weui-form__tips">点击确定进行注册</view>
+                <view class="weui-form__tips">点击确定进行添加</view>
             </view>
 
             <view class="weui-form__opr-area">
@@ -74,3 +74,4 @@
         </form>
     </view>
 </view>
+

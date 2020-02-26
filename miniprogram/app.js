@@ -33,6 +33,7 @@ App({
         this.globalData.permission_too_low = false // whether the user's permission level is too low
         this.globalData.restaurant_info = {} // the all restaurants info
         this.globalData.check_left = false // the inventory state
+        this.globalData.new_restaurant_add = false
         this.globalData.info_id = '157bd19b-1943-4998-886f-5c6bb3f0bb78' // the id of the info collection
         this.globalData.version = 'Copyright © 开发所属：国泰肯德基 王智健' // the version info of this app
 

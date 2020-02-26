@@ -11,6 +11,7 @@ const db = wx.cloud.database() // the cloud database
 const db_user = 'user' // the collection of users
 
 const registration_page = '../userRegister/userRegister' // the page url of the user registration
+const add_restaurant_page = '../addRestaurant/addRestaurant' // the page url of adding restaurants
 const upgrade_page = '../userUpgrade/userUpgrade' // the page url of the user upgrade 
 
 
@@ -26,6 +27,7 @@ Page({
         user_name: '', //user's registered real name
         permission_level: 0, // user's permission level
         restaurant_name: '', // the name of the restaurant selected
+        restaurants: {}, // the restaurants
         restaurant_array: [], // the items of the restaurant picker
         restaurant_index: 0, // the index of the restaurant picker
         version: '', // the version info shows at the bottom of the page
@@ -108,6 +110,18 @@ Page({
             // if user just registered from the registration page
             this.setData({
                 registered: app.globalData.registered,
+                user_name: app.globalData.user_name,
+                permission_level: app.globalData.permission_level,
+                restaurant_name: app.globalData.restaurant_name
+            })
+
+            setPicker(this)
+        }
+
+        if (app.globalData.new_restaurant_add) {
+            app.globalData.new_restaurant_add = false
+
+            this.setData({
                 user_name: app.globalData.user_name,
                 permission_level: app.globalData.permission_level,
                 restaurant_name: app.globalData.restaurant_name
@@ -211,8 +225,61 @@ Page({
         })
     },
 
-    changeRestaurant: function (e) {
-        console.log(e)
+    changeRestaurant: async function (e) {
+        var target_restaurant_name = this.data.restaurant_array[parseInt(e.detail.value)]
+        var target_restaurant_id = this.data.restaurants[target_restaurant_name]._id
+
+        if (target_restaurant_id !== app.globalData.restaurant_id) {
+            wx.showLoading({
+                title: '切换中',
+                mask: true
+            })
+            
+            var info_result = await getUser()
+            if (info_result.stat) {
+                var update_result = await user.updateRecentRestaurant(app.globalData.uid, target_restaurant_id)
+                if (update_result.stat) {
+                    app.globalData.restaurant_id = target_restaurant_id
+                    app.globalData.restaurant_name = target_restaurant_name
+                    console.log('User switched to restaurant: ', target_restaurant_name, ' id: ', target_restaurant_id)
+
+                    app.globalData.user_name = info_result.result[target_restaurant_id].name
+                    console.log('User name in this restaurant: ', app.globalData.user_name)
+
+                    app.globalData.permission_level = info_result.result[target_restaurant_id].permission_level
+                    console.log('User permission level in this restaurant: ', app.globalData.permission_level)
+
+                    this.setData({
+                        user_name: app.globalData.user_name,
+                        permission_level: app.globalData.permission_level,
+                        restaurant_name: app.globalData.restaurant_name
+                    })
+
+                    wx.hideLoading()
+                    wx.showToast({
+                        title: '切换成功'
+                    })
+                } else {
+                    wx.hideLoading()
+                    wx.showToast({
+                        title: '网络错误，请重试',
+                        icon: 'none'
+                    })
+                }
+            } else {
+                wx.hideLoading()
+                wx.showToast({
+                    title: '网络错误，请重试',
+                    icon: 'none'
+                })
+            }
+        }
+    },
+
+    addRestaurant: function() {
+        wx.navigateTo({
+            url: add_restaurant_page
+        })
     },
 
     /**
@@ -443,8 +510,10 @@ async function userLoginProcess(page, log_info) {
 function setPicker(page) {
     var restaurants = app.globalData.restaurant_info
     var formated_restaurants = {}
+    var restaurants_key_name = {}
     for (var i in restaurants) {
         formated_restaurants[restaurants[i]._id] = restaurants[i]
+        restaurants_key_name[restaurants[i].name] = restaurants[i]
     }
     
     var restaurant_registered = app.globalData.restaurant_registered
@@ -461,9 +530,37 @@ function setPicker(page) {
 
     page.setData({
         restaurant_array: restaurant_array,
-        restaurant_index: restaurant_index
+        restaurant_index: restaurant_index,
+        restaurants: restaurants_key_name
     })
 
     console.log('Set up the restaurant picker: ', restaurant_array)
     console.log('Set up the restaurant picker index: ', restaurant_index)
+}
+
+
+function getUser() {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+
+        db.collection(db_user)
+            .where({
+                _id: app.globalData.uid
+            })
+            .get({
+                success: res => {
+                    if (res.data.length === 1) {
+                        result['stat'] = true
+                        result['result'] = res.data[0]
+                    }
+                    
+                    resolve(result)
+                },
+                fail: err => {
+                    realTimeLog.error('Failed to get current user info in the database.', err)
+                    resolve(result)
+                }
+            })
+    })
 }

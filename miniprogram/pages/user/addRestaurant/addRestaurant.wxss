@@ -1,0 +1,7 @@
+/* pages/user/addRestaurant/addRestaurant.wxss */
+
+page,.page{height:100%;}
+
+.red_label {
+    color: #F25438
+}

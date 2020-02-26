@@ -20,7 +20,7 @@
                         <block wx:if="{{!loginSuccess}}">
                             <view class="weui-cell">
                                 <view class="weui-cell__hd">
-                                    <label class="weui-label link_label" bindtap="retryLogin">点击重新尝试登录</label>
+                                    <label class="weui-label link_label" hover-class="weui-cell_active" bindtap="retryLogin">点击重新尝试登录</label>
                                 </view>
                             </view>
                         </block>
@@ -28,7 +28,7 @@
                         <block wx:elif="{{!registered && logged}}">
                             <view class="weui-cell">
                                 <view class="weui-cell__hd">
-                                    <label class="weui-label link_label" bindtap="userRegister">点击注册信息</label>
+                                    <label class="weui-label link_label" hover-class="weui-cell_active" bindtap="userRegister">点击注册信息</label>
                                 </view>
                             </view>
                         </block>
@@ -62,13 +62,13 @@
                                 </view>
 
                                 <picker bindchange="changeRestaurant" value="{{restaurant_index}}" range="{{restaurant_array}}" disabled="{{restaurant_array.length === 0}}">
-                                    <view class="weui-cell__ft weui-cell__ft_in-access">切换</view>
+                                    <view class="weui-cell__ft weui-cell__ft_in-access" hover-class="weui-cell_active">切换</view>
                                 </picker>
                             </view>
 
                             <view class="weui-cell">
-                                <view class="weui-cell__hd">
-                                    <view class="weui-label link_label">添加餐厅</view>
+                                <view class="weui-cell__hd" hover-class="weui-cell_active">
+                                    <view class="weui-label link_label" bindtap="addRestaurant">添加餐厅</view>
                                 </view>
                             </view>
                         </block>

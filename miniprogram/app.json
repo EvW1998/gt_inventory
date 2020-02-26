@@ -34,6 +34,7 @@
 
         "pages/user/userInfo/userInfo",
         "pages/user/userRegister/userRegister",
+        "pages/user/addRestaurant/addRestaurant",
         "pages/user/userUpgrade/userUpgrade"
     ],
     "window": {

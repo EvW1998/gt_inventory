@@ -258,6 +258,66 @@ function getAllRestaurant() {
 }
 
 
+function updateUserRestaurant(u_data) {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+
+        var uid = u_data._id
+        delete u_data._id
+
+        wx.cloud.callFunction({
+            name: 'dbSet',
+            data: {
+                collection_name: db_user,
+                uid: uid,
+                set_data: u_data
+            },
+            success: res => {
+                result['stat'] = true
+                result['result'] = res.result
+
+                resolve(result)
+            },
+            fail: err => {
+                realTimeLog.error('Failed to update the user restaurant info by using dbSet().', err)
+                resolve(result)
+            }
+        })
+    })
+}
+
+
+function updateRecentRestaurant(uid, rid) {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+
+        var update_data = {}
+        update_data['recent_restaurant'] = rid
+
+        wx.cloud.callFunction({
+            name: 'dbUpdate',
+            data: {
+                collection_name: db_user,
+                uid: uid,
+                update_data: update_data
+            },
+            success: res => {
+                result['stat'] = true
+                result['result'] = res.result
+
+                resolve(result)
+            },
+            fail: err => {
+                realTimeLog.error('Failed to update the user recent restaurant by using dbUpdate().', err)
+                resolve(result)
+            }
+        })
+    })
+}
+
+
 module.exports = {
     getAuthority: getAuthority,
     getUserInfomation: getUserInfomation,
@@ -266,5 +326,7 @@ module.exports = {
     addNewUser: addNewUser,
     getSystem: getSystem,
     getRestaurantInfo: getRestaurantInfo,
-    getAllRestaurant: getAllRestaurant
+    getAllRestaurant: getAllRestaurant,
+    updateUserRestaurant: updateUserRestaurant,
+    updateRecentRestaurant: updateRecentRestaurant
 }
