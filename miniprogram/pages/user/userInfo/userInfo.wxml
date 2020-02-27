@@ -79,8 +79,6 @@
     </view>
 
     <view class="weui-footer weui-footer_fixed-bottom">
-        <navigator url="{{upgrade_page}}" class="weui-footer__text">
-            <view>{{version}}</view>
-        </navigator>
+        <view class="weui-footer__text" hover-class="weui-cell_active" bindtap="upgradeUser">{{version}}</view>
     </view>
 </view>

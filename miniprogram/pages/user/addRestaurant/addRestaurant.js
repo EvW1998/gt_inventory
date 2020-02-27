@@ -205,68 +205,6 @@ Page({
                                 icon: 'none'
                             })
                         }
-
-                        /** 
-
-                        var add_result = await user.addNewUser(add_user_data)
-
-                        if (add_result.stat === 'success') {
-                            var uid = add_result.result.result._id
-                            if (uid === undefined) {
-                                this.setData({
-                                    progress: 0,
-                                    progress_text: '未开始',
-                                    progress_enable: false
-                                })
-
-                                wx.hideLoading()
-                                wx.showToast({
-                                    title: '网络错误，请重试',
-                                    icon: 'none'
-                                })
-                            } else {
-                                this.setData({
-                                    progress: 100,
-                                    progress_text: '注册成功'
-                                })
-
-                                app.globalData.registered = true
-                                console.log('User registered: ', app.globalData.registered)
-
-                                app.globalData.uid = uid
-                                console.log('User uid: ', app.globalData.uid)
-
-                                app.globalData.restaurant_id = restaurant._id
-                                app.globalData.restaurant_name = restaurant.name
-                                console.log('Selected restaurant: ', restaurant.name, ' id: ', app.globalData.restaurant_id)
-
-                                app.globalData.restaurant_registered = {}
-                                app.globalData.restaurant_registered[restaurant._id] = restaurant._id
-                                console.log('User restaurant registered: ', app.globalData.restaurant_registered)
-
-                                app.globalData.user_name = inputs.name
-                                console.log('User name: ', app.globalData.user_name)
-
-                                app.globalData.permission_level = 0
-                                console.log('User permission level: ', app.globalData.permission_level)
-
-                                realTimeLog.info('User ', inputs.name, ' registered in restaurant ', restaurant.name, ' with uid ', uid, '.')
-                                pAction.navigateBackUser('注册成功', 1)
-                            }
-                        } else {
-                            this.setData({
-                                progress: 0,
-                                progress_text: '未开始',
-                                progress_enable: false
-                            })
-
-                            wx.hideLoading()
-                            wx.showToast({
-                                title: '网络错误，请重试',
-                                icon: 'none'
-                            })
-                        }
-                        */
                     } else {
                         this.setData({
                             progress: 0,

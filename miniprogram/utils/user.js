@@ -318,6 +318,36 @@ function updateRecentRestaurant(uid, rid) {
 }
 
 
+function upgradeRestaurantPermission(uid, rid) {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+
+        var update_data = {}
+        update_data[rid] = {'permission_level': 3}
+
+        wx.cloud.callFunction({
+            name: 'dbUpdate',
+            data: {
+                collection_name: db_user,
+                uid: uid,
+                update_data: update_data
+            },
+            success: res => {
+                result['stat'] = true
+                result['result'] = res.result
+
+                resolve(result)
+            },
+            fail: err => {
+                realTimeLog.error('Failed to upgrade the user permission level in the current restaurant by using dbUpdate().', err)
+                resolve(result)
+            }
+        })
+    })
+}
+
+
 module.exports = {
     getAuthority: getAuthority,
     getUserInfomation: getUserInfomation,
@@ -328,5 +358,6 @@ module.exports = {
     getRestaurantInfo: getRestaurantInfo,
     getAllRestaurant: getAllRestaurant,
     updateUserRestaurant: updateUserRestaurant,
-    updateRecentRestaurant: updateRecentRestaurant
+    updateRecentRestaurant: updateRecentRestaurant,
+    upgradeRestaurantPermission: upgradeRestaurantPermission
 }

@@ -12,7 +12,9 @@ const db_user = 'user' // the collection of users
 
 const registration_page = '../userRegister/userRegister' // the page url of the user registration
 const add_restaurant_page = '../addRestaurant/addRestaurant' // the page url of adding restaurants
-const upgrade_page = '../userUpgrade/userUpgrade' // the page url of the user upgrade 
+const upgrade_page = '../userUpgrade/userUpgrade' // the page url of the user upgrade
+
+var tap_times = 0
 
 
 Page({
@@ -30,8 +32,7 @@ Page({
         restaurants: {}, // the restaurants
         restaurant_array: [], // the items of the restaurant picker
         restaurant_index: 0, // the index of the restaurant picker
-        version: '', // the version info shows at the bottom of the page
-        upgrade_page: upgrade_page // the page url of the user upgrade 
+        version: '' // the version info shows at the bottom of the page
     },
 
     /***
@@ -75,6 +76,8 @@ Page({
      * is too low, show the message.
      */
     onShow: function () {
+        tap_times = 0
+
         this.setData({
             loginSuccess: app.globalData.loginSuccess
         })
@@ -255,6 +258,10 @@ Page({
                         restaurant_name: app.globalData.restaurant_name
                     })
 
+                    realTimeLog.info('User ', app.globalData.uid, ' switched login to restaurant ', app.globalData.restaurant_name, ' id ', app.globalData.restaurant_id, 'with name ', app.globalData.user_name, ' permission level ', app.globalData.permission_level)
+
+                    tap_times = 0
+
                     wx.hideLoading()
                     wx.showToast({
                         title: '切换成功'
@@ -282,6 +289,19 @@ Page({
         })
     },
 
+    upgradeUser: function() {
+        tap_times++
+        console.log('Tapped upgrade ', tap_times, ' times')
+
+        if (tap_times > 2 && app.globalData.permission_level < 3) {
+            console.log('Redirect to user upgrade page.')
+
+            wx.navigateTo({
+                url: upgrade_page
+            })
+        }
+    },
+
     /**
      * When the user wants to share this miniapp
      */
@@ -302,36 +322,61 @@ Page({
  * @method refreshInfo
  * @param{Page} page The current page
  */
-function refreshInfo(page) {
-    db.collection(db_user)
-        .where({
-            // use the user's openid to search in db
-            user_openid: app.globalData.openid
-        })
-        .field({
-            true_name: true,
-            permission_level: true
-        })
-        .get({
-            success: res => {
-                // update the user's info
-                app.globalData.true_name = res.data[0].true_name
-                app.globalData.permission_level = res.data[0].permission_level
+async function refreshInfo(page) {
+    var info_result = await getUser()
 
+    if (info_result.stat) {
+        var user_info = info_result.result[app.globalData.restaurant_id]
+
+        app.globalData.user_name = user_info.name
+        app.globalData.permission_level = user_info.permission_level
+
+        page.setData({
+            user_name: user_info.name,
+            permission_level: user_info.permission_level
+        })
+
+        console.log('Refresh user name ', user_info.name, ' with permission level ', user_info.permission_level)
+    } else {
+        wx.stopPullDownRefresh()
+        wx.showToast({
+            title: '网络错误，请重试',
+            icon: 'none'
+        })
+
+        return
+    }
+
+    // get all the restaurants info
+    var all_restaurant_res = await user.getAllRestaurant()
+    if (all_restaurant_res.stat) {
+        app.globalData.restaurant_info = all_restaurant_res.result
+        console.log('Refresh restaurants info: ', all_restaurant_res.result)
+
+        for (var i in all_restaurant_res.result) {
+            if (all_restaurant_res.result[i]._id === app.globalData.restaurant_id) {
+                app.globalData.restaurant_name = all_restaurant_res.result[i].name
                 page.setData({
-                    true_name: app.globalData.true_name,
-                    permission_level: app.globalData.permission_level
+                    restaurant_name: app.globalData.restaurant_name
                 })
 
-                console.log('Refreshed user info')
-                wx.stopPullDownRefresh()
-            },
-            fail: err => {
-                // if failed to search the user in the db
-                console.error('Failed to search user in the database', err)
-                wx.stopPullDownRefresh()
+                console.log('Refresh current restaurant name ', app.globalData.restaurant_name)
+                break
             }
+        }
+
+        setPicker(page)
+
+        wx.stopPullDownRefresh()
+    } else {
+        wx.stopPullDownRefresh()
+        wx.showToast({
+            title: '网络错误，请重试',
+            icon: 'none'
         })
+
+        return
+    }
 }
 
 
