@@ -33,7 +33,7 @@
                         <view class="{{code_warn_enable ? 'weui-cell weui-cell_warn' : 'weui-cell'}}">
                             <view class="weui-cell__hd"><view class="weui-label">邀请码</view></view>
                             <view class="weui-cell__bd">
-                                <input class="weui-input" name="code" type="text" bindinput="codeInput" placeholder="请输入餐厅邀请码"/>
+                                <input class="weui-input" name="code" type="text" bindinput="codeInput" placeholder="请输入餐厅邀请码" password="true"/>
                             </view>
                             <view wx:if="{{code_warn_enable}}" class="weui-cell__ft">
                                 <icon type="warn" size="23" color="#E64340"></icon>

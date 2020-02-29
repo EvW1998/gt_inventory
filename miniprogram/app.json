@@ -7,6 +7,7 @@
         "pages/inventory/itemDetail/itemDetail",
 
         "pages/manage/setting/setting",
+        "pages/manage/restaurantManage/restaurantModify/restaurantModify",
         "pages/manage/userManage/viewUser/viewUser",
         "pages/manage/userManage/userSetting/userSetting",
         "pages/manage/inventoryManage/categoryView/categoryView",

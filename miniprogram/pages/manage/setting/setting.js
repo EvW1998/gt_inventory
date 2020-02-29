@@ -15,6 +15,8 @@ const product_manage_page = '../productManage/productView/productView' // the pa
 const promotion_type_manage_page = '../promotionTypeManage/promotionTypeView/promotionTypeView' // the page url of the promotion type management
 const promotion_event_manage_page = '../promotionEventManage/promotionEventView/promotionEventView' // the page url of the promotion event management
 
+const restaurant_manage_page = '../restaurantManage/restaurantModify/restaurantModify' // the page url of the restaurant management
+
 const check_left_message_id = 'LJqgpHGDBW5N1A_7A3goZytqjqN-AR5ldYjSRvjFSSU' // the message id of checking
 const refill_message_id = 'X9BoiE_piVjqKaKsAH1KcFhOX46FFps-bWoNBK-LnYQ' // the message id of refilling
 
@@ -23,6 +25,8 @@ const warning_state = 1
 
 Page({
     data: {
+        permission_level: 0, // the user permission level
+        restaurant_name: '', // the current restaurant name
         user_manage_page: user_manage_page, // the page url of the user management
         category_manage_page: category_manage_page, // the page url of the category management
         sale_manage_page: sale_manage_page, // the page url of the sale management
@@ -30,7 +34,8 @@ Page({
         refill_manage_page: refill_manage_page, // the page url of the refill log viewing
         product_manage_page: product_manage_page, // the page url of the product management
         promotion_type_manage_page: promotion_type_manage_page, // the page url of the promotion type management
-        promotion_event_manage_page: promotion_event_manage_page // the page url of the promotion event management
+        promotion_event_manage_page: promotion_event_manage_page, // the page url of the promotion event management
+        restaurant_manage_page: restaurant_manage_page // the page url of the restaurant management
     },
 
     /**
@@ -38,6 +43,11 @@ Page({
      */
     onShow: function () {
         checkPermission()
+
+        this.setData({
+            permission_level: app.globalData.permission_level,
+            restaurant_name: app.globalData.restaurant_name
+        })
     },
 
     /**
