@@ -1,6 +1,8 @@
 /**
  * Update the selected user's name and permission level
  */
+const realTimeLog = require('../../../../utils/log.js') // require the util of real time logs
+const uInput = require('../../../../utils/uInput.js') // require the util of user input
 const pAction = require('../../../../utils/pageAction.js') // require the util of page actions
 
 const app = getApp() // the app
@@ -16,9 +18,13 @@ Page({
     data: {
         manage_id: '', // the uid of the selected user
         manage_user: {},  // the selected user
+        restaurant_id: '', // the current restaurant id
         max_level: 0, // the maximum level can be selected
         button_enable: true, // whether the sumbit button is enabled
-        warn_enable: false // whether the warning icon should display
+        warn_enable: false, // whether the warning icon should display
+        progress: 0, // the process to register a new user in percentage
+        progress_text: '未开始', // the process to register a new user in text
+        progress_enable: false // whether the progress bar is enabled
     },
 
     /**
@@ -28,40 +34,16 @@ Page({
      */
     onLoad: function (options) {
         wx.showLoading({
-            title: '加载中',
-            mask: true
+            title: '加载中'
         })
 
         this.setData({
             manage_id: options.title,
+            restaurant_id: app.globalData.restaurant_id,
             max_level: app.globalData.permission_level - 1
         })
 
-        this.searchUser(options.title)
-    },
-
-    /**
-     * Search the user by given uid in the database.
-     * Then set the return data to the page data.
-     * 
-     * @method searchUser
-     * @param{String} uid The user id in the App
-     */
-    searchUser: function(uid) {
-        db.collection(db_user)
-            .where({
-                _id: uid
-            })
-            .get({
-                success: res => {
-                    this.setData({
-                        manage_user: res.data[0]
-                    })
-
-                    console.log('Manage the user', this.data.manage_user)
-                    wx.hideLoading()
-                }
-            })
+        searchUser(options.title, this)
     },
 
     nameInput: function(event) {
@@ -69,7 +51,7 @@ Page({
         var warn_enable = false
         var new_name = event.detail.value
 
-        if (new_name.length == 0 || !isChinese(new_name)) {
+        if (new_name.length === 0 || !uInput.isChinese(new_name)) {
             button_enable = false
             warn_enable = true
         }
@@ -86,52 +68,112 @@ Page({
      * @method formSubmit
      * @param{Object} e The return val from the form submit
      */
-    formSubmit: function(e) {
+    formSubmit: async function(e) {
         wx.showLoading({
-            title: '提交中',
+            title: '上传中',
             mask: true
         })
 
+        var inputs = e.detail.value
         var update_user_data = {} // the new user info needs to be updated
 
-        if (e.detail.value.name != this.data.manage_user.true_name) {
-            // if the user's real name is changed
-            update_user_data['true_name'] = e.detail.value.name
+        this.setData({
+            progress: 0,
+            progress_text: '检查姓名',
+            progress_enable: true
+        })
+
+        if (inputs.name !== this.data.manage_user[app.globalData.restaurant_id].name) {
+            var n_result = await isRepeated(inputs.name, app.globalData.restaurant_id)
+
+            if (n_result.stat) {
+                if (n_result.result) {
+                    this.setData({
+                        progress: 0,
+                        progress_text: '未开始',
+                        progress_enable: false
+                    })
+
+                    wx.hideLoading()
+                    wx.showModal({
+                        title: '错误',
+                        content: '输入的姓名在此餐厅已被注册',
+                        showCancel: false
+                    })
+
+                    return
+                } else {
+                    update_user_data['name'] = inputs.name
+                }
+            } else {
+                this.setData({
+                    progress: 0,
+                    progress_text: '未开始',
+                    progress_enable: false
+                })
+
+                wx.hideLoading()
+                wx.showToast({
+                    title: '网络错误，请重试',
+                    icon: 'none'
+                })
+
+                return
+            }
         }
 
-        if (e.detail.value.level != this.data.manage_user.permission_level) {
+        this.setData({
+            progress: 33,
+            progress_text: '检查权限'
+        })
+
+        if (inputs.level !== this.data.manage_user.permission_level) {
             // if the user's permission level is changed
-            if (e.detail.value.level == '') {
+            if (inputs.level === '') {
                 update_user_data['permission_level'] = 0
             }
             else {
-                update_user_data['permission_level'] = e.detail.value.level
+                update_user_data['permission_level'] = inputs.level
             }
         }
 
-        if (Object.keys(update_user_data).length != 0) {
-            // if there is a user info changed
-            // call dbUpdate() cloud function to update the userinfo
-            wx.cloud.callFunction({
-                name: 'dbUpdate',
-                data: {
-                    collection_name: db_user,
-                    update_data: update_user_data,
-                    uid: this.data.manage_id
-                },
-                success: res => {
-                    console.log('Update user info success')
-                    pAction.navigateBackUser('更改成功', 1)
-                },
-                fail: err => {
-                    // if get a failed result
-                    console.error('failed to use cloud function dbUpdate()', err)
-                }
-            })
+        this.setData({
+            progress: 67,
+            progress_text: '检查通过，正在上传'
+        })
+
+        if (Object.keys(update_user_data).length !== 0) {
+            var update_data = {}
+            update_data[app.globalData.restaurant_id] = update_user_data
+            var update_result = await updateUser(update_data, this.data.manage_id)
+
+            if (update_result.stat) {
+                this.setData({
+                    progress: 100,
+                    progress_text: '上传成功'
+                })
+
+                realTimeLog.info('User ', app.globalData.user_name, app.globalData.uid, ' modify the user info ', update_user_data)
+                pAction.navigateBackUser('修改成功', 1)
+            } else {
+                this.setData({
+                    progress: 0,
+                    progress_text: '未开始',
+                    progress_enable: false
+                })
+
+                wx.hideLoading()
+                wx.showToast({
+                    title: '网络错误，请重试',
+                    icon: 'none'
+                })
+
+                return
+            }
         }
         else {
-            console.log('No use info changed')
-            pAction.navigateBackUser('更改成功', 1)
+            console.log('No use info changed。')
+            pAction.navigateBackUser('修改成功', 1)
         }
     },
 
@@ -149,17 +191,121 @@ Page({
 
 
 /**
- * Return whether the string is all Chinese characters.
+ * Search the user by given uid in the database.
+ * Then set the return data to the page data.
  * 
- * @method isChinese
- * @param{String} str The string for testing
- * @return{Boolean} whether the string is all Chinese characters
+ * @method searchUser
+ * @param{String} uid The user id
+ * @param{Page} page The page
  */
-function isChinese(str) {
-    var reg = /^[\u4e00-\u9fa5]*$/
-    if (!reg.test(str)) {
-        return false
-    } else {
-        return true
-    }
+function searchUser(uid, page) {
+    var collection_field = {}
+    collection_field['_id'] = true
+    collection_field[app.globalData.restaurant_id] = true
+
+    db.collection(db_user)
+        .where({
+            _id: uid
+        })
+        .field(collection_field)
+        .get({
+            success: res => {
+                if (res.data.length === 1) {
+                    page.setData({
+                        manage_user: res.data[0]
+                    })
+
+                    console.log('Modify the user.', res.data[0])
+                    wx.hideLoading()
+                } else {
+                    realTimeLog.error('Failed to get user info from the database while modifying a user.', res)
+                    wx.hideLoading()
+                    wx.showToast({
+                        title: '网络错误，请重试',
+                        icon: 'none'
+                    })
+                }
+            },
+            fail: err => {
+                realTimeLog.error('Failed to get user info from the database while modifying a user.', err)
+                wx.hideLoading()
+                wx.showToast({
+                    title: '网络错误，请重试',
+                    icon: 'none'
+                })
+            }
+        })
+}
+
+
+/**
+ * Check the user name whether has a repetition name in the same restaurant which the invitataion code points to.
+ * 
+ * @method isRepeated
+ * @param{Object} n The user name
+ * @param{String} r_id The restaurant id
+ * @return{Promise} The state of the function. Resolve false when there is no repetition user.
+ */
+function isRepeated(n, r_id) {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+
+        wx.cloud.callFunction({
+            name: 'getUser',
+            data: {
+                r_id: r_id
+            },
+            success: res => {
+                result['stat'] = true
+
+                var n_result = false
+                for (var i in res.result) {
+                    if (n === res.result[i][r_id].name) {
+                        n_result = true
+                        break
+                    }
+                }
+
+                result['result'] = n_result
+                resolve(result)
+            },
+            fail: err => {
+                wx.showToast({
+                    title: '网络错误，请重试',
+                    icon: 'none'
+                })
+
+                realTimeLog.error('Failed to get users in the restaruant with the given id by using getUser().', err)
+                resolve(result)
+            }
+        })
+    })
+}
+
+
+function updateUser(update_user_data, uid) {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+
+        wx.cloud.callFunction({
+            name: 'dbUpdate',
+            data: {
+                collection_name: db_user,
+                update_data: update_user_data,
+                uid: uid
+            },
+            success: res => {
+                result['stat'] = true
+                result['result'] = res
+
+                resolve(result)
+            },
+            fail: err => {
+                realTimeLog.error('Failed to update user info by using dbUpdate().', err)
+                resolve(result)
+            }
+        })
+    })
 }

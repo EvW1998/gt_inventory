@@ -14,6 +14,7 @@ const db_user = 'user' // the collection of promotion events
 exports.main = async (event, context) => {
     try {
         var collection_limit = 100
+        var collection_filed = event.collection_filed
         var r_id = event.r_id
 
         var get_result = []
@@ -30,6 +31,7 @@ exports.main = async (event, context) => {
                 .skip(total_amount)
                 .limit(collection_limit)
                 .where(w)
+                .field(collection_filed)
                 .get()
 
             new_result = new_result.data

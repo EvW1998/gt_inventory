@@ -293,12 +293,19 @@ Page({
         tap_times++
         console.log('Tapped upgrade ', tap_times, ' times')
 
-        if (tap_times > 2 && app.globalData.permission_level < 3) {
-            console.log('Redirect to user upgrade page.')
+        if (tap_times > 2) {
+            if (app.globalData.permission_level < 3) {
+                console.log('Redirect to user upgrade page.')
 
-            wx.navigateTo({
-                url: upgrade_page
-            })
+                wx.navigateTo({
+                    url: upgrade_page
+                })
+            } else {
+                wx.showToast({
+                    title: '权限已达到3级',
+                    icon: 'none'
+                })
+            }
         }
     },
 

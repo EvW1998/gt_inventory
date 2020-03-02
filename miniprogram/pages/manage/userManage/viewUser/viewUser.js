@@ -2,6 +2,8 @@
  * The page to show all the user in the user collection,
  * whose permission level is lower than the current user.
  */
+const realTimeLog = require('../../../../utils/log.js') // require the util of real time logs
+
 const app = getApp() // the app
 const db = wx.cloud.database() // the cloud database
 const db_user = 'user' // the collection name of the user
@@ -25,6 +27,7 @@ Page({
         user_level_0: {}, // users have permission level 0
         user_level_0_amount: 0, // the amount of users have permission level 0
         permission_level: 0, // the current user permission level
+        restaurant_id: '', // the id of the current restaurant
         userSetting_page: userSetting_page // the page url of the user setting
     },
 
@@ -40,7 +43,8 @@ Page({
      */
     onShow: function () {
         this.setData({
-            permission_level: app.globalData.permission_level
+            permission_level: app.globalData.permission_level,
+            restaurant_id: app.globalData.restaurant_id
         })
 
         setAllUserInfo(this)
@@ -74,6 +78,82 @@ Page({
  * @param{Page} page The page
  */
 function setAllUserInfo(page) {
+    var collection_filed = {}
+    collection_filed['_id'] = true
+    collection_filed[app.globalData.restaurant_id] = true
+
+    wx.cloud.callFunction({
+        name: 'getUser',
+        data: {
+            r_id: app.globalData.restaurant_id,
+            collection_filed: collection_filed
+        },
+        success: res => {
+            var user_result = res.result
+            var r_id = app.globalData.restaurant_id
+
+            if (user_result.length === 0) {
+                page.setData({
+                    search_state: 'noUsers'
+                })
+            } else {
+                var user_level_2 = {}
+                var user_level_2_amount = 0
+                var user_level_1 = {}
+                var user_level_1_amount = 0
+                var user_level_0 = {}
+                var user_level_0_amount = 0
+
+                for (var i in user_result) {
+                    if (user_result[i][r_id].permission_level == 2 && app.globalData.permission_level > 2) {
+                        user_level_2[user_result[i]._id] = user_result[i]
+                        user_level_2_amount++
+                    } else if (user_result[i][r_id].permission_level == 1) {
+                        user_level_1[user_result[i]._id] = user_result[i]
+                        user_level_1_amount++
+                    } else if (user_result[i][r_id].permission_level == 0) {
+                        user_level_0[user_result[i]._id] = user_result[i]
+                        user_level_0_amount++
+                    }
+                }
+
+                if (user_level_2_amount == 0 && user_level_1_amount == 0 && user_level_0_amount == 0) {
+                    page.setData({
+                        search_state: 'noUsers'
+                    })
+                } else {
+                    page.setData({
+                        user_level_2: user_level_2,
+                        user_level_2_amount: user_level_2_amount,
+                        user_level_1: user_level_1,
+                        user_level_1_amount: user_level_1_amount,
+                        user_level_0: user_level_0,
+                        user_level_0_amount: user_level_0_amount,
+                        search_state: 'foundUsers'
+                    })
+                }
+            }
+
+            console.log('Get all users info', user_result)
+            wx.stopPullDownRefresh()
+        },
+        fail: err => {
+            page.setData({
+                search_state: 'error'
+            })
+
+            realTimeLog.error('Failed to get users info by using getUser() cloud function.', err)
+            wx.stopPullDownRefresh()
+
+            wx.showToast({
+                title: '网络错误，请重试',
+                icon: 'none'
+            })
+        }
+    })
+
+
+    /** 
     db.collection(db_user)
         .field({
             true_name: true,
@@ -137,4 +217,5 @@ function setAllUserInfo(page) {
                 wx.stopPullDownRefresh()
             }
         })
+    */
 }

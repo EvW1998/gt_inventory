@@ -4,36 +4,62 @@
     <view class="weui-form">
         <view class="weui-form__text-area">
             <view class="weui-form__title">员工管理</view>
-            <view class="weui-form__desc">更改员工姓名及权限</view>
+            <view class="weui-form__desc">修改员工姓名及权限</view>
         </view>
 
         <form bindsubmit="formSubmit">
             <view class="weui-form__control-area">
                 <view class="weui-cells__group weui-cells__group_form">
-                    <view class="weui-cells__title">员工信息</view>
+                    <view class="weui-cells__title">员工姓名</view>
                     <view class="weui-cells weui-cells_form weui-cells_after-title">
                         <view class="{{warn_enable ? 'weui-cell weui-cell_warn' : 'weui-cell'}}">
-                            <view class="weui-cell__hd"><label class="weui-label">姓名</label></view>
+                            <view class="weui-cell__hd"><view class="weui-label">姓名</view></view>
                             <view class="weui-cell__bd">
-                                <input class="weui-input" name="name" type="text" maxlength="10" bindinput="nameInput" value="{{manage_user.true_name}}" placeholder="请输入中文姓名"/>
+                                <input class="weui-input" name="name" type="text" maxlength="10" bindinput="nameInput" value="{{manage_user[restaurant_id].name}}" placeholder="请输入中文姓名"/>
                             </view>
                             <view wx:if="{{warn_enable}}" class="weui-cell__ft">
                                 <icon type="warn" size="23" color="#E64340"></icon>
                             </view>
                         </view>
+                    </view>
+                    <view class="weui-cells__tips" wx:if="{{warn_enable}}">
+                        <view class="red_label">姓名不能为空，只能输入中文字符</view>
+                    </view>
+                </view>
 
+                <view class="weui-cells__group weui-cells__group_form">
+                    <view class="weui-cells__title">员工在此餐厅权限</view>
+                    <view class="weui-cells weui-cells_form weui-cells_after-title">
                         <view class="weui-cell">
-                            <view class="weui-cell__hd"><label class="weui-label">权限</label></view>
+                            <view class="weui-cell__hd"><view class="weui-label">权限</view></view>
                             <view class="weui-cell__bd">
-                                <slider name="level" max="{{max_level}}" value="{{manage_user.permission_level}}" show-value/>
+                                <slider name="level" max="{{max_level}}" value="{{manage_user[restaurant_id].permission_level}}" show-value/>
                             </view>
                         </view>
                     </view>
                 </view>
             </view>
 
+            <view wx:if="{{progress_enable}}" class="page__bd page__bd_spacing">
+                <view class="weui-progress">
+                    <view class="weui-progress__bar">
+                        <progress percent="{{progress}}" stroke-width="6" />
+                    </view>
+                    <view class="weui-progress__opr">
+                        <icon type="waiting" size="22"></icon>
+                    </view>
+                </view>
+
+                <view class="weui-form__tips-area">
+                    <view class="weui-loadmore">
+                        <view class="weui-loading"></view>
+                        <view class="weui-loadmore__tips">{{progress_text}}</view>
+                    </view>
+                </view>
+            </view>
+
             <view class="weui-form__tips-area">
-                <view class="weui-form__tips">点击确定更改员工信息</view>
+                <view class="weui-form__tips">点击确定修改员工信息</view>
             </view>
 
             <view class="weui-form__opr-area">

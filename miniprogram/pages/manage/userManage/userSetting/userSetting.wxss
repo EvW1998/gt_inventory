@@ -1,3 +1,7 @@
 /* pages/manage/userManage/userSetting/userSetting.wxss */
 
 page,.page{height:100%;}
+
+.red_label {
+    color: #F25438
+}
