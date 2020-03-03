@@ -21,6 +21,8 @@ App({
             })
         }
 
+        wx.clearStorageSync()
+
         this.globalData = {}
         this.globalData.loginSuccess = true // whether the login process succeeds
         this.globalData.logged = false // the user's login state

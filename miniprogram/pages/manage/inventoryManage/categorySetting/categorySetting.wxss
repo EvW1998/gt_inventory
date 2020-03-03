@@ -1,45 +1,33 @@
 /* pages/manage/inventoryManage/categorySetting/categorySetting.wxss */
 
-.title {
-    margin-top: 20rpx;
-    text-align: center;
-    font-size: 40rpx;
+.no-data {
+    background-color:#ececec;
 }
 
-.item {
-    margin-top: 40rpx;
-    height: 100rpx;
-    width: 100%;
-    background: rgb(250, 250, 250);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-left: none;
-    border-right: none;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+.red-text {
+    color: #F25438;
 }
 
-.detail {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    font-size: 34rpx;
+.link-text {
+    color: #576b95;
 }
 
-.btn {
-    text-align: center;
-    width: 100%;
-    font-size: 34rpx;
-    font-weight: bold;
+.weui-demo-dialog{
+    visibility:hidden;
+    opacity:0;
+    transition:all .3s;
 }
 
-.name {
-    height: 100%;
-    width: 100%;
-    text-align: center;
+.weui-half-screen-dialog{
+    transition:all .3s;
+    transform:translateY(100%);
 }
 
-.space {
-    margin-top: 50rpx;
-    padding-top: 50rpx;
+.weui-demo-dialog_show{
+    visibility:visible;
+    opacity:1;
+}
+
+.weui-demo-dialog_show .weui-half-screen-dialog{
+    transform:translateY(0);
 }

@@ -33,17 +33,14 @@ Page({
      * @param{Object} options The data passed to this page
      */
     onLoad: function (options) {
-        wx.showLoading({
-            title: '加载中'
-        })
+        var users = wx.getStorageSync('users')
 
         this.setData({
             manage_id: options.title,
+            manage_user: users[options.title],
             restaurant_id: app.globalData.restaurant_id,
             max_level: app.globalData.permission_level - 1
         })
-
-        searchUser(options.title, this)
     },
 
     nameInput: function(event) {
@@ -83,7 +80,7 @@ Page({
             progress_enable: true
         })
 
-        if (inputs.name !== this.data.manage_user[app.globalData.restaurant_id].name) {
+        if (inputs.name !== this.data.manage_user.name) {
             var n_result = await isRepeated(inputs.name, app.globalData.restaurant_id)
 
             if (n_result.stat) {
@@ -188,54 +185,6 @@ Page({
         }
     }
 })
-
-
-/**
- * Search the user by given uid in the database.
- * Then set the return data to the page data.
- * 
- * @method searchUser
- * @param{String} uid The user id
- * @param{Page} page The page
- */
-function searchUser(uid, page) {
-    var collection_field = {}
-    collection_field['_id'] = true
-    collection_field[app.globalData.restaurant_id] = true
-
-    db.collection(db_user)
-        .where({
-            _id: uid
-        })
-        .field(collection_field)
-        .get({
-            success: res => {
-                if (res.data.length === 1) {
-                    page.setData({
-                        manage_user: res.data[0]
-                    })
-
-                    console.log('Modify the user.', res.data[0])
-                    wx.hideLoading()
-                } else {
-                    realTimeLog.error('Failed to get user info from the database while modifying a user.', res)
-                    wx.hideLoading()
-                    wx.showToast({
-                        title: '网络错误，请重试',
-                        icon: 'none'
-                    })
-                }
-            },
-            fail: err => {
-                realTimeLog.error('Failed to get user info from the database while modifying a user.', err)
-                wx.hideLoading()
-                wx.showToast({
-                    title: '网络错误，请重试',
-                    icon: 'none'
-                })
-            }
-        })
-}
 
 
 /**

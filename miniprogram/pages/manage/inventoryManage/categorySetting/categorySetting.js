@@ -2,14 +2,17 @@
  * Modify the category name or delete it.
  * Also show items under this category.
  */
+const realTimeLog = require('../../../../utils/log.js') // require the util of user inputs
+
 const app = getApp() // the app
 const db = wx.cloud.database() // the cloud database
-const db_category = 'category' // the collection of categories
 const db_item = 'item' // the collection of items
 
 const page_modify = '../categoryModify/categoryModify' // the page url of modifying the category
 const page_new_item = '../itemAdd/itemAdd' // the page url of adding a new item
 const page_item_setting = '../itemSetting/itemSetting' // the page url of modifying the item
+
+var category_id = ''
 
 
 Page({
@@ -18,13 +21,16 @@ Page({
      * Data for the page
      */
     data: {
-        category_id: '', // the uid of the selected category
-        category_selected: {}, // the selected category
-        items: {}, // items under this category
+        search_state: 'searching', // the state of the searching items under the selected category
+        category_name: '', // the name of the selected cateogry
+        category_id: '', // the id of the selected category
+        items: {}, // items under the selected category
+        item_amount: 0, // the amount of the items
+        show_tip: false, // whether to show the tip of promotion events
+        show_remove: false, // whether to show the dialog to remove a promotion event
         page_modify: page_modify, // the page url of modifying the category
         page_new_item: page_new_item, // the page url of adding a new item
-        page_item_setting: page_item_setting, // the page url of modifying the item
-        first_load: true // whether it is first time load this page
+        page_item_setting: page_item_setting // the page url of modifying the item
     },
 
     /**
@@ -33,33 +39,40 @@ Page({
      * @param{Object} options The data passed to this page
      */
     onLoad: function (options) {
-        wx.showLoading({
-            title: '加载中',
-            mask: true
-        })
+        category_id = options.title
+        var categories = wx.getStorageSync('categories')
 
         this.setData({
-            category_id: options.title
+            category_name: categories[category_id],
+            category_id: category_id
         })
-
-        // search and set the selected category
-        searchCategory(this, this.data.category_id)
-        // search and set items under this category
-        searchItem(this, this.data.category_id)
     },
 
     /**
      * When the app shows the page
      */
     onShow: function() {
-        if(this.data.first_load) {
+        setItem(this)
+    },
+
+    onPullDownRefresh: function() {
+        setItem(this)
+    },
+
+    /**
+     * When tapping, show the tip or hide the tip
+     * 
+     * @method tipChange
+     */
+    tipChange: function (e) {
+        if (this.data.show_tip) {
             this.setData({
-                first_load: false
+                show_tip: false
             })
         } else {
-            // update the category and item info
-            searchCategory(this, this.data.category_id)
-            searchItem(this, this.data.category_id)
+            this.setData({
+                show_tip: true
+            })
         }
     },
 
@@ -76,62 +89,60 @@ Page({
 })
 
 
-/**
- * Search the category in the collection with the given id.
- * Then store the data in the page data.
- * 
- * @method searchCategory
- * @param{Object} page The page
- * @param{String} category_id The collection id of the selected category
- */
-function searchCategory(page, category_id) {
-    db.collection(db_category)
-        .where({
-            _id: category_id
-        })
-        .get({
-            success: res => {
+function setItem(page) {
+    var collection_where = {}
+    collection_where['restaurant_id'] = app.globalData.restaurant_id
+
+    var collection_field = {}
+    collection_field['_id'] = true
+    collection_field['name'] = true
+
+    wx.cloud.callFunction({
+        name: 'dbGet',
+        data: {
+            collection_name: db_item,
+            collection_limit: 100,
+            collection_field: collection_field,
+            collection_where: collection_where,
+            collection_orderby_key: 'item_order',
+            collection_orderby_order: 'asc'
+        },
+        success: res => {
+            if (res.result.length === 0) {
                 page.setData({
-                    category_selected: res.data[0]
+                    search_state: 'noData'
                 })
+            } else {
+                var storage_item = {}
+                for (let i in res.result) {
+                    storage_item[res.result[i]._id] = res.result[i].name
+                }
 
-                console.log('Show the category: ', res.data[0])
-                wx.hideLoading()
-            },
-            fail: err => {
-                console.error('Failed to search the category', err)
-                wx.hideLoading()
-            }
-        })
-}
+                wx.setStorageSync('items', storage_item)
 
+                var items = addOrder(res.result, res.result.length)
 
-/**
- * Search all the items under this category.
- * Then store the data in the page data.
- * 
- * @method searchItem
- * @param{Object} page The page
- * @param{String} category_id The collection id of the selected category
- */
-function searchItem(page, category_id) {
-    db.collection(db_item)
-        .where({
-            category_id: category_id
-        })
-        .orderBy('item_order', 'asc')
-        .get({
-            success: res => {
                 page.setData({
-                    items: res.data
+                    search_state: 'found',
+                    items: items,
+                    item_amount: res.result.length
                 })
-
-                console.log('Get all items under this category: ', res.data)
-                wx.hideLoading()
-            },
-            fail: err => {
-                console.error('Failed to search items', err)
-                wx.hideLoading()
             }
-        })
+
+            console.log('View all the items under the category ', page.data.category_name, ' in the current restaurant.', page.data.items)
+            wx.stopPullDownRefresh()
+        },
+        fail: err => {
+            page.setData({
+                search_state: 'noData'
+            })
+
+            wx.stopPullDownRefresh()
+            realTimeLog.error('Failed to get all the items under the selected category in the current restaurant by using dbGet().', err)
+            wx.showToast({
+                title: '网络错误，请重试',
+                icon: 'none'
+            })
+        }
+    })
 }

@@ -15,7 +15,7 @@
             </navigator>
 
             <navigator url="{{category_manage_page}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
-                <view class="weui-cell__bd">补货品类管理</view>
+                <view class="weui-cell__bd">补货品类品项管理</view>
                 <view class="weui-cell__ft weui-cell__ft_in-access"></view>
             </navigator>
 

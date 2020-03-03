@@ -1,12 +1,13 @@
 /**
  * The page to add new category to database
  */
+const realTimeLog = require('../../../../utils/log.js') // require the util of user inputs
 const pAction = require('../../../../utils/pageAction.js') // require the util of page actions
 
 const app = getApp() // the app
 const db = wx.cloud.database() // the cloud database
 const db_category = 'category' // the collection of categories
-const db_info = 'info' // the collection of the app info
+const db_restaurant = 'restaurant' // the collection of restaurants
 
 
 Page({
@@ -15,10 +16,14 @@ Page({
      * Data in the page
      */
     data: {
-        exist_category_amount: 0, // The amount of the existed cateogies in the collection
-        info_id: '', // The collection id of the info in the info collection
-        filled: false,  // whether the input box of the category name gets filled
-        btn_state: "default" // the state for the confirm button
+        error_happened: true, // whether there is error happened while loading
+        existed_category_amount: 0, // The amount of the existed cateogies in the collection
+        name_filled: false, // whether the name input is filled
+        name_warn_enable: false, // whether the warning icon for the name should be enabled
+        button_enable: false, // whether the sumbit button is enabled
+        progress: 0, // the process to add a new promotion event in percentage
+        progress_text: '未开始', // the process to register a new user in text
+        progress_enable: false // whether the progress bar is enabled
     },
 
     /**
@@ -26,8 +31,7 @@ Page({
      */
     onLoad: function() {
         wx.showLoading({
-            title: '获取中',
-            mask: true
+            title: '加载中'
         })
 
         // set the amount of categories to the page data
@@ -35,26 +39,30 @@ Page({
     },
 
     /**
-     * Check whether the new category's name gets filled
+     * Check the input, set the name_filled to be true if the length is greater than 0,
+     * enable the warning icon if the length is 0.
+     * If both the input is filled, enable the confirm button.
      * 
-     * @method checkBlur_name
-     * @param e The value returned from the input text
+     * @method nameInput
+     * @param{Object} event The event of the input
      */
-    checkBlur_name: function(e) {
-        if (e.detail.value != "") {
-            // if the name input text get filled with something
-            this.setData({
-                filled: true,
-                btn_state: "primary"
-            })
+    nameInput: function (event) {
+        var name_filled = true
+        var name_warn_enable = false
+        var button_enable = true
+        var new_name = event.detail.value
+
+        if (new_name.length === 0) {
+            name_filled = false
+            name_warn_enable = true
+            button_enable = false
         }
-        else {
-            // if the name input text get filled with nothing
-            this.setData({
-                filled: false,
-                btn_state: "default"
-            })
-        }
+
+        this.setData({
+            name_filled: name_filled,
+            name_warn_enable: name_warn_enable,
+            button_enable: button_enable
+        })
     },
 
     /**
@@ -65,11 +73,11 @@ Page({
      */
     formSubmit: function (e) {
         wx.showLoading({
-            title: '提交中',
+            title: '上传中',
             mask: true
         })
 
-        addCategory(this.data.exist_category_amount, e.detail.value.name, this.data.info_id)
+        addCategoryProcess(this, this.data.existed_category_amount, e.detail.value.name)
     },
 
     /**
@@ -92,74 +100,224 @@ Page({
  * @param page The page
  */
 function setCategoryAmount(page) {
-    db.collection(db_info)
+    db.collection(db_restaurant)
+        .where({
+            _id: app.globalData.restaurant_id
+        })
         .field({
-            _id: true,
             category_amount: true
         })
         .get({
             success: res => {
-                page.setData({
-                    exist_category_amount: res.data[0].category_amount,
-                    info_id: res.data[0]._id
-                })
+                if (res.data.length === 1) {
+                    page.setData({
+                        error_happened: false,
+                        existed_category_amount: res.data[0].category_amount
+                    })
 
-                console.log('Get the amount of categories: ', page.data.exist_category_amount)
+                    console.log('Get the amount of existed categories in the current restaurant.', res.data[0].category_amount)
+                    wx.hideLoading()
 
-                wx.hideLoading()
+                } else {
+                    realTimeLog.error('Failed to get category amount from the restaurant database.', res)
+
+                    wx.hideLoading()
+                    wx.showToast({
+                        title: '网络错误，请重试',
+                        icon: 'none'
+                    })
+                }
             },
             fail: err => {
-                console.error('Failed to get category info in the database', err)
+                realTimeLog.error('Failed to get category amount from the restaurant database.', err)
+
+                wx.hideLoading()
+                wx.showToast({
+                    title: '网络错误，请重试',
+                    icon: 'none'
+                })
             }
         })
 }
 
 
-/**
- * Add the new category to the category collection.
- * Update the amount of the categories in the info collection.
- * Then return to the previous page.
- * 
- * @method addCategory
- * @param category_order The order of the category
- * @param category_name The name of the category
- * @param info_id The id of the info collection
- */
-async function addCategory(category_order, category_name, info_id) {
-    // use an object to hold the data that plans to add to db
-    var add_category_data = {
-        category_order: category_order,
-        category_name: category_name,
-        item_amount: 0
+async function addCategoryProcess(page, category_order, category_name) {
+    var add_category_data = {}
+    var update_restaurant_data = {}
+
+    page.setData({
+        progress: 0,
+        progress_text: '检查名称',
+        progress_enable: true
+    })
+
+    var n_result = await isRepeated(category_name)
+
+    if (n_result.stat) {
+        if (n_result.result) {
+            page.setData({
+                progress: 0,
+                progress_text: '未开始',
+                progress_enable: false
+            })
+
+            wx.hideLoading()
+            wx.showModal({
+                title: '错误',
+                content: '输入的品类名称与此餐厅已有品类重复，请更改后重试。',
+                showCancel: false
+            })
+
+            return
+        } else {
+            add_category_data['restaurant_id'] = app.globalData.restaurant_id
+            add_category_data['name'] = category_name
+            add_category_data['category_order'] = category_order
+            add_category_data['item_amount'] = 0
+            
+            update_restaurant_data['category_amount'] = category_order + 1
+        }
+
+    } else {
+        page.setData({
+            progress: 0,
+            progress_text: '未开始',
+            progress_enable: false
+        })
+
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重试',
+            icon: 'none'
+        })
+
+        return
     }
 
-    // add the new category to the collection
-    await addToDB(add_category_data)
-    console.log('Add the new category to the collection: ', add_category_data)
+    page.setData({
+        progress: 33,
+        progress_text: '检查通过，正在上传餐厅数据'
+    })
 
-    // use an object to hold the data that plans to update to db
-    var update_info_data = {
-        category_amount: category_order + 1
+    var update_result = await updateRestaurant(update_restaurant_data)
+
+    if (!update_result.stat) {
+        page.setData({
+            progress: 0,
+            progress_text: '未开始',
+            progress_enable: false
+        })
+
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重试',
+            icon: 'none'
+        })
+
+        return
     }
 
-    // update the total amount of the categories in the db
-    await updateCategoryAmount(update_info_data, info_id)
-    console.log('Update the total amount of the categories: ', update_info_data.category_amount)
+    page.setData({
+        progress: 67,
+        progress_text: '正在上传新的补货品类'
+    })
 
-    pAction.navigateBackUser('新增成功', 1)
+    var add_result = await addCategory(add_category_data)
+
+    if (add_result.stat) {
+        page.setData({
+            progress: 100,
+            progress_text: '上传成功'
+        })
+
+        realTimeLog.info('User ', app.globalData.user_name, app.globalData.uid, ' add a new category ', add_category_data, ' into the restaurant ', app.globalData.restaurant_name, app.globalData.restaurant_id)
+
+        pAction.navigateBackUser('新增成功', 1)
+    } else {
+        page.setData({
+            progress: 0,
+            progress_text: '未开始',
+            progress_enable: false
+        })
+
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重试',
+            icon: 'none'
+        })
+
+        return
+    }
 }
 
 
-/**
- * Add the new category to the category collection.
- * 
- * @method addToDB
- * @param add_category_data The data that plans to add to the db
- */
-function addToDB(add_category_data) {
-
+function isRepeated(category_name) {
     return new Promise((resolve, reject) => {
-        // call dbAdd() cloud function to add the category to collection
+        var result = {}
+        result['stat'] = false
+        result['result'] = true
+
+        db.collection(db_category)
+            .where({
+                restaurant_id: app.globalData.restaurant_id,
+                name: category_name
+            })
+            .field({
+                _id: true
+            })
+            .get({
+                success: res => {
+                    result['stat'] = true
+                    if (res.data.length === 0) {
+                        result['result'] = false
+                    }
+
+                    resolve(result)
+                },
+                fail: err => {
+                    realTimeLog.error('Failed to get the cateogry with the same name as the new category in the same restaurant from the database.', err)
+
+                    resolve(result)
+                }
+            })
+    })
+}
+
+
+function updateRestaurant(update_restaurant_data) {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+
+        wx.cloud.callFunction({
+            name: 'dbUpdate',
+            data: {
+                collection_name: db_restaurant,
+                update_data: update_restaurant_data,
+                uid: app.globalData.restaurant_id
+            },
+            success: res => {
+                if (res.result.stats.updated === 1) {
+                    result['stat'] = true
+                    result['result'] = res
+                }
+                
+                resolve(result)
+            },
+            fail: err => {
+                realTimeLog.error('Failed to update the restaurant category amount by using dbUpdate().', err)
+                resolve(result)
+            }
+        })
+    })
+}
+
+
+function addCategory(add_category_data) {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+
         wx.cloud.callFunction({
             name: 'dbAdd',
             data: {
@@ -167,43 +325,16 @@ function addToDB(add_category_data) {
                 add_data: add_category_data
             },
             success: res => {
-                resolve()
+                if (res.result._id !== undefined) {
+                    result['stat'] = true
+                    result['result'] = res
+                }
+
+                resolve(result)
             },
             fail: err => {
-                // if get a failed result
-                console.error('Failed to use cloud function dbAdd()', err)
-                reject()
-            }
-        })
-    })
-}
-
-
-/**
- * Update the amount of the categories in the info collection.
- * 
- * @method updateCategoryAmount
- * @param update_info_data The data that plans to update to db
- * @param info_id The id of the info collection
- */
-function updateCategoryAmount(update_info_data, info_id) {
-
-    return new Promise((resolve, reject) => {
-        // call dbChangeUser() cloud function to update the category amount
-        wx.cloud.callFunction({
-            name: 'dbUpdate',
-            data: {
-                collection_name: db_info,
-                update_data: update_info_data,
-                uid: info_id
-            },
-            success: res => {
-                resolve()
-            },
-            fail: err => {
-                // if get a failed result
-                console.error('Failed to use cloud function dbUpdate()', err)
-                reject()
+                realTimeLog.error('Failed to add a new category into the database by using dbAdd().', err)
+                resolve(result)
             }
         })
     })

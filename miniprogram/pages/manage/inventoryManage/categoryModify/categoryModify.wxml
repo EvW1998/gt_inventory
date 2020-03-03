@@ -7,7 +7,7 @@
         <view class="item">
             <view class="name">品类名称:  </view>
             <view class="val">
-                <input name="name" type="text" bindblur="checkBlur_name" value="{{category_selected.category_name}}"/>
+                <input name="name" type="text" bindblur="checkBlur_name" value="{{category_selected.name}}"/>
             </view>
         </view>
 

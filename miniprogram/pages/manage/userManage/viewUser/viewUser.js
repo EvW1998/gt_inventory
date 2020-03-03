@@ -58,6 +58,10 @@ Page({
         this.onShow()
     },
 
+    onUnload: function () {
+        wx.removeStorageSync('users')
+    },
+
     /**
      * When the user wants to share this miniapp
      */
@@ -104,7 +108,11 @@ function setAllUserInfo(page) {
                 var user_level_0 = {}
                 var user_level_0_amount = 0
 
+                var storage_user = {}
+
                 for (var i in user_result) {
+                    storage_user[user_result[i]._id] = user_result[i][r_id]
+
                     if (user_result[i][r_id].permission_level == 2 && app.globalData.permission_level > 2) {
                         user_level_2[user_result[i]._id] = user_result[i]
                         user_level_2_amount++
@@ -122,6 +130,8 @@ function setAllUserInfo(page) {
                         search_state: 'noUsers'
                     })
                 } else {
+                    wx.setStorageSync('users', storage_user)
+
                     page.setData({
                         user_level_2: user_level_2,
                         user_level_2_amount: user_level_2_amount,
@@ -151,71 +161,4 @@ function setAllUserInfo(page) {
             })
         }
     })
-
-
-    /** 
-    db.collection(db_user)
-        .field({
-            true_name: true,
-            permission_level: true,
-            user_openid: true,
-            _id: true
-        })
-        .orderBy('true_name', 'desc')
-        .get({
-            success: res => {
-                var user_result = res.data
-                
-                if(user_result.length == 0) {
-                    page.setData({
-                        search_state: 'noUsers'
-                    })
-                } else {
-                    var user_level_2 = {}
-                    var user_level_2_amount = 0
-                    var user_level_1 = {}
-                    var user_level_1_amount = 0
-                    var user_level_0 = {}
-                    var user_level_0_amount = 0
-                    
-                    for(var i in user_result) {
-                        if (user_result[i].permission_level == 2 && app.globalData.permission_level > 2) {
-                            user_level_2[user_result[i]._id] = user_result[i]
-                            user_level_2_amount ++
-                        } else if (user_result[i].permission_level == 1) {
-                            user_level_1[user_result[i]._id] = user_result[i]
-                            user_level_1_amount ++
-                        } else if (user_result[i].permission_level == 0) {
-                            user_level_0[user_result[i]._id] = user_result[i]
-                            user_level_0_amount ++
-                        }
-                    }
-
-                    if (user_level_2_amount == 0 && user_level_1_amount == 0 && user_level_0_amount == 0) {
-                        page.setData({
-                            search_state: 'noUsers'
-                        })
-                    } else {
-                        page.setData({
-                            user_level_2: user_level_2,
-                            user_level_2_amount: user_level_2_amount,
-                            user_level_1: user_level_1,
-                            user_level_1_amount: user_level_1_amount,
-                            user_level_0: user_level_0,
-                            user_level_0_amount: user_level_0_amount,
-                            search_state: 'foundUsers'
-                        })
-
-                    }
-                }
-
-                console.log('Get all users info', user_result)
-                wx.stopPullDownRefresh()
-            },
-            fail: err => {
-                console.error('Failed to search users in database', err)
-                wx.stopPullDownRefresh()
-            }
-        })
-    */
 }

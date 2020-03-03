@@ -262,6 +262,8 @@ Page({
 
                     tap_times = 0
 
+                    wx.clearStorageSync()
+
                     wx.hideLoading()
                     wx.showToast({
                         title: '切换成功'

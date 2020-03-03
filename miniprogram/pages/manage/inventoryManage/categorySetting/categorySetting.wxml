@@ -1,21 +1,95 @@
 <!--pages/manage/inventoryManage/categorySetting/categorySetting.wxml-->
 
-<view class="title">品类: {{category_selected.category_name}}</view>
+<view class="page">
+    <view class="page__hd">
+        <view class="page__title">补货品类管理: {{category_name}}</view>
+        <view class="page__desc link-text" bindtap="tipChange">{{show_tip ? '点击收起帮助' : '点击查看帮助'}}</view>
 
-<view class="item">
-    <navigator url="{{page_modify}}?title={{category_id}}" class="btn">编辑此品类</navigator>
-</view>
+        <block wx:if="{{show_tip}}">
+            <view class="page__desc">补货品类为需要补充耗材的大类</view>
+            <view class="page__desc">补货品项为大品类中的小项</view>
+            <view class="page__desc">例如：品类杯子中有品项12oz波纹咖啡杯</view>
+            <view class="page__desc">品类只需要填写名称</view>
+            <view class="page__desc">例如 名称：杯子</view>
+            <view class="page__desc">品项需要名称，每日补货量，备货天数，现有剩余量，最大存量</view>
+            <view class="page__desc">例如 名称：12oz波纹咖啡杯</view>
+            <view class="page__desc">每日补货量：5 (正整数)</view>
+            <view class="page__desc">备货天数：2 (正整数)</view>
+            <view class="page__desc">现有剩余量：3 (非负数)</view>
+            <view class="page__desc">最大存量：6 (正整数)</view>
+        </block>
+    </view>
 
-<view class="item">
-    <navigator url="{{page_new_item}}?title={{category_id}}" class="btn">新增子品项</navigator>
-</view>
+    <view class="page__bd">
+        <view class="weui-cells__title">点击修改补货品类</view>
+        <view class="weui-cells weui-cells_after-title">
+            <navigator url="{{page_modify}}?category_id={{category_id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
+                <view class="weui-cell__bd">修改此补货品类</view>
+                <view class="weui-cell__ft weui-cell__ft_in-access">{{category_name}}</view>
+            </navigator>
+        </view>
 
-<view wx:for="{{items}}" wx:key="_id">
-    <view class="item">
-        <navigator url="{{page_item_setting}}?title={{item._id}}" class="detail">
-            <view class="name">{{item.item_name}}</view>
-        </navigator>
+        <view class="weui-cells__title">点击新增补货品项</view>
+        <view class="weui-cells weui-cells_after-title">
+            <navigator url="{{page_new_item}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
+                <view class="weui-cell__bd">在{{category_name}}中添加新的补货品项</view>
+                <view class="weui-cell__ft weui-cell__ft_in-access"></view>
+            </navigator>
+        </view>
+
+        <view class="weui-cells__title">点击查看，修改补货品项或长按删除补货品项</view>
+        
+        <block wx:if="{{search_state == 'searching'}}">
+            <view class="weui-loadmore">
+                <view class="weui-loading"></view>
+                <view class="weui-loadmore__tips">正在加载</view>
+            </view>
+        </block>
+
+        <block wx:elif="{{search_state == 'noData'}}">
+            <view class="weui-loadmore weui-loadmore_line">
+                <view class="weui-loadmore__tips weui-loadmore__tips_in-line no-data">暂无数据</view>
+            </view>
+        </block>
+
+        <block wx:elif="{{search_state == 'found'}}">
+            <view class="weui-cells weui-cells_after-title">
+                <block wx:for="{{items}}" wx:key="_id">
+                    <navigator url="{{page_item_setting}}?title={{item._id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active" bindlongpress="openRemoveDialog" id="{{item._id}}">
+                        <view class="weui-cell__bd">{{item.order}}. {{item.name}}</view>
+                        <view class="weui-cell__ft weui-cell__ft_in-access"></view>
+                    </navigator>
+                </block>
+            </view>
+        </block>
+
+        <view class="weui-demo-dialog {{show_remove ? 'weui-demo-dialog_show' : ''}}">
+            <view class="weui-mask" bindtap="closeRemoveDialog"></view>
+            <view class="weui-half-screen-dialog">
+                <view class="weui-half-screen-dialog__hd">
+                    <view class="weui-half-screen-dialog__hd__side">
+                        <view bindtap="closeRemoveDialog" class="weui-icon-btn weui-icon-btn_close">关闭</view>
+                    </view>
+                    <view class="weui-half-screen-dialog__hd__main">
+                        <text class="weui-half-screen-dialog__title red-text">警告</text>
+                    </view>
+                </view>
+
+                <view class="weui-half-screen-dialog__bd">
+                    <view class="weui-half-screen-dialog__desc red-text">
+                        将要删除促销类型：{{selected_promotion_type.promotion_type_name}}
+                    </view>
+
+                    <view class="weui-half-screen-dialog__tips red-text">
+                        此操作无法恢复！
+                    </view>
+                </view>
+
+                <view class="weui-half-screen-dialog__ft">
+                    <button type="default" class="weui-btn" bindtap="closeRemoveDialog">取消</button>
+                    <button type="warn" class="weui-btn" bindtap="removePromotionType">删除</button>
+                </view>
+            </view>
+        </view>
     </view>
 </view>
-
-<view class="space"></view>
