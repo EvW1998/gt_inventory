@@ -1,34 +1,140 @@
 <!--pages/manage/inventoryManage/itemAdd/itemAdd.wxml-->
 
-<view class="content">
-    <view class="title">在"{{category_selected.category_name}}"中新增子品项</view>
-
-    <form bindsubmit="formSubmit">
-        <view class="item">
-            <view class="name">子品项名称:  </view>
-            <view class="val"><input name="name" type="text" bindblur="checkBlur_name"/></view>
+<view class="page">
+    <view class="weui-form">
+        <view class="weui-form__text-area">
+            <view class="weui-form__title">在{{category_name}}中新增补货品项</view>
+            <view class="weui-form__desc">补货品项名称，每日补货量，备货天数，现有剩余量，最大存量</view>
         </view>
 
-        <view class="item">
-            <view class="name">默认补货量:  </view>
-            <view class="val"><input name="base" type="number" bindblur="checkBlur_base"/></view>
-        </view>
+        <form bindsubmit="formSubmit">
+            <view class="weui-form__control-area">
+                <view class="weui-cells__group weui-cells__group_form">
+                    <view class="weui-cells__title">补货品项的名称</view>
+                    <view class="weui-cells weui-cells_form weui-cells_after-title">
+                        <view class="{{name_warn_enable ? 'weui-cell weui-cell_warn' : 'weui-cell'}}">
+                            <view class="weui-cell__hd">
+                                <view class="weui-label">名称</view>
+                            </view>
+                            <view class="weui-cell__bd">
+                                    <input class="weui-input" name="name" type="text" bindinput="nameInput" placeholder="请输入补货品项名称"/>
+                            </view>
+                            <view wx:if="{{name_warn_enable}}" class="weui-cell__ft">
+                                <icon type="warn" size="23" color="#E64340"></icon>
+                            </view>
+                        </view>
+                    </view>
+                    <view class="weui-cells__tips" wx:if="{{name_warn_enable}}">
+                        <label class="red_label">名称不能为空</label>
+                    </view>
+                </view>
 
-        <view class="item">
-            <view class="name">备货率:  </view>
-            <view class="val"><input name="scale" type="number" bindblur="checkBlur_scale"/></view>
-        </view>
+                <view class="weui-cells__group weui-cells__group_form">
+                    <view class="weui-cells__title">补货品项的每日补货量</view>
+                    <view class="weui-cells weui-cells_form weui-cells_after-title">
+                        <view class="{{daily_warn_enable ? 'weui-cell weui-cell_warn' : 'weui-cell'}}">
+                            <view class="weui-cell__hd">
+                                <view class="weui-label">每日补货量</view>
+                            </view>
+                            <view class="weui-cell__bd">
+                                    <input class="weui-input" name="daily" type="number" bindinput="dailyInput" placeholder="请输入每日默认补货量"/>
+                            </view>
+                            <view wx:if="{{daily_warn_enable}}" class="weui-cell__ft">
+                                <icon type="warn" size="23" color="#E64340"></icon>
+                            </view>
+                        </view>
+                    </view>
+                    <view class="weui-cells__tips" wx:if="{{daily_warn_enable}}">
+                        <label class="red_label">每日补货量需要为正整数</label>
+                    </view>
+                </view>
 
-        <view class="item">
-            <view class="name">现有库存:  </view>
-            <view class="val"><input name="stock" type="number" bindblur="checkBlur_stock"/></view>
-        </view>
+                <view class="weui-cells__group weui-cells__group_form">
+                    <view class="weui-cells__title">补货品项的备货天数</view>
+                    <view class="weui-cells weui-cells_form weui-cells_after-title">
+                        <view class="{{prepare_warn_enable ? 'weui-cell weui-cell_warn' : 'weui-cell'}}">
+                            <view class="weui-cell__hd">
+                                <view class="weui-label">备货天数</view>
+                            </view>
+                            <view class="weui-cell__bd">
+                                    <input class="weui-input" name="prepare" type="digit" bindinput="prepareInput" placeholder="请输入备货天数"/>
+                            </view>
+                            <view wx:if="{{prepare_warn_enable}}" class="weui-cell__ft">
+                                <icon type="warn" size="23" color="#E64340"></icon>
+                            </view>
+                        </view>
+                    </view>
+                    <view class="weui-cells__tips" wx:if="{{prepare_warn_enable}}">
+                        <label class="red_label">备货天数需要为大于等于1的正数</label>
+                    </view>
+                </view>
 
-        <view class="item">
-            <view class="name">最大库存容量:  </view>
-            <view class="val"><input name="capacity" type="number" bindblur="checkBlur_capacity"/></view>
-        </view>
+                <view class="weui-cells__group weui-cells__group_form">
+                    <view class="weui-cells__title">补货品项的现有剩余量</view>
+                    <view class="weui-cells weui-cells_form weui-cells_after-title">
+                        <view class="{{stock_warn_enable ? 'weui-cell weui-cell_warn' : 'weui-cell'}}">
+                            <view class="weui-cell__hd">
+                                <view class="weui-label">现有剩余量</view>
+                            </view>
+                            <view class="weui-cell__bd">
+                                    <input class="weui-input" name="stock" type="digit" bindinput="stockInput" placeholder="请输入现有剩余量"/>
+                            </view>
+                            <view wx:if="{{stock_warn_enable}}" class="weui-cell__ft">
+                                <icon type="warn" size="23" color="#E64340"></icon>
+                            </view>
+                        </view>
+                    </view>
+                    <view class="weui-cells__tips" wx:if="{{stock_warn_enable}}">
+                        <label class="red_label">现有剩余量需要为非负数</label>
+                    </view>
+                </view>
 
-        <button class="btn" type="{{btn_state}}" form-type="submit" disabled="{{!filled}}">确认提交</button>
-    </form>
+                <view class="weui-cells__group weui-cells__group_form">
+                    <view class="weui-cells__title">补货品项的最大库存量</view>
+                    <view class="weui-cells weui-cells_form weui-cells_after-title">
+                        <view class="{{capacity_warn_enable ? 'weui-cell weui-cell_warn' : 'weui-cell'}}">
+                            <view class="weui-cell__hd">
+                                <view class="weui-label">最大存量</view>
+                            </view>
+                            <view class="weui-cell__bd">
+                                    <input class="weui-input" name="capacity" type="number" bindinput="capacityInput" placeholder="请输入最大库存量"/>
+                            </view>
+                            <view wx:if="{{capacity_warn_enable}}" class="weui-cell__ft">
+                                <icon type="warn" size="23" color="#E64340"></icon>
+                            </view>
+                        </view>
+                    </view>
+                    <view class="weui-cells__tips" wx:if="{{capacity_warn_enable}}">
+                        <label class="red_label">最大存量需要为正整数，不能小于现有剩余量或者每日补货量与备货天数的乘积</label>
+                    </view>
+                </view>
+            </view>
+
+            <view wx:if="{{progress_enable}}" class="page__bd page__bd_spacing">
+                <view class="weui-progress">
+                    <view class="weui-progress__bar">
+                        <progress percent="{{progress}}" stroke-width="6" />
+                    </view>
+                    <view class="weui-progress__opr">
+                        <icon type="waiting" size="22"></icon>
+                    </view>
+                </view>
+
+                <view class="weui-form__tips-area">
+                    <view class="weui-loadmore">
+                        <view class="weui-loading"></view>
+                        <view class="weui-loadmore__tips">{{progress_text}}</view>
+                    </view>
+                </view>
+            </view>
+
+            <view class="weui-form__tips-area">
+                <view class="weui-form__tips">点击确定新增补货补货品项</view>
+            </view>
+
+            <view class="weui-form__opr-area">
+                <button type="primary" form-type="submit" disabled="{{!button_enable || error_happened}}">确定</button>
+            </view>
+        </form>
+    </view>
 </view>

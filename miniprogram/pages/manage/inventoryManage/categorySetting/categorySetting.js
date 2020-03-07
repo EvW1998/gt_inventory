@@ -40,10 +40,8 @@ Page({
      */
     onLoad: function (options) {
         category_id = options.title
-        var categories = wx.getStorageSync('categories')
-
+        
         this.setData({
-            category_name: categories[category_id],
             category_id: category_id
         })
     },
@@ -52,6 +50,12 @@ Page({
      * When the app shows the page
      */
     onShow: function() {
+        var categories = wx.getStorageSync('categories')
+
+        this.setData({
+            category_name: categories[category_id]
+        })
+
         setItem(this)
     },
 

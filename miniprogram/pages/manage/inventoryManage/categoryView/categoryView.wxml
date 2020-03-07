@@ -14,7 +14,7 @@
             <view class="page__desc">品项需要名称，每日补货量，备货天数，现有剩余量，最大存量</view>
             <view class="page__desc">例如 名称：12oz波纹咖啡杯</view>
             <view class="page__desc">每日补货量：5 (正整数)</view>
-            <view class="page__desc">备货天数：2 (正整数)</view>
+            <view class="page__desc">备货天数：2 (大于等于1的正数)</view>
             <view class="page__desc">现有剩余量：3 (非负数)</view>
             <view class="page__desc">最大存量：6 (正整数)</view>
         </block>

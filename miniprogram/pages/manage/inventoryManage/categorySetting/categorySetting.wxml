@@ -14,7 +14,7 @@
             <view class="page__desc">品项需要名称，每日补货量，备货天数，现有剩余量，最大存量</view>
             <view class="page__desc">例如 名称：12oz波纹咖啡杯</view>
             <view class="page__desc">每日补货量：5 (正整数)</view>
-            <view class="page__desc">备货天数：2 (正整数)</view>
+            <view class="page__desc">备货天数：2 (大于等于1的正数)</view>
             <view class="page__desc">现有剩余量：3 (非负数)</view>
             <view class="page__desc">最大存量：6 (正整数)</view>
         </block>
@@ -31,7 +31,7 @@
 
         <view class="weui-cells__title">点击新增补货品项</view>
         <view class="weui-cells weui-cells_after-title">
-            <navigator url="{{page_new_item}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
+            <navigator url="{{page_new_item}}?category_id={{category_id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
                 <view class="weui-cell__bd">在{{category_name}}中添加新的补货品项</view>
                 <view class="weui-cell__ft weui-cell__ft_in-access"></view>
             </navigator>

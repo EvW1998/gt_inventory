@@ -1,6 +1,8 @@
 /**
  * The page to add new item to the selected category.
  */
+const uInput = require('../../../../utils/uInput.js') // require the util of user inputs
+const realTimeLog = require('../../../../utils/log.js') // require the util of user inputs
 const pAction = require('../../../../utils/pageAction.js') // require the util of page actions
 
 const app = getApp() // the app
@@ -8,20 +10,31 @@ const db = wx.cloud.database() // the cloud database
 const db_category = 'category' // the collection of categories
 const db_item = 'item' // the collection of items
 
+var category_id = ''
+var existed_item_amount = 0 // The amount of the existed cateogies in the collection
+
 
 Page({
     /**
      * Data in the page
      */
     data: {
-        category_selected: {}, // The selected category
-        filled_name: false, // whether the input box of the item name gets filled
-        filled_base: false, // whether the input box of the item base value gets filled
-        filled_scale: false, // whether the input box of the item scale value gets filled
-        filled_stock: false, // whether the input box of the item stock value filled
-        filled_capacity: false, // whether the input box of the item capacity value gets filled
-        filled: false,  // whether all input boxes are filled
-        btn_state: "default" // the state for the confirm button
+        category_name: '', // the name of the selected category
+        error_happened: true, // whether there is error happened while loading
+        name_filled: false, // whether the name input is filled
+        name_warn_enable: false, // whether the warning icon for the name should be enabled
+        daily_filled: false, // whether the daily input is filled
+        daily_warn_enable: false, // whether the warning icon for the daily should be enabled
+        prepare_filled: false, // whether the prepare input is filled
+        prepare_warn_enable: false, // whether the warning icon for the prepare should be enabled
+        stock_filled: false, // whether the stock input is filled
+        stock_warn_enable: false, // whether the warning icon for the stock should be enabled
+        capacity_filled: false, // whether the capacity input is filled
+        capacity_warn_enable: false, // whether the warning icon for the capacity should be enabled
+        button_enable: false, // whether the sumbit button is enabled
+        progress: 0, // the process to add a new promotion event in percentage
+        progress_text: '未开始', // the process to register a new user in text
+        progress_enable: false // whether the progress bar is enabled
     },
 
     /**
@@ -29,164 +42,82 @@ Page({
      */
     onLoad: function(options) {
         wx.showLoading({
-            title: '获取中',
-            mask: true
+            title: '加载中'
         })
 
-        // set the amount of categories to the page data
-        setCategory(this, options.title)
+        category_id = options.category_id
+
+        var categories = wx.getStorageSync('categories')
+
+        this.setData({
+            category_name: categories[category_id]
+        })
+
+        setItemAmount(this, options.category_id)
     },
 
     /**
-     * Check whether the new item's name gets filled
+     * Check the input, set the name_filled to be true if the length is greater than 0,
+     * enable the warning icon if the length is 0.
+     * If both the input is filled, enable the confirm button.
      * 
-     * @method checkBlur_name
-     * @param e The value returned from the input text
+     * @method nameInput
+     * @param{Object} event The event of the input
      */
-    checkBlur_name: function(e) {
-        if (e.detail.value != "") {
-            // if the name input text get filled with something
-            this.setData({
-                filled_name: true
-            })
+    nameInput: function (event) {
+        var name_filled = true
+        var name_warn_enable = false
+        var button_enable = true
+        var new_name = event.detail.value
 
-            if(isAllFilled(this)) {
-                this.setData({
-                    filled: true,
-                    btn_state: "primary"
-                })
-            }
+        if (new_name.length === 0) {
+            name_filled = false
+            name_warn_enable = true
+            button_enable = false
         }
-        else {
-            // if the name input text get filled with nothing
-            this.setData({
-                filled_name: false,
-                filled: false,
-                btn_state: "default"
-            })
+
+        this.setData({
+            name_filled: name_filled
+        })
+
+        if(!isAllFilled(this)) {
+            button_enable = false
         }
+
+        this.setData({
+            name_warn_enable: name_warn_enable,
+            button_enable: button_enable
+        })
     },
 
-    /**
-     * Check whether the new item's base gets filled
-     * 
-     * @method checkBlur_base
-     * @param e The value returned from the input text
-     */
-    checkBlur_base: function (e) {
-        if (e.detail.value != "") {
-            // if the name input text get filled with something
-            this.setData({
-                filled_base: true
-            })
+    dailyInput: function (event) {
+        var daily_filled = true
+        var daily_warn_enable = false
+        var button_enable = true
+        var new_daily = event.detail.value
 
-            if (isAllFilled(this)) {
-                this.setData({
-                    filled: true,
-                    btn_state: "primary"
-                })
-            }
+        if (!uInput.isInteger(new_daily)) {
+            daily_filled = false
+            daily_warn_enable = true
+            button_enable = false
+        } else if (parseInt(new_daily) < 1) {
+            daily_filled = false
+            daily_warn_enable = true
+            button_enable = false
         }
-        else {
-            // if the name input text get filled with nothing
-            this.setData({
-                filled_base: false,
-                filled: false,
-                btn_state: "default"
-            })
+
+        this.setData({
+            daily_filled: daily_filled
+        })
+
+        if (!isAllFilled(this)) {
+            button_enable = false
         }
-    },
 
-
-    /**
-     * Check whether the new item's scale gets filled
-     * 
-     * @method checkBlur_scale
-     * @param e The value returned from the input text
-     */
-    checkBlur_scale: function (e) {
-        if (e.detail.value != "") {
-            // if the name input text get filled with something
-            this.setData({
-                filled_scale: true
-            })
-
-            if (isAllFilled(this)) {
-                this.setData({
-                    filled: true,
-                    btn_state: "primary"
-                })
-            }
-        }
-        else {
-            // if the name input text get filled with nothing
-            this.setData({
-                filled_scale: false,
-                filled: false,
-                btn_state: "default"
-            })
-        }
-    },
-
-
-    /**
-     * Check whether the new item's stock gets filled
-     * 
-     * @method checkBlur_stock
-     * @param e The value returned from the input text
-     */
-    checkBlur_stock: function (e) {
-        if (e.detail.value != "") {
-            // if the name input text get filled with something
-            this.setData({
-                filled_stock: true
-            })
-
-            if (isAllFilled(this)) {
-                this.setData({
-                    filled: true,
-                    btn_state: "primary"
-                })
-            }
-        }
-        else {
-            // if the name input text get filled with nothing
-            this.setData({
-                filled_stock: false,
-                filled: false,
-                btn_state: "default"
-            })
-        }
-    },
-
-    /**
-     * Check whether the new item's stock gets filled
-     * 
-     * @method checkBlur_capacity
-     * @param e The value returned from the input text
-     */
-    checkBlur_capacity: function (e) {
-        if (e.detail.value != "") {
-            // if the name input text get filled with something
-            this.setData({
-                filled_capacity: true
-            })
-
-            if (isAllFilled(this)) {
-                this.setData({
-                    filled: true,
-                    btn_state: "primary"
-                })
-            }
-        }
-        else {
-            // if the name input text get filled with nothing
-            this.setData({
-                filled_capacity: false,
-                filled: false,
-                btn_state: "default"
-            })
-        }
+        this.setData({
+            daily_warn_enable: daily_warn_enable,
+            button_enable: button_enable
+        })
     },
 
     /**
@@ -253,6 +184,55 @@ function setCategory(page, category_id) {
 
 
 /**
+ * Set the amount of items in the db to the page data.
+ * 
+ * @method setItemAmount
+ * @param page The page
+ */
+function setItemAmount(page) {
+    db.collection(db_category)
+        .where({
+            _id: category_id
+        })
+        .field({
+            item_amount: true
+        })
+        .get({
+            success: res => {
+                if (res.data.length === 1) {
+                    page.setData({
+                        error_happened: false
+                    })
+
+                    existed_item_amount = res.data[0].item_amount
+
+                    console.log('Get the amount of existed items in the current category.', res.data[0].item_amount)
+                    wx.hideLoading()
+
+                } else {
+                    realTimeLog.warn('Failed to get item amount from the category database.', res)
+
+                    wx.hideLoading()
+                    wx.showToast({
+                        title: '网络错误，请重试',
+                        icon: 'none'
+                    })
+                }
+            },
+            fail: err => {
+                realTimeLog.error('Failed to get item amount from the category database.', err)
+
+                wx.hideLoading()
+                wx.showToast({
+                    title: '网络错误，请重试',
+                    icon: 'none'
+                })
+            }
+        })
+}
+
+
+/**
  * Check all the input text state, if all input text get filled, return true,
  * if not, return false.
  * 
@@ -263,7 +243,7 @@ function setCategory(page, category_id) {
 function isAllFilled(page) {
     var pd = page.data
 
-    if(pd.filled_name && pd.filled_base && pd.filled_scale && pd.filled_stock && pd.filled_capacity) {
+    if(pd.name_filled && pd.daily_filled && pd.prepare_filled && pd.stock_filled && pd.capacity_filled) {
         return true
     }
 

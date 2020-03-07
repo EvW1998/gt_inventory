@@ -23,6 +23,23 @@ function isNumber(str) {
 
 
 /**
+ * Return whether the string is a number.
+ * 
+ * @method isInteger
+ * @param{String} str The string for testing
+ * @return{Boolean} whether the string is a number
+ */
+function isInteger(str) {
+    var reg = /^\-?\d+$/
+    if (!reg.test(str)) {
+        return false
+    } else {
+        return true
+    }
+}
+
+
+/**
  * Return whether the string is all Chinese characters.
  * 
  * @method isChinese
@@ -70,6 +87,7 @@ function isRepeated(c, i) {
 
 module.exports = {
     isNumber: isNumber,
+    isInteger: isInteger,
     isChinese: isChinese,
     isRepeated: isRepeated
 }

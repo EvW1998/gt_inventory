@@ -1,18 +1,60 @@
 <!--pages/manage/inventoryManage/categoryModify/categoryModify.wxml-->
 
-<view class="content">
-    <view class="title">品类设置</view>
-
-    <form bindsubmit="formSubmit">
-        <view class="item">
-            <view class="name">品类名称:  </view>
-            <view class="val">
-                <input name="name" type="text" bindblur="checkBlur_name" value="{{category_selected.name}}"/>
-            </view>
+<view class="page">
+    <view class="weui-form">
+        <view class="weui-form__text-area">
+            <view class="weui-form__title">修改补货品类</view>
+            <view class="weui-form__desc">补货品类名称</view>
         </view>
 
-        <button class="btn" type="{{btn_state}}" form-type="submit" disabled="{{!filled_name}}">确认更改</button>
-    </form>
+        <form bindsubmit="formSubmit">
+            <view class="weui-form__control-area">
+                <view class="weui-cells__group weui-cells__group_form">
+                    <view class="weui-cells__title">补货品类信息</view>
+                    <view class="weui-cells weui-cells_form weui-cells_after-title">
+                        <view class="{{name_warn_enable ? 'weui-cell weui-cell_warn' : 'weui-cell'}}">
+                            <view class="weui-cell__hd">
+                                <view class="weui-label">名称</view>
+                            </view>
+                            <view class="weui-cell__bd">
+                                    <input class="weui-input" name="name" type="text" bindinput="nameInput" placeholder="请输入补货品类名称" value="{{category_name}}"/>
+                            </view>
+                            <view wx:if="{{name_warn_enable}}" class="weui-cell__ft">
+                                <icon type="warn" size="23" color="#E64340"></icon>
+                            </view>
+                        </view>
+                    </view>
+                    <view class="weui-cells__tips" wx:if="{{name_warn_enable}}">
+                        <label class="red_label">名称不能为空</label>
+                    </view>
+                </view>
+            </view>
 
-    <button class="delete_btn" type="warn" bindtap="removeCategory">删除此品类</button>
+            <view wx:if="{{progress_enable}}" class="page__bd page__bd_spacing">
+                <view class="weui-progress">
+                    <view class="weui-progress__bar">
+                        <progress percent="{{progress}}" stroke-width="6" />
+                    </view>
+                    <view class="weui-progress__opr">
+                        <icon type="waiting" size="22"></icon>
+                    </view>
+                </view>
+
+                <view class="weui-form__tips-area">
+                    <view class="weui-loadmore">
+                        <view class="weui-loading"></view>
+                        <view class="weui-loadmore__tips">{{progress_text}}</view>
+                    </view>
+                </view>
+            </view>
+
+            <view class="weui-form__tips-area">
+                <view class="weui-form__tips">点击确定修改补货品类</view>
+            </view>
+
+            <view class="weui-form__opr-area">
+                <button type="primary" form-type="submit" disabled="{{!button_enable}}">确定</button>
+            </view>
+        </form>
+    </view>
 </view>
