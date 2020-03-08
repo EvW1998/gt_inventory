@@ -129,7 +129,7 @@
             </view>
 
             <view class="weui-form__tips-area">
-                <view class="weui-form__tips">点击确定新增补货补货品项</view>
+                <view class="weui-form__tips">点击确定新增补货品项</view>
             </view>
 
             <view class="weui-form__opr-area">

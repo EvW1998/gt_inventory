@@ -63,6 +63,10 @@ Page({
         setItem(this)
     },
 
+    onUnload: function () {
+        wx.removeStorageSync('items')
+    },
+
     /**
      * When tapping, show the tip or hide the tip
      * 
@@ -96,10 +100,12 @@ Page({
 function setItem(page) {
     var collection_where = {}
     collection_where['restaurant_id'] = app.globalData.restaurant_id
+    collection_where['category_id'] = category_id
 
     var collection_field = {}
-    collection_field['_id'] = true
-    collection_field['name'] = true
+    collection_field['category_id'] = false
+    collection_field['item_order'] = false
+    collection_field['restaurant_id'] = false
 
     wx.cloud.callFunction({
         name: 'dbGet',
@@ -119,7 +125,7 @@ function setItem(page) {
             } else {
                 var storage_item = {}
                 for (let i in res.result) {
-                    storage_item[res.result[i]._id] = res.result[i].name
+                    storage_item[res.result[i]._id] = res.result[i]
                 }
 
                 wx.setStorageSync('items', storage_item)
@@ -138,7 +144,7 @@ function setItem(page) {
         },
         fail: err => {
             page.setData({
-                search_state: 'noData'
+                search_state: 'error'
             })
 
             wx.stopPullDownRefresh()
@@ -149,4 +155,27 @@ function setItem(page) {
             })
         }
     })
+}
+
+
+function addOrder(target, amount) {
+    var order = 1
+
+    for (var i in target) {
+        var new_order = order.toString()
+
+        if (amount > 9 && order < 10) {
+            new_order = '0' + new_order
+        }
+
+        if (amount > 99 && order < 100) {
+            new_order = '0' + new_order
+        }
+
+        target[i]['order'] = new_order
+
+        order++
+    }
+
+    return target
 }

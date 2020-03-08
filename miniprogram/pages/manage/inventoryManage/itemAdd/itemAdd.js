@@ -13,6 +13,11 @@ const db_item = 'item' // the collection of items
 var category_id = ''
 var existed_item_amount = 0 // The amount of the existed cateogies in the collection
 
+var stock_value = undefined
+var daily_value = undefined
+var prepare_value = undefined
+var capacity_value = undefined
+
 
 Page({
     /**
@@ -73,7 +78,6 @@ Page({
         if (new_name.length === 0) {
             name_filled = false
             name_warn_enable = true
-            button_enable = false
         }
 
         this.setData({
@@ -93,21 +97,45 @@ Page({
     dailyInput: function (event) {
         var daily_filled = true
         var daily_warn_enable = false
+        var capacity_filled = this.data.capacity_filled
+        var capacity_warn_enable = this.data.capacity_warn_enable
         var button_enable = true
         var new_daily = event.detail.value
 
         if (!uInput.isInteger(new_daily)) {
             daily_filled = false
             daily_warn_enable = true
-            button_enable = false
+            daily_value = undefined
         } else if (parseInt(new_daily) < 1) {
             daily_filled = false
             daily_warn_enable = true
-            button_enable = false
+            daily_value = undefined
+        } else {
+            daily_value = parseInt(new_daily)
+
+            if (this.data.prepare_filled && capacity_filled) {
+                if (daily_value * prepare_value > capacity_value) {
+                    capacity_filled = false
+                    capacity_warn_enable = true
+                }
+            } else if (prepare_value !== undefined && capacity_value !== undefined) {
+                if (daily_value * prepare_value <= capacity_value) {
+                    capacity_filled = true
+                    capacity_warn_enable = false
+                }
+
+                if (this.data.stock_filled) {
+                    if (stock_value > capacity_value) {
+                        capacity_filled = false
+                        capacity_warn_enable = true
+                    }
+                }
+            }
         }
 
         this.setData({
-            daily_filled: daily_filled
+            daily_filled: daily_filled,
+            capacity_filled: capacity_filled
         })
 
         if (!isAllFilled(this)) {
@@ -116,6 +144,163 @@ Page({
 
         this.setData({
             daily_warn_enable: daily_warn_enable,
+            capacity_warn_enable: capacity_warn_enable,
+            button_enable: button_enable
+        })
+    },
+
+    prepareInput: function (event) {
+        var prepare_filled = true
+        var prepare_warn_enable = false
+        var capacity_filled = this.data.capacity_filled
+        var capacity_warn_enable = this.data.capacity_warn_enable
+        var button_enable = true
+        var new_prepare = event.detail.value
+
+        if (!uInput.isNumber(new_prepare)) {
+            prepare_filled = false
+            prepare_warn_enable = true
+            prepare_value = undefined
+        } else if (parseFloat(new_prepare) < 1) {
+            prepare_filled = false
+            prepare_warn_enable = true
+            prepare_value = undefined
+        } else {
+            prepare_value = parseFloat(new_prepare)
+
+            if (this.data.daily_filled && capacity_filled) {
+                if (daily_value * prepare_value > capacity_value) {
+                    capacity_filled = false
+                    capacity_warn_enable = true
+                }
+            } else if (daily_value !== undefined && capacity_value !== undefined) {
+                if (daily_value * prepare_value <= capacity_value) {
+                    capacity_filled = true
+                    capacity_warn_enable = false
+                }
+
+                if (this.data.stock_filled) {
+                    if (stock_value > capacity_value) {
+                        capacity_filled = false
+                        capacity_warn_enable = true
+                    }
+                }
+            }
+        }
+
+        this.setData({
+            prepare_filled: prepare_filled,
+            capacity_filled: capacity_filled
+        })
+
+        if (!isAllFilled(this)) {
+            button_enable = false
+        }
+
+        this.setData({
+            prepare_warn_enable: prepare_warn_enable,
+            capacity_warn_enable: capacity_warn_enable,
+            button_enable: button_enable
+        })
+    },
+
+    stockInput: function (event) {
+        var stock_filled = true
+        var stock_warn_enable = false
+        var capacity_filled = this.data.capacity_filled
+        var capacity_warn_enable = this.data.capacity_warn_enable
+        var button_enable = true
+        var new_stock = event.detail.value
+
+        if (!uInput.isNumber(new_stock)) {
+            stock_filled = false
+            stock_warn_enable = true
+            stock_value = undefined
+        } else if (parseFloat(new_stock) < 0) {
+            stock_filled = false
+            stock_warn_enable = true
+            stock_value = undefined
+        } else {
+            stock_value = parseFloat(new_stock)
+
+            if (capacity_filled) {
+                if (stock_value > capacity_value) {
+                    capacity_filled = false
+                    capacity_warn_enable = true
+                }
+            } else if (capacity_value !== undefined) {
+                if (stock_value <= capacity_value) {
+                    capacity_filled = true
+                    capacity_warn_enable = false
+                }
+
+                if (this.data.daily_filled && this.data.prepare_filled) {
+                    if (daily_value * prepare_value > capacity_value) {
+                        capacity_filled = false
+                        capacity_warn_enable = true
+                    }
+                }
+            }
+        }
+
+        this.setData({
+            stock_filled: stock_filled,
+            capacity_filled: capacity_filled
+        })
+
+        if (!isAllFilled(this)) {
+            button_enable = false
+        }
+
+        this.setData({
+            stock_warn_enable: stock_warn_enable,
+            capacity_warn_enable: capacity_warn_enable,
+            button_enable: button_enable
+        })
+    },
+
+    capacityInput: function (event) {
+        var capacity_filled = true
+        var capacity_warn_enable = false
+        var button_enable = true
+        var new_capacity = event.detail.value
+
+        if (!uInput.isInteger(new_capacity)) {
+            capacity_filled = false
+            capacity_warn_enable = true
+            capacity_value = undefined
+        } else if (parseInt(new_capacity) < 1) {
+            capacity_filled = false
+            capacity_warn_enable = true
+            capacity_value = undefined
+        } else {
+            capacity_value = parseInt(new_capacity)
+
+            if (this.data.daily_filled && this.data.prepare_filled) {
+                if (daily_value * prepare_value > capacity_value) {
+                    capacity_filled = false
+                    capacity_warn_enable = true
+                }
+            }
+
+            if (this.data.stock_filled) {
+                if (stock_value > capacity_value) {
+                    capacity_filled = false
+                    capacity_warn_enable = true
+                }
+            }
+        }
+
+        this.setData({
+            capacity_filled: capacity_filled
+        })
+
+        if (!isAllFilled(this)) {
+            button_enable = false
+        }
+
+        this.setData({
+            capacity_warn_enable: capacity_warn_enable,
             button_enable: button_enable
         })
     },
@@ -128,11 +313,11 @@ Page({
      */
     formSubmit: function (e) {
         wx.showLoading({
-            title: '提交中',
+            title: '上传中',
             mask: true
         })
 
-        addItem(this.data.category_selected, e.detail.value)
+        addItemProcess(this, e.detail.value)
     },
 
     /**
@@ -146,41 +331,6 @@ Page({
         }
     }
 })
-
-
-/**
- * Set the selected category in the db to the page data.
- * 
- * @method setCategory
- * @param{Object} page The page
- * @param{String} category_id The collection id of the selected category
- */
-function setCategory(page, category_id) {
-    db.collection(db_category)
-        .where({
-            _id: category_id
-        })
-        .field({
-            _id: true,
-            category_name: true,
-            item_amount: true
-        })
-        .get({
-            success: res => {
-                page.setData({
-                    category_selected: res.data[0]
-                })
-
-                console.log('Get the selected category ', page.data.category_selected)
-
-                wx.hideLoading()
-            },
-            fail: err => {
-                console.error('Failed to get category info in the database', err)
-                wx.hideLoading()
-            }
-        })
-}
 
 
 /**
@@ -257,104 +407,161 @@ function isAllFilled(page) {
  * Then return to the previous page.
  * 
  * @method addItem
- * @param category_selected{Object} The selected category
- * @param item_info{Object} The info of the new item
+ * @param page{Page} The page
+ * @param inputs{Object} The info of the new item
  */
-async function addItem(category_selected, item_info) {
-    // use an object to hold the data that plans to add to db
-    var base_number = parseInt(item_info.base)
-    var scale_number = parseFloat(item_info.scale)
-    var stock_value = parseFloat(item_info.stock)
-    var max_capacity = parseInt(item_info.capacity)
+async function addItemProcess(page, inputs) {
+    var add_item_data = {}
+    var update_category_data = {}
 
-    var legal_input = true
-    if (isNaN(base_number) || isNaN(scale_number) || isNaN(stock_value) || isNaN(max_capacity)) {
-        legal_input = false
-    }
-    if(base_number < 1 || scale_number < 1 || stock_value < 0 || max_capacity < base_number * scale_number) {
-        legal_input = false
-    }
-    if(stock_value > max_capacity) {
-        legal_input = false
-    }
+    page.setData({
+        progress: 0,
+        progress_text: '检查名称',
+        progress_enable: true
+    })
 
-    if(legal_input) {
-        var add_item_data = {
-            category_id: category_selected._id,
-            item_order: category_selected.item_amount,
-            item_name: item_info.name,
-            base_number: base_number,
-            scale_number: scale_number,
-            stock_value: stock_value,
-            max_capacity: max_capacity,
-            item_state: 0
+    var n_result = await isRepeated(inputs.name)
+
+    if (n_result.stat) {
+        if (n_result.result) {
+            page.setData({
+                progress: 0,
+                progress_text: '未开始',
+                progress_enable: false
+            })
+
+            wx.hideLoading()
+            wx.showModal({
+                title: '错误',
+                content: '输入的品项名称与此餐厅已有品项重复，请更改后重试。',
+                showCancel: false
+            })
+
+            return
+        } else {
+            add_item_data['restaurant_id'] = app.globalData.restaurant_id
+            add_item_data['category_id'] = category_id
+            add_item_data['item_order'] = existed_item_amount
+            add_item_data['name'] = inputs.name
+            add_item_data['daily_refill'] = parseInt(inputs.daily)
+            add_item_data['prepare_day'] = parseFloat(inputs.prepare)
+            add_item_data['stock'] = parseFloat(inputs.stock)
+            add_item_data['capacity'] = parseInt(inputs.capacity)
+
+            update_category_data['item_amount'] = existed_item_amount + 1
         }
 
-        // add the new item to the collection
-        await addToDB(add_item_data)
-        console.log('Add the new item to the collection: ', add_item_data)
+    } else {
+        page.setData({
+            progress: 0,
+            progress_text: '未开始',
+            progress_enable: false
+        })
 
-        // use an object to hold the data that plans to update to db
-        var update_category_data = {
-            item_amount: category_selected.item_amount + 1
-        }
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重试',
+            icon: 'none'
+        })
 
-        // update the total amount of the items inside this category
-        await updateItemAmount(update_category_data, category_selected._id)
-        console.log('Update the total amount of the items: ', update_category_data.item_amount)
+        return
+    }
+
+    page.setData({
+        progress: 33,
+        progress_text: '检查通过，正在上传品类数据'
+    })
+
+    var update_result = await updateCategory(update_category_data)
+
+    if (!update_result.stat) {
+        page.setData({
+            progress: 0,
+            progress_text: '未开始',
+            progress_enable: false
+        })
+
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重试',
+            icon: 'none'
+        })
+
+        return
+    }
+
+    page.setData({
+        progress: 67,
+        progress_text: '正在上传新的补货品项到' + page.data.category_name
+    })
+    
+    var add_result = await addItem(add_item_data)
+
+    if (add_result.stat) {
+        page.setData({
+            progress: 100,
+            progress_text: '上传成功'
+        })
+
+        realTimeLog.info('User ', app.globalData.user_name, app.globalData.uid, ' add a new item ', add_item_data, 'into the category ', page.data.category_name, category_id, ' into the restaurant ', app.globalData.restaurant_name, app.globalData.restaurant_id)
 
         pAction.navigateBackUser('新增成功', 1)
     } else {
-        console.log('User input illegal')
+        page.setData({
+            progress: 0,
+            progress_text: '未开始',
+            progress_enable: false
+        })
+
         wx.hideLoading()
         wx.showToast({
-            title: '输入错误',
+            title: '网络错误，请重试',
             icon: 'none'
         })
+
+        return
     }
 }
 
 
-/**
- * Add the new item to the selected category.
- * 
- * @method addToDB
- * @param add_item_data The data that plans to add to the db
- */
-function addToDB(add_item_data) {
-
+function isRepeated(item_name) {
     return new Promise((resolve, reject) => {
-        // call dbAdd() cloud function to add the category to collection
-        wx.cloud.callFunction({
-            name: 'dbAdd',
-            data: {
-                collection_name: db_item,
-                add_data: add_item_data
-            },
-            success: res => {
-                resolve()
-            },
-            fail: err => {
-                // if get a failed result
-                console.error('Failed to use cloud function dbAdd()', err)
-                reject()
-            }
-        })
+        var result = {}
+        result['stat'] = false
+        result['result'] = true
+
+        db.collection(db_item)
+            .where({
+                restaurant_id: app.globalData.restaurant_id,
+                name: item_name
+            })
+            .field({
+                _id: true
+            })
+            .get({
+                success: res => {
+                    result['stat'] = true
+                    if (res.data.length === 0) {
+                        result['result'] = false
+                    }
+
+                    resolve(result)
+                },
+                fail: err => {
+                    realTimeLog.error('Failed to get the item with the same name as the new item in the same restaurant from the database.', err)
+
+                    resolve(result)
+                }
+            })
     })
 }
 
 
-/**
- * Update the amount of the items inside this category.
- * 
- * @method updateItemAmount
- * @param update_category_data The data that plans to update to db
- * @param category_id The id of the selected category
- */
-function updateItemAmount(update_category_data, category_id) {
-
+function updateCategory(update_category_data) {
     return new Promise((resolve, reject) => {
-        // call dbUpdate() cloud function to update the category amount
+        var result = {}
+        result['stat'] = false
+
         wx.cloud.callFunction({
             name: 'dbUpdate',
             data: {
@@ -363,12 +570,44 @@ function updateItemAmount(update_category_data, category_id) {
                 uid: category_id
             },
             success: res => {
-                resolve()
+                if (res.result.stats.updated === 1) {
+                    result['stat'] = true
+                    result['result'] = res
+                }
+
+                resolve(result)
             },
             fail: err => {
-                // if get a failed result
-                console.error('Failed to use cloud function dbUpdate()', err)
-                reject()
+                realTimeLog.error('Failed to update the category item amount by using dbUpdate().', err)
+                resolve(result)
+            }
+        })
+    })
+}
+
+
+function addItem(add_item_data) {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+
+        wx.cloud.callFunction({
+            name: 'dbAdd',
+            data: {
+                collection_name: db_item,
+                add_data: add_item_data
+            },
+            success: res => {
+                if (res.result._id !== undefined) {
+                    result['stat'] = true
+                    result['result'] = res
+                }
+
+                resolve(result)
+            },
+            fail: err => {
+                realTimeLog.error('Failed to add a new item into the database by using dbAdd().', err)
+                resolve(result)
             }
         })
     })
