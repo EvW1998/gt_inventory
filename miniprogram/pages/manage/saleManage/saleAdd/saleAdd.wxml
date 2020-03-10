@@ -1,23 +1,82 @@
 <!--pages/manage/saleManage/saleAdd/saleAdd.wxml-->
 
-<view class="content">
-    <view class="title">新增营业额</view>
-
-    <form bindsubmit="formSubmit">
-        <view class="item">
-            <view class="name">营业额:  </view>
-            <view class="val"><input name="sale" type="number" bindblur="checkBlur_value"/></view>
+<view class="page">
+    <view class="weui-form">
+        <view class="weui-form__text-area">
+            <view class="weui-form__title">新增营业额</view>
+            <view class="weui-form__desc">营业额，日期</view>
         </view>
 
-        <view class="section_date">
-            <view class="date_title">日期</view>
-            <picker name="date" mode="date" value="{{select_date}}" start="2019-01-01" end="2022-12-31" bindchange="bindDateChange">
-                <view class="picker">
-                    点击更改：{{select_date}}
+        <form bindsubmit="formSubmit">
+            <view class="weui-form__control-area">
+                <view class="weui-cells__group weui-cells__group_form">
+                    <view class="weui-cells__title">当日营业金额</view>
+                    <view class="weui-cells weui-cells_form weui-cells_after-title">
+                        <view class="{{sale_warn_enable ? 'weui-cell weui-cell_warn' : 'weui-cell'}}">
+                            <view class="weui-cell__hd">
+                                <view class="weui-label">营业额</view>
+                            </view>
+                            <view class="weui-cell__bd">
+                                    <input class="weui-input" name="sale" type="digit" bindinput="saleInput" placeholder="请输入营业额"/>
+                            </view>
+                            <view wx:if="{{sale_warn_enable}}" class="weui-cell__ft">
+                                <icon type="warn" size="23" color="#E64340"></icon>
+                            </view>
+                        </view>
+                    </view>
+                    <view class="weui-cells__tips" wx:if="{{sale_warn_enable}}">
+                        <label class="red_label">营业额需为正数</label>
+                    </view>
                 </view>
-            </picker>
-        </view>
 
-        <button class="btn" type="{{btn_state}}" form-type="submit" disabled="{{!filled}}">确认提交</button>
-    </form>
+                <view class="weui-cells__group weui-cells__group_form">
+                    <view class="weui-cells__title">营业额日期</view>
+
+                    <view class="weui-cells weui-cells_form weui-cells_after-title">
+                        <view class="weui-cell">
+                            <view class="weui-cell__hd">
+                                <view class="weui-label">日期</view>
+                            </view>
+                            <view class="weui-cell__bd">
+                                <picker mode="date" bindchange="bindDateChange" value="{{today}}" start="2020-01-01">
+                                    <block wx:if="{{date_filled}}">
+                                        <label class="weui-label">{{date}}</label>
+                                    </block>
+                                    <block wx:else>
+                                        <label class="weui-label link_label">请点击选择日期</label>
+                                    </block>
+                                </picker>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+            </view>
+
+            <view wx:if="{{progress_enable}}" class="page__bd page__bd_spacing">
+                <view class="weui-progress">
+                    <view class="weui-progress__bar">
+                        <progress percent="{{progress}}" stroke-width="6" />
+                    </view>
+                    <view class="weui-progress__opr">
+                        <icon type="waiting" size="22"></icon>
+                    </view>
+                </view>
+
+                <view class="weui-form__tips-area">
+                    <view class="weui-loadmore">
+                        <view class="weui-loading"></view>
+                        <view class="weui-loadmore__tips">{{progress_text}}</view>
+                    </view>
+                </view>
+            </view>
+
+            <view class="weui-form__tips-area">
+                <view class="weui-form__tips">点击确定新增营业额</view>
+            </view>
+
+            <view class="weui-form__opr-area">
+                <button type="primary" form-type="submit" disabled="{{!button_enable}}">确定</button>
+            </view>
+        </form>
+    </view>
 </view>

@@ -1,13 +1,19 @@
 /**
  * Add a new product to the cloud database
  */
+const realTimeLog = require('../../../../utils/log.js') // require the util of user inputs
 const pAction = require('../../../../utils/pageAction.js') // require the util of page actions
 
 const app = getApp() // the app
 const db = wx.cloud.database() // the cloud database
-const db_category = 'category' // the collection of categories
-const db_item = 'item' // the collection of items
 const db_product = 'product' // the collection of products
+
+var item_key_name = {} // the items in an Object that the key is the item name
+var category_array = [] // the categories in an array
+var item_array = {} // the items in an array
+
+var name_filled = false // whether the name input is filled
+var material_filled = false // whether the material is filled
 
 
 Page({
@@ -16,24 +22,31 @@ Page({
      * Data for the page
      */
     data: {
+        error_happened: true, // whether error happened
         multiArray: [], // the choices in the multiSelector
         multiIndex: [0, 0], // the index of the multiSelector
-        categories: {}, // the categories in the category collection
-        items: {}, // the items in the item collection
-        formated_item: {}, // the items in an Object that the key is the item name
         item_key_id: {}, // the items in an Object that the key is the item id
-        category_array: [], // the categories in an array
-        item_array: {}, // the items in an array
         picked_item: {}, // the items are picked
         set_picker: false, // whether the picker is set
+        name_warn_enable: false, // whether the name input warning icon should display
+        material_warn_enable: false, // whether the material warning icon should display
         button_enable: false, // whether the sumbit button is enabled
-        warn_enable: false // whether the warning icon should display
+        progress: 0, // the process to add a new promotion event in percentage
+        progress_text: '未开始', // the process to register a new user in text
+        progress_enable: false // whether the progress bar is enabled
     },
 
     /**
      * When the page is loaded, set the picker for items
      */
     onLoad: function () {
+        item_key_name = {}
+        category_array = []
+        item_array = {}
+
+        name_filled = false
+        material_filled = false
+
         setPicker(this)
     },
 
@@ -45,18 +58,23 @@ Page({
      * @param{Object} event The event of the input
      */
     nameInput: function (event) {
-        var button_enable = true
-        var warn_enable = false
-        var new_name = event.detail.value
+        var name_warn_enable = false
+        var button_enable = false
+        
+        if (event.detail.value.length === 0) {
+            name_filled = false
+            name_warn_enable = true
+        } else {
+            name_filled = true
+        }
 
-        if (new_name.length == 0) {
-            button_enable = false
-            warn_enable = true
+        if (name_filled && material_filled) {
+            button_enable = true
         }
 
         this.setData({
-            button_enable: button_enable,
-            warn_enable: warn_enable
+            name_warn_enable: name_warn_enable,
+            button_enable: button_enable
         })
     },
 
@@ -68,26 +86,31 @@ Page({
      */
     addItem: function (event) {
         var picker_index = event.detail.value
-        var picked = this.data.item_array[this.data.category_array[picker_index[0]]][picker_index[1]]
-        console.log('Picked index: ', picker_index)
-        console.log('Picked item: ', picked)
+        var picked = item_array[category_array[picker_index[0]]][picker_index[1]]
+        console.log('Picked material item: ', picked)
 
         var picked_item = this.data.picked_item
 
-        if (this.data.formated_item[picked]._id in picked_item) {
-            // if the item is already in the list
-            console.log('Picked item already picked before')
+        if (item_key_name[picked]._id in picked_item) {
             wx.showToast({
-                title: '选择重复',
+                title: '请勿重复添加材料',
                 icon: 'none'
             })
         } else {
-            // if the item is not in the list
-            picked_item[this.data.formated_item[picked]._id] = {'item_id': this.data.formated_item[picked]._id}
+            picked_item[item_key_name[picked]._id] = {'item_id': item_key_name[picked]._id}
 
-            console.log('New picked item array: ', picked_item)
+            material_filled = true
+            var button_enable = false
+            var material_warn_enable = false
+
+            if (material_filled && name_filled) {
+                button_enable = true
+            }
+
             this.setData({
-                picked_item: picked_item
+                picked_item: picked_item,
+                material_warn_enable: material_warn_enable,
+                button_enable: button_enable
             })
         }
     },
@@ -99,20 +122,17 @@ Page({
      * @param{Object} e The change event
      */
     changePicker: function (e) {
-        console.log('Add material: column: ', e.detail.column, ' change to: ', e.detail.value)
         var data = {
             multiArray: this.data.multiArray,
             multiIndex: this.data.multiIndex
         }
         data.multiIndex[e.detail.column] = e.detail.value
 
-        if (e.detail.column == 0) {
-            data.multiArray[1] = this.data.item_array[this.data.category_array[e.detail.value]]
+        if (e.detail.column === 0) {
+            data.multiArray[1] = item_array[category_array[e.detail.value]]
             data.multiIndex[1] = 0
         }
 
-        console.log('After changing the index: ', data.multiIndex)
-        console.log('After changing the array: ', data.multiArray)
         this.setData(data)
     },
 
@@ -123,16 +143,23 @@ Page({
      * @param{Object} e The delete event
      */
     deleteItem: function(e) {
+        var set_data = {}
         var item_id = e.currentTarget.id
-        console.log('Try to delete item id: ', item_id, ' name: ', this.data.picked_item[item_id].item_name)
+
+        console.log('Remove picked item ', item_id, this.data.item_key_id[item_id].name)
 
         var new_picked_item = this.data.picked_item
         delete new_picked_item[item_id]
-        console.log('New picked item: ', new_picked_item)
 
-        this.setData({
-            picked_item: new_picked_item
-        })
+        set_data['picked_item'] = new_picked_item
+
+        if (Object.keys(new_picked_item).length === 0) {
+            material_filled = false
+            set_data['material_warn_enable'] = true
+            set_data['button_enable'] = false
+        }
+
+        this.setData(set_data)
     },
 
     /**
@@ -147,27 +174,7 @@ Page({
             mask: true
         })
 
-        var add_product_data = {
-            product_name: e.detail.value.name,
-            product_material: this.data.picked_item
-        }
-
-        // call dbAdd() cloud function to add the product
-        wx.cloud.callFunction({
-            name: 'dbAdd',
-            data: {
-                collection_name: db_product,
-                add_data: add_product_data
-            },
-            success: res => {
-                console.log('Add new product data to the database: ', add_product_data)
-                pAction.navigateBackUser('新增成功', 1)
-            },
-            fail: err => {
-                console.error('Failed to use cloud function dbAdd()', err)
-                wx.hideLoading()
-            }
-        })
+        addProductProcess(this, e.detail.value)
     },
 
     /**
@@ -189,114 +196,187 @@ Page({
  * @method setPicker
  * @param{Page} page The page
  */
-async function setPicker(page) {
-    var categories = await getCategory()
-    console.log('Get all categories: ', categories)
+function setPicker(page) {
+    try {
+        var material_picker = wx.getStorageSync('material_picker')
+        var categories = material_picker.categories
+        var items = material_picker.items
 
-    var items = await getItem()
-    console.log('Get all items: ', items)
-    var formated_item = {}
-    var item_key_id = {}
-    for (var i in items) {
-        formated_item[items[i].item_name] = items[i]
-        item_key_id[items[i]._id] = items[i]
-    }
-    console.log('Set the formated_item: ', formated_item)
-    console.log('Set the item_key_id: ', item_key_id)
-
-    var category_array = []
-    var item_array = {}
-
-    for (var i in categories) {
-        category_array.push(categories[i].category_name)
-
-        var i_array = []
-        for (var j in items) {
-            if (items[j].category_id == categories[i]._id) {
-                i_array.push(items[j].item_name)
-            }
+        var item_key_id = {}
+        for (let i in items) {
+            item_key_name[items[i].name] = items[i]
+            item_key_id[items[i]._id] = items[i]
         }
 
-        item_array[categories[i].category_name] = i_array
-    }
-    console.log('Set the category_array: ', category_array)
-    console.log('Set the item_array: ', item_array)
+        for (let i in categories) {
+            category_array.push(categories[i].name)
 
-    var multiArray = [category_array, item_array[category_array[0]]]
-    console.log('Set the multiArray: ', multiArray)
+            let i_array = []
+            for (let j in items) {
+                if (items[j].category_id === categories[i]._id) {
+                    i_array.push(items[j].name)
+                }
+            }
+
+            item_array[categories[i].name] = i_array
+        }
+
+        var multiArray = [category_array, item_array[category_array[0]]]
+
+        page.setData({
+            error_happened: false,
+            item_key_id: item_key_id,
+            multiArray: multiArray,
+            set_picker: true
+        })
+    } catch (err) {
+        realTimeLog.error('Failed to get the material picker data from the local stroage.', err)
+
+        wx.showToast({
+            title: '存储错误，请重试',
+            icon: 'none'
+        })
+    }
+}
+
+async function addProductProcess(page, inputs) {
+    var add_product_data = {}
 
     page.setData({
-        categories: categories,
-        items: items,
-        formated_item: formated_item,
-        item_key_id: item_key_id,
-        category_array: category_array,
-        item_array: item_array,
-        multiArray: multiArray,
-        set_picker: true
+        progress: 0,
+        progress_text: '检查新增产品名称',
+        progress_enable: true
     })
-}
 
+    var n_result = await isRepeated(inputs.name)
 
-/**
- * Get categories from the database
- * 
- * @method getCategory
- */
-function getCategory() {
-    return new Promise((resolve, reject) => {
-        wx.cloud.callFunction({
-            name: 'dbGet',
-            data: {
-                collection_name: db_category,
-                collection_limit: 100,
-                collection_field: {
-                    _id: true,
-                    category_name: true
-                },
-                collection_where: {},
-                collection_orderby_key: 'category_order',
-                collection_orderby_order: 'asc'
-            },
-            success: res => {
-                resolve(res.result)
-            },
-            fail: err => {
-                console.error('Failed to search categories in the collection', err)
-                reject()
-            }
+    if (n_result.stat) {
+        if (n_result.result) {
+            page.setData({
+                progress: 0,
+                progress_text: '未开始',
+                progress_enable: false
+            })
+
+            wx.hideLoading()
+            wx.showModal({
+                title: '错误',
+                content: '新增在售产品的名称与此餐厅已有产品的名称重复，请更改后重试。',
+                showCancel: false
+            })
+
+            return
+        } else {
+            add_product_data['restaurant_id'] = app.globalData.restaurant_id
+            add_product_data['name'] = inputs.name
+            add_product_data['material'] = page.data.picked_item
+        }
+
+    } else {
+        page.setData({
+            progress: 0,
+            progress_text: '未开始',
+            progress_enable: false
         })
+
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重试',
+            icon: 'none'
+        })
+
+        return
+    }
+
+    page.setData({
+        progress: 50,
+        progress_text: '检查通过，正在上传新的在售产品'
+    })
+
+    var add_result = await addProduct(add_product_data)
+
+    if (add_result.stat) {
+        page.setData({
+            progress: 100,
+            progress_text: '上传成功'
+        })
+
+        realTimeLog.info('User ', app.globalData.user_name, app.globalData.uid, ' add a new product ', add_product_data, ' into the restaurant ', app.globalData.restaurant_name, app.globalData.restaurant_id)
+
+        pAction.navigateBackUser('新增成功', 1)
+    } else {
+        page.setData({
+            progress: 0,
+            progress_text: '未开始',
+            progress_enable: false
+        })
+
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重试',
+            icon: 'none'
+        })
+
+        return
+    }
+}
+
+
+function isRepeated(name) {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+        result['result'] = true
+
+        db.collection(db_product)
+            .where({
+                restaurant_id: app.globalData.restaurant_id,
+                name: name
+            })
+            .field({
+                _id: true
+            })
+            .get({
+                success: res => {
+                    result['stat'] = true
+                    if (res.data.length === 0) {
+                        result['result'] = false
+                    }
+
+                    resolve(result)
+                },
+                fail: err => {
+                    realTimeLog.error('Failed to get the product data with the same date as the new product in the same restaurant from the database.', err)
+
+                    resolve(result)
+                }
+            })
     })
 }
 
 
-/**
- * Get items from the database
- * 
- * @method getItem
- */
-function getItem() {
+function addProduct(add_product_data) {
     return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+
         wx.cloud.callFunction({
-            name: 'dbGet',
+            name: 'dbAdd',
             data: {
-                collection_name: db_item,
-                collection_limit: 100,
-                collection_field: {
-                    _id: true,
-                    category_id: true,
-                    item_name: true
-                },
-                collection_where: {},
-                collection_orderby_key: 'category_id',
-                collection_orderby_order: 'asc'
+                collection_name: db_product,
+                add_data: add_product_data
             },
             success: res => {
-                resolve(res.result)
+                if (res.result._id !== undefined) {
+                    result['stat'] = true
+                    result['result'] = res
+                }
+
+                resolve(result)
             },
             fail: err => {
-                console.error('Failed to search items in the collection', err)
-                reject()
+                realTimeLog.error('Failed to add a new product into the database by using dbAdd().', err)
+                resolve(result)
             }
         })
     })

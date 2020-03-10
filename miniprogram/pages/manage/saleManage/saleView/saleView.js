@@ -1,6 +1,8 @@
 /**
  * The page to show all the sale info in the sale collection.
  */
+const realTimeLog = require('../../../../utils/log.js') // require the util of user inputs
+
 const app = getApp() // the app
 const db = wx.cloud.database() // the cloud database
 const db_sale = 'sale' // the collection of sale values
@@ -15,7 +17,14 @@ Page({
      * Data for this page
      */
     data: {
-        sales: {}, // sales in the miniapp
+        search_state: 'searching', // the state of the searching promotion events
+        sales_unconfirmed: [], // the sales data in the database
+        sale_unconfirmed_amount: 0, // the amount of sale data
+        sales_confirmed: [], // the sales data in the database
+        sale_confirmed_amount: 0, // the amount of sale data
+        selected_sale: {}, // the selected sale data for removing
+        show_tip: false, // whether to show the tip of promotion events
+        show_remove: false, // whether to show the dialog to remove a promotion event
         saleSetting_page: saleSetting_page, // the page url of sale value setting
         saleAdd_page: saleAdd_page // the page url of adding a new sale value
     },
@@ -28,14 +37,9 @@ Page({
     },
 
     /**
-     * When show the page, get all category info
+     * When show the page, get all sale info
      */
     onShow: function () {
-        wx.showLoading({
-            title: '加载中',
-            mask: true
-        })
-
         setAllSaleInfo(this)
     },
 
@@ -44,7 +48,28 @@ Page({
      * call onShow to update categories info.
      */
     onPullDownRefresh: function () {
-        this.onShow()
+        setAllSaleInfo(this)
+    },
+
+    onUnload: function () {
+        wx.removeStorageSync('sales')
+    },
+
+    /**
+     * When tapping, show the tip or hide the tip
+     * 
+     * @method tipChange
+     */
+    tipChange: function (e) {
+        if (this.data.show_tip) {
+            this.setData({
+                show_tip: false
+            })
+        } else {
+            this.setData({
+                show_tip: true
+            })
+        }
     },
 
     /**
@@ -67,29 +92,97 @@ Page({
  * @param{Page} page The page
  */
 function setAllSaleInfo(page) {
+    var collection_where = {}
+    collection_where['restaurant_id'] = app.globalData.restaurant_id
+
+    var collection_field = {}
+    collection_field['restaurant_id'] = false
+
     wx.cloud.callFunction({
         name: 'dbGet',
         data: {
             collection_name: db_sale,
-            collection_limit: 30,
-            collection_field: {},
-            collection_where: {},
-            collection_orderby_key: 'sale_date',
+            collection_limit: 100,
+            collection_field: collection_field,
+            collection_where: collection_where,
+            collection_orderby_key: 'date',
             collection_orderby_order: 'desc'
         },
         success: res => {
-            page.setData({
-                sales: res.result
-            })
+            if (res.result.length === 0) {
+                page.setData({
+                    search_state: 'noData'
+                })
+            } else {
+                var storage_sale = {}
+                var sales_unconfirmed = []
+                var sale_unconfirmed_amount = 0
+                var sales_confirmed = []
+                var sale_confirmed_amount = 0
 
-            console.log('Get all sales info', page.data.sales)
-            wx.hideLoading()
+                for (let i in res.result) {
+                    storage_sale[res.result[i]._id] = res.result[i]
+
+                    if (res.result[i].confirmed) {
+                        sales_confirmed.push(res.result[i])
+                        sale_confirmed_amount++
+                    } else {
+                        sales_unconfirmed.push(res.result[i])
+                        sale_unconfirmed_amount++
+                    }
+                }
+
+                wx.setStorageSync('sales', storage_sale)
+
+                sales_confirmed = addOrder(sales_confirmed, Math.max(sale_confirmed_amount, sale_unconfirmed_amount))
+                sales_unconfirmed = addOrder(sales_unconfirmed, Math.max(sale_confirmed_amount, sale_unconfirmed_amount))
+
+                page.setData({
+                    search_state: 'found',
+                    sales_unconfirmed: sales_unconfirmed,
+                    sale_unconfirmed_amount: sale_unconfirmed_amount,
+                    sales_confirmed: sales_confirmed,
+                    sale_confirmed_amount: sale_confirmed_amount
+                })
+            }
+
+            console.log('View all the sales in the current restaurant.', res.result)
             wx.stopPullDownRefresh()
         },
         fail: err => {
-            console.error('Failed to search sales in database', err)
-            wx.hideLoading()
+            page.setData({
+                search_state: 'error'
+            })
+
             wx.stopPullDownRefresh()
+            realTimeLog.error('Failed to get all the sales in the current restaurant by using dbGet().', err)
+            wx.showToast({
+                title: '网络错误，请重试',
+                icon: 'none'
+            })
         }
     })
+}
+
+
+function addOrder(target, amount) {
+    var order = 1
+
+    for (var i in target) {
+        var new_order = order.toString()
+
+        if (amount > 9 && order < 10) {
+            new_order = '0' + new_order
+        }
+
+        if (amount > 99 && order < 100) {
+            new_order = '0' + new_order
+        }
+
+        target[i]['order'] = new_order
+
+        order++
+    }
+
+    return target
 }

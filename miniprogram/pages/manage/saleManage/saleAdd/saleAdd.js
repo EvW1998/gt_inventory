@@ -1,6 +1,8 @@
 /**
  * The page to add new sale to the miniapp
  */
+const uInput = require('../../../../utils/uInput.js') // require the util of user inputs
+const realTimeLog = require('../../../../utils/log.js') // require the util of user inputs
 const date = require('../../../../utils/date.js'); //require the util of date
 const pAction = require('../../../../utils/pageAction.js') // require the util of page actions
 
@@ -14,43 +16,49 @@ Page({
      * Data in the page
      */
     data: {
-        select_date: '', // the selected date for the sale value
-        filled: false,  // whether the input box of the sale value gets filled
-        btn_state: "default" // the state for the confirm button
+        today: '2020-01-01', // the date of today
+        sale_filled: false, // whether the name input is filled
+        sale_warn_enable: false, // whether the warning icon for the name should be enabled
+        date: '', // the sale date
+        date_filled: false, // whether the name input is filled
+        button_enable: false, // whether the sumbit button is enabled
+        progress: 0, // the process to add a new promotion event in percentage
+        progress_text: '未开始', // the process to register a new user in text
+        progress_enable: false // whether the progress bar is enabled
     },
 
     /**
      * When the page gets loaded
      */
     onLoad: function () {
-        var d = date.dateInformat(date.dateInArray(new Date())) 
-
         this.setData({
-            select_date: d,
+            today: date.dateInformat(date.dateInArray(new Date()))
         })
     },
 
-    /**
-     * Check whether the new sale value gets filled
-     * 
-     * @method checkBlur_value
-     * @param e The value returned from the input text
-     */
-    checkBlur_value: function (e) {
-        if (e.detail.value != "") {
-            // if the name input text get filled with something
-            this.setData({
-                filled: true,
-                btn_state: "primary"
-            })
+    saleInput: function (event) {
+        var sale_filled = true
+        var sale_warn_enable = false
+        var button_enable = false
+        var new_sale = event.detail.value
+
+        if (!uInput.isNumber(new_sale)) {
+            sale_filled = false
+            sale_warn_enable = true
+        } else if (parseFloat(new_sale) <= 0) {
+            sale_filled = false
+            sale_warn_enable = true
         }
-        else {
-            // if the name input text get filled with nothing
-            this.setData({
-                filled: false,
-                btn_state: "default"
-            })
+
+        if (sale_filled && this.data.date_filled) {
+            button_enable = true
         }
+
+        this.setData({
+            sale_filled: sale_filled,
+            sale_warn_enable: sale_warn_enable,
+            button_enable: button_enable
+        })
     },
 
     /**
@@ -60,11 +68,17 @@ Page({
      * @param{Object} e The return value from the date picker
      */
     bindDateChange: function(e) {
+        var button_enable = false
+
+        if (this.data.sale_filled) {
+            button_enable = true
+        }
+
         this.setData({
-            select_date: e.detail.value
+            date: e.detail.value,
+            date_filled: true,
+            button_enable: button_enable
         })
-        
-        console.log('Date changed to: ', this.data.select_date)
     },
 
     /**
@@ -74,12 +88,31 @@ Page({
      * @param e The return val from the form submit
      */
     formSubmit: function (e) {
-        wx.showLoading({
-            title: '提交中',
-            mask: true
-        })
+        var page = this
 
-        addSale(e.detail.value)
+        if (parseFloat(e.detail.value.sale) < 10000 || parseFloat(e.detail.value.sale) > 40000) {
+            wx.showModal({
+                title: '警告',
+                content: '新增营业额的数值异常，输入值为' + e.detail.value.sale + '元，是否继续？',
+                success (res) {
+                    if (res.confirm) {
+                        wx.showLoading({
+                            title: '上传中',
+                            mask: true
+                        })
+
+                        addSaleProcess(page, e.detail.value)
+                    }
+                }
+            })
+        } else {
+            wx.showLoading({
+                title: '上传中',
+                mask: true
+            })
+
+            addSaleProcess(page, e.detail.value)
+        }
     },
 
     /**
@@ -98,24 +131,144 @@ Page({
 /**
  * Add the new sale data to the collection.
  * 
- * @method addSale
+ * @method addSaleProcess
  * @param{Object} value The value from the form
  */
-function addSale(value) {
-    var new_sale = parseInt(value.sale)
-    var legal_input = true
+async function addSaleProcess(page, inputs) {
+    var add_sale_data = {}
 
-    if(isNaN(new_sale) || new_sale < 0) {
-        legal_input = false
-    }
+    page.setData({
+        progress: 0,
+        progress_text: '检查日期',
+        progress_enable: true
+    })
 
-    if(legal_input) {
-        var add_sale_data = {
-            sale_value: new_sale,
-            sale_date: value.date
+    var n_result = await isRepeated(page.data.date)
+
+    if (n_result.stat) {
+        if (n_result.result) {
+            page.setData({
+                progress: 0,
+                progress_text: '未开始',
+                progress_enable: false
+            })
+
+            wx.hideLoading()
+            wx.showModal({
+                title: '错误',
+                content: '新增营业额的日期与此餐厅已有营业额的日期重复，请更改后重试。',
+                showCancel: false
+            })
+
+            return
+        } else {
+            add_sale_data['restaurant_id'] = app.globalData.restaurant_id
+            add_sale_data['date'] = page.data.date
+            add_sale_data['value'] = parseFloat(inputs.sale)
+           
+            if (page.data.date > page.data.today) {
+                add_sale_data['confirmed'] = false
+            } else if (page.data.date < page.data.today) {
+                add_sale_data['confirmed'] = true
+            } else {
+                var hour = date.dateInArray(new Date()).hour
+                
+                if (hour < 22) {
+                    add_sale_data['confirmed'] = false
+                } else {
+                    add_sale_data['confirmed'] = true
+                }
+            }
         }
 
-        // call dbAdd() cloud function to add the sale to collection
+    } else {
+        page.setData({
+            progress: 0,
+            progress_text: '未开始',
+            progress_enable: false
+        })
+
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重试',
+            icon: 'none'
+        })
+
+        return
+    }
+
+    page.setData({
+        progress: 50,
+        progress_text: '检查通过，正在上传新的营业额'
+    })
+
+    var add_result = await addSale(add_sale_data)
+
+    if (add_result.stat) {
+        page.setData({
+            progress: 100,
+            progress_text: '上传成功'
+        })
+
+        realTimeLog.info('User ', app.globalData.user_name, app.globalData.uid, ' add a new sale data ', add_sale_data, ' into the restaurant ', app.globalData.restaurant_name, app.globalData.restaurant_id)
+
+        pAction.navigateBackUser('新增成功', 1)
+    } else {
+        page.setData({
+            progress: 0,
+            progress_text: '未开始',
+            progress_enable: false
+        })
+
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重试',
+            icon: 'none'
+        })
+
+        return
+    }
+}
+
+
+function isRepeated(date) {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+        result['result'] = true
+
+        db.collection(db_sale)
+            .where({
+                restaurant_id: app.globalData.restaurant_id,
+                date: date
+            })
+            .field({
+                _id: true
+            })
+            .get({
+                success: res => {
+                    result['stat'] = true
+                    if (res.data.length === 0) {
+                        result['result'] = false
+                    }
+
+                    resolve(result)
+                },
+                fail: err => {
+                    realTimeLog.error('Failed to get the sale data with the same date as the new sale date in the same restaurant from the database.', err)
+
+                    resolve(result)
+                }
+            })
+    })
+}
+
+
+function addSale(add_sale_data) {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+
         wx.cloud.callFunction({
             name: 'dbAdd',
             data: {
@@ -123,22 +276,17 @@ function addSale(value) {
                 add_data: add_sale_data
             },
             success: res => {
-                console.log('Add new sale data to the database: ', add_sale_data)
+                if (res.result._id !== undefined) {
+                    result['stat'] = true
+                    result['result'] = res
+                }
 
-                pAction.navigateBackUser('新增成功', 1)
+                resolve(result)
             },
             fail: err => {
-                // if get a failed result
-                console.error('Failed to use cloud function dbAdd()', err)
-                wx.hideLoading()
+                realTimeLog.error('Failed to add a new sale data into the database by using dbAdd().', err)
+                resolve(result)
             }
         })
-    } else {
-        console.log('User input illegal')
-        wx.hideLoading()
-        wx.showToast({
-            title: '输入错误',
-            icon: 'none'
-        })
-    }
+    })
 }
