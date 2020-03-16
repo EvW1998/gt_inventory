@@ -1,6 +1,8 @@
 /**
  * The page to show all the promotion types in the database.
  */
+const realTimeLog = require('../../../../utils/log.js') // require the util of user inputs
+
 const app = getApp() // the app
 const db = wx.cloud.database() // the cloud database
 const db_promotion_type = 'promotion_type' // the collection of promotion types
@@ -16,7 +18,7 @@ Page({
      */
     data: {
         search_state: 'searching', // the state of the searching promotion types
-        promotion_types: {}, // the promotion types in the database
+        promotion_types: [], // the promotion types in the database
         promotion_type_amount: 0, // the amount of promotion types
         selected_promotion_type: {}, // the selected promotion type for removing
         show_tip: false, // whether to show the tip of promotion types
@@ -37,6 +39,14 @@ Page({
      */
     onShow: function () {
         setAllPromotionType(this)
+    },
+
+    onPullDownRefresh: function () {
+        setAllPromotionType(this)
+    },
+
+    onUnload: function () {
+        wx.removeStorageSync('promotion_types')
     },
 
     /**
@@ -155,63 +165,98 @@ Page({
 })
 
 
-/**
- * Set all the promotion types into the page data.
- * 
- * @method setAllPromotionType
- * @param{Page} page The page
- */
 function setAllPromotionType(page) {
+    var collection_where = {}
+    collection_where['restaurant_id'] = app.globalData.restaurant_id
+
+    var collection_field = {}
+    collection_field['restaurant_id'] = false
+
     wx.cloud.callFunction({
         name: 'dbGet',
         data: {
             collection_name: db_promotion_type,
             collection_limit: 100,
-            collection_field: {},
-            collection_where: {},
-            collection_orderby_key: 'promotion_type_name',
+            collection_field: collection_field,
+            collection_where: collection_where,
+            collection_orderby_key: 'null',
             collection_orderby_order: 'asc'
         },
         success: res => {
-            var promotion_type_result = res.result
-            var promotion_type_amount = promotion_type_result.length
-
-            if (promotion_type_amount == 0) {
+            if (res.result.length === 0) {
                 page.setData({
                     search_state: 'noData'
                 })
             } else {
-                var promotion_types = []
-                var order = 1
-                for (var i in promotion_type_result) {
-                    var new_promotion_type = promotion_type_result[i]
-                    var new_order = order.toString()
-
-                    if (promotion_type_amount > 9 && order < 10) {
-                        new_order = '0' + new_order
-                    }
-
-                    if (promotion_type_amount > 99 && order < 100) {
-                        new_order = '0' + new_order
-                    }
-
-                    new_promotion_type['promotion_type_order'] = new_order
-                    promotion_types.push(new_promotion_type)
-
-                    order++
+                var storage_promotion_type = {}
+                for (let i in res.result) {
+                    storage_promotion_type[res.result[i]._id] = res.result[i]
                 }
+
+                try {
+                    wx.setStorageSync('promotion_types', storage_promotion_type)
+                } catch (err) {
+                    realTimeLog.error('Failed to store the promotion types data into the local storage.', err)
+
+                    page.setData({
+                        search_state: 'error'
+                    })
+
+                    wx.stopPullDownRefresh()
+                    wx.showToast({
+                        title: '存储错误，请重试',
+                        icon: 'none'
+                    })
+
+                    return
+                }
+
+                var promotion_types = addOrder(res.result, res.result.length)
 
                 page.setData({
                     search_state: 'found',
                     promotion_types: promotion_types,
-                    promotion_type_amount: promotion_type_amount
+                    promotion_type_amount: res.result.length
                 })
             }
 
-            console.log('Get all promotion types', res.result)
+            console.log('View all the promotion types in the current restaurant.', res.result)
+            wx.stopPullDownRefresh()
         },
         fail: err => {
-            console.error('Failed to search promotion types in database', err)
+            page.setData({
+                search_state: 'error'
+            })
+
+            wx.stopPullDownRefresh()
+            realTimeLog.error('Failed to get all the promotion types in the current restaurant by using dbGet().', err)
+            wx.showToast({
+                title: '网络错误，请重试',
+                icon: 'none'
+            })
         }
     })
+}
+
+
+function addOrder(target, amount) {
+    var order = 1
+
+    for (var i in target) {
+        var new_order = order.toString()
+
+        if (amount > 9 && order < 10) {
+            new_order = '0' + new_order
+        }
+
+        if (amount > 99 && order < 100) {
+            new_order = '0' + new_order
+        }
+
+        target[i]['order'] = new_order
+
+        order++
+    }
+
+    return target
 }

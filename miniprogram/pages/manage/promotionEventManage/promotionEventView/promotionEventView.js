@@ -7,6 +7,8 @@ const realTimeLog = require('../../../../utils/log.js') // require the util of u
 const app = getApp() // the app
 const db = wx.cloud.database() // the cloud database
 const db_promotion_event = 'promotion_event' // the collection of promotion events
+const db_promotion_type = 'promotion_type'
+const db_product = 'product'
 
 const promotion_event_add_page = '../promotionEventAdd/promotionEventAdd' // the page url of adding a new promotion event
 const promotion_event_modify_page = '../promotionEventModify/promotionEventModify' // the page url of modifying a promotion event
@@ -42,7 +44,21 @@ Page({
      * When show the page, get all promotion events
      */
     onShow: function () {
-        setAllPromotionEvent(this)
+        setAllInfo(this)
+    },
+
+    onPullDownRefresh: function () {
+        setAllInfo(this)
+    },
+
+    onUnload: function () {
+        try {
+            wx.removeStorageSync('promotion_type_picker')
+            wx.removeStorageSync('product_picker')
+            wx.removeStorageSync('promotion_events')
+        } catch (err) {
+            realTimeLog.error('Failed to remove data from the local storage.', err)
+        }
     },
 
     /**
@@ -75,7 +91,7 @@ Page({
 
         var promotion_event = ''
 
-        for (var i in this.data.promotion_events) {
+        for (let i in this.data.promotion_events) {
             if (this.data.promotion_events[i]._id == promotion_event_id) {
                 promotion_event = this.data.promotion_events[i]
                 break
@@ -162,6 +178,113 @@ Page({
 })
 
 
+function setAllInfo(page) {
+    setPromotionTypePicker(page)
+    setProductPicker(page)
+    setAllPromotionEvent(page)
+}
+
+
+function setPromotionTypePicker(page) {
+    var collection_field = {}
+    collection_field['_id'] = true
+    collection_field['name'] = true
+
+    var collection_where = {}
+    collection_where['restaurant_id'] = app.globalData.restaurant_id
+
+    wx.cloud.callFunction({
+        name: 'dbGet',
+        data: {
+            collection_name: db_promotion_type,
+            collection_limit: 100,
+            collection_field: collection_field,
+            collection_where: collection_where,
+            collection_orderby_key: 'null',
+            collection_orderby_order: 'desc'
+        },
+        success: res => {
+           try {
+                wx.setStorageSync('promotion_type_picker', res.result)
+           } catch (err) {
+                page.setData({
+                    search_state: 'error'
+                })
+
+                realTimeLog.error('Failed to set promotion types for the picker to local storage.', err)
+
+                wx.showToast({
+                    title: '本地存储错误，请重试',
+                    icon: 'none'
+                })
+           }
+        },
+        fail: err => {
+            page.setData({
+                search_state: 'error'
+            })
+
+            realTimeLog.error('Failed to get promotion types for the picker.', err)
+
+            wx.showToast({
+                title: '网络错误，请重试',
+                icon: 'none'
+            })
+        }
+    })
+}
+
+
+function setProductPicker(page) {
+    var collection_field = {}
+    collection_field['_id'] = true
+    collection_field['name'] = true
+
+    var collection_where = {}
+    collection_where['restaurant_id'] = app.globalData.restaurant_id
+
+    wx.cloud.callFunction({
+        name: 'dbGet',
+        data: {
+            collection_name: db_product,
+            collection_limit: 100,
+            collection_field: collection_field,
+            collection_where: collection_where,
+            collection_orderby_key: 'null',
+            collection_orderby_order: 'desc'
+        },
+        success: res => {
+            try {
+                wx.setStorageSync('product_picker', res.result)
+            } catch (err) {
+                page.setData({
+                    search_state: 'error'
+                })
+
+                realTimeLog.error('Failed to set products for the picker to local storage.', err)
+
+                wx.showToast({
+                    title: '本地存储错误，请重试',
+                    icon: 'none'
+                })
+            }
+        },
+        fail: err => {
+            page.setData({
+                search_state: 'error'
+            })
+
+            realTimeLog.error('Failed to get products for the picker.', err)
+
+            wx.showToast({
+                title: '网络错误，请重试',
+                icon: 'none'
+            })
+        }
+    })
+}
+
+
 /**
  * Set all the promotion events into the page data.
  * 
@@ -169,13 +292,20 @@ Page({
  * @param{Page} page The page
  */
 function setAllPromotionEvent(page) {
+    var collection_field = {}
+    collection_field['_id'] = true
+    collection_field['name'] = true
+
+    var collection_where = {}
+    collection_where['restaurant_id'] = app.globalData.restaurant_id
+
     wx.cloud.callFunction({
         name: 'dbGet',
         data: {
             collection_name: db_promotion_event,
             collection_limit: 100,
             collection_field: {},
-            collection_where: {},
+            collection_where: collection_where,
             collection_orderby_key: 'end_date',
             collection_orderby_order: 'desc'
         },
@@ -192,10 +322,13 @@ function setAllPromotionEvent(page) {
                 var promotion_events_past = []
                 var promotion_events_current = []
                 var promotion_events_future = []
+                var storage_events = {}
 
                 var today = date.dateInformat(date.dateInArray(new Date()))
 
-                for (var i in promotion_events) {
+                for (let i in promotion_events) {
+                    storage_events[promotion_events[i]._id] = promotion_events[i]
+
                     if (promotion_events[i].end_date < today) {
                         promotion_events_past.push(promotion_events[i])
                     } else if (promotion_events[i].start_date <= today && promotion_events[i].end_date >= today) {
@@ -205,20 +338,37 @@ function setAllPromotionEvent(page) {
                     }
                 }
 
+                try {
+                    wx.setStorageSync('promotion_events', storage_events)
+                } catch {
+                    page.setData({
+                        search_state: 'error'
+                    })
+
+                    realTimeLog.error('Failed to set promotion events to local storage.', err)
+
+                    wx.showToast({
+                        title: '本地存储错误，请重试',
+                        icon: 'none'
+                    })
+                }
+
                 var amount = Math.max(promotion_events_past.length, promotion_events_current.length, promotion_events_future.length)
 
                 promotion_events_past = addEventOrder(promotion_events_past, amount)
                 promotion_events_current = addEventOrder(promotion_events_current, amount)
                 promotion_events_future = addEventOrder(promotion_events_future, amount)
 
-                page.setData({
-                    search_state: 'found',
-                    promotion_events: promotion_events,
-                    promotion_event_amount: promotion_event_amount,
-                    promotion_events_past: promotion_events_past,
-                    promotion_events_current: promotion_events_current,
-                    promotion_events_future: promotion_events_future
-                })
+                if (page.data.search_state !== 'error') {
+                    page.setData({
+                        search_state: 'found',
+                        promotion_events: promotion_events,
+                        promotion_event_amount: promotion_event_amount,
+                        promotion_events_past: promotion_events_past,
+                        promotion_events_current: promotion_events_current,
+                        promotion_events_future: promotion_events_future
+                    })
+                }
             }
 
             console.log('Get all promotion events', res.result)
@@ -246,7 +396,7 @@ function setAllPromotionEvent(page) {
 function addEventOrder(events, amount) {
     var order = 1
 
-    for (var i in events) {
+    for (let i in events) {
         var new_order = order.toString()
 
         if (amount > 9 && order < 10) {
@@ -257,7 +407,7 @@ function addEventOrder(events, amount) {
             new_order = '0' + new_order
         }
 
-        events[i]['promotion_event_order'] = new_order
+        events[i]['order'] = new_order
 
         order++
     }

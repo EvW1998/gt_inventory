@@ -1,4 +1,4 @@
-<!--pages/manage/promotionEventManage/promotionEventAdd/promotionEventAdd.wxml-->
+ <!--pages/manage/promotionEventManage/promotionEventAdd/promotionEventAdd.wxml-->
 
 <view class="page">
     <view class="weui-form">
@@ -25,7 +25,7 @@
                         </view>
                     </view>
                     <view class="weui-cells__tips" wx:if="{{name_warn_enable}}">
-                        <label class="red_label">名称不能为空</label>
+                        <view class="red_label">名称不能为空</view>
                     </view>
                 </view>
 
@@ -39,7 +39,7 @@
                                 </view>
 
                                 <view class="weui-cell__bd">
-                                    <label>{{products_key_id[item].product_name}}</label>
+                                    <label>{{products_key_id[item].name}}</label>
                                 </view>
                             </view>
                         </block>
@@ -52,7 +52,7 @@
                             </view>
 
                             <view class="weui-cell__bd">
-                                <label></label>
+                                <view></view>
                             </view>
 
                             <view wx:if="{{product_warn_enable}}" class="weui-cell__ft">
@@ -62,7 +62,7 @@
                     </view>
 
                     <view class="weui-cells__tips" wx:if="{{product_warn_enable}}">
-                        <label class="red_label">请选择至少一个产品</label>
+                        <view class="red_label">请选择至少一个产品</view>
                     </view>
                 </view>
 
@@ -77,10 +77,10 @@
                             <view class="weui-cell__bd">
                                 <picker bindchange="changeType" value="{{type_index}}" range="{{type_array}}" disabled="{{!type_picker_enable}}">
                                     <block wx:if="{{type_filled}}">
-                                        <label class="weui-label">{{types_key_id[type_picked].promotion_type_name}}</label>
+                                        <label class="weui-label">{{types_key_id[type_picked].name}}</label>
                                     </block>
                                     <block wx:else>
-                                        <label class="{{type_picker_enable ? 'weui-label link_label' : 'weui-label dark_grey_label'}}">请点击选择促销类型</label>
+                                        <label class="{{type_picker_enable ? 'weui-label link_label' : 'weui-label dark_grey_label'}}">点击选择</label>
                                     </block>
                                 </picker>
                             </view>
@@ -102,7 +102,7 @@
                                         <label class="weui-label">{{start_date}}</label>
                                     </block>
                                     <block wx:else>
-                                        <label class="weui-label link_label">请点击选择开始日期</label>
+                                        <label class="weui-label link_label">点击选择</label>
                                     </block>
                                 </picker>
                             </view>
@@ -118,7 +118,7 @@
                                         <label class="weui-label">{{end_date}}</label>
                                     </block>
                                     <block wx:else>
-                                        <label class="weui-label link_label">请点击选择结束日期</label>
+                                        <label class="weui-label link_label">点击选择</label>
                                     </block>
                                 </picker>
                             </view>
@@ -127,21 +127,30 @@
                 </view>
             </view>
 
-            <view wx:if="{{progress_enable}}" class="page__bd page__bd_spacing weui-progress">
-                <view class="weui-progress__bar">
-                    <progress percent="{{progress}}" stroke-width="6" />
+            <view wx:if="{{progress_enable}}" class="page__bd page__bd_spacing">
+                <view class="weui-progress">
+                    <view class="weui-progress__bar">
+                        <progress percent="{{progress}}" stroke-width="6" />
+                    </view>
+                    <view class="weui-progress__opr">
+                        <icon type="waiting" size="22"></icon>
+                    </view>
                 </view>
-                <view class="weui-progress__opr">
-                    <icon type="waiting" size="22"></icon>
+
+                <view class="weui-form__tips-area">
+                    <view class="weui-loadmore">
+                        <view class="weui-loading"></view>
+                        <view class="weui-loadmore__tips">{{progress_text}}</view>
+                    </view>
                 </view>
-             </view>
+            </view>
 
             <view class="weui-form__tips-area">
                 <view class="weui-form__tips">点击确定新增促销事件</view>
             </view>
 
             <view class="weui-form__opr-area">
-                <button type="primary" form-type="submit" disabled="{{!button_enable}}">确定</button>
+                <button type="primary" form-type="submit" disabled="{{!button_enable || error_happened}}">确定</button>
             </view>
         </form>
     </view>

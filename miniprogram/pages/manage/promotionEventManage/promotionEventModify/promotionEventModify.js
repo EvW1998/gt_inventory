@@ -9,11 +9,6 @@ const date = require('../../../../utils/date.js') // require the util of date
 const app = getApp() // the app
 const db = wx.cloud.database() // the cloud database
 const db_promotion_event = 'promotion_event' // the collection of promotion events
-const db_product = 'product' // the collection of products
-const db_promotion_type = 'promotion_type' // the collection of promotion types
-
-var loading_picker = false
-var loading_event = false
 
 
 Page({
@@ -22,10 +17,11 @@ Page({
      * Data for the page
      */
     data: {
-        promotion_event: {}, // the selected promotion event
+        error_happened: true, // whether error happened
+        promotion_event_selected: {}, // the selected promotion event
         name_filled: true, // whether the name input is filled
         name_warn_enable: false, // whether the warning icon for the name should be enabled
-        products: {}, // the products
+        products_key_name: {}, // the products
         products_key_id: {}, // the products that use the product id as the key
         product_index: 0, // the index of the product picker
         product_array: [], // the picker items of the product picker
@@ -33,7 +29,7 @@ Page({
         product_picked: {}, // the products for the promotion event
         product_filled: true, // whether the products is filled
         product_warn_enable: false, // whether the warning icon of the products shoud be enabled
-        types: {}, // the promotion types
+        types_key_name: {}, // the promotion types
         types_key_id: {}, // the promotion types that use the promotion type id as the key
         type_index: 0, // the index of the promotion type picker
         type_array: [], // the picker items of the promotion type picker
@@ -45,8 +41,9 @@ Page({
         start_date_filled: true, // whether the start date is filled
         end_date: '', // the end date of the promotion event
         end_date_filled: true, // whether the end date is filled
-        button_enable: true, // whether the sumbit button is enabled
-        progress: 0, // the process to add a new promotion event in percentage
+        button_enable: false, // whether the sumbit button is enabled
+        pprogress: 0, // the process to add a new promotion event in percentage
+        progress_text: '未开始', // the process to register a new user in text
         progress_enable: false // whether the progress bar is enabled
     },
 
@@ -54,20 +51,7 @@ Page({
      * When the page is loaded
      */
     onLoad: function (options) {
-        wx.showLoading({
-            title: '加载中'
-        })
-
-        setPicker(this)
-        setPromotionEvent(this, options.promotion_event_id)
-    },
-
-    /**
-     * When the page is showed
-     */
-    onShow: function () {
-        loading_event = false
-        loading_picker = false
+        setPickerAndPromotionEvent(this, options.promotion_event_id)
     },
 
     /**
@@ -83,7 +67,7 @@ Page({
         var name_warn_enable = false
         var new_name = event.detail.value
 
-        if (new_name.length == 0) {
+        if (new_name.length === 0) {
             name_filled = false
             name_warn_enable = true
 
@@ -112,13 +96,14 @@ Page({
      */
     addProduct: function (e) {
         var product_name = this.data.product_array[e.detail.value]
-        var product = this.data.products[product_name]
+        var product = this.data.products_key_name[product_name]
         var product_picked = this.data.product_picked
 
+        console.log('Picked product ', product_name)
+
         if (product._id in product_picked) {
-            console.log('Picked product is already in the list.', product._id)
             wx.showToast({
-                title: '无法添加已选产品',
+                title: '请勿重复添加已选产品',
                 icon: 'none'
             })
         } else {
@@ -135,8 +120,6 @@ Page({
                     button_enable: true
                 })
             }
-
-            console.log('Add a new product ', product_name, ' to the picked products list of the new promotion event.')
         }
     },
 
@@ -150,12 +133,14 @@ Page({
         var product_id = e.currentTarget.id
         var product_picked = this.data.product_picked
 
+        console.log('Remove product ', this.data.products_key_id[product_id].name)
+
         delete product_picked[product_id]
 
         var product_warn_enable = false
         var product_filled = true
 
-        if (Object.keys(product_picked).length == 0) {
+        if (Object.keys(product_picked).length === 0) {
             product_warn_enable = true
             product_filled = false
 
@@ -169,8 +154,6 @@ Page({
             product_warn_enable: product_warn_enable,
             product_filled: product_filled
         })
-
-        console.log('Remove the product ', this.data.products_key_id[product_id].product_name, ' from the picked products list of the new promotion event.')
     },
 
     /**
@@ -181,7 +164,9 @@ Page({
      */
     changeType: function (e) {
         var type_name = this.data.type_array[e.detail.value]
-        var type_picked = this.data.types[type_name]._id
+        var type_picked = this.data.types_key_name[type_name]._id
+
+        console.log('Pick promotion type ', type_name)
 
         this.setData({
             type_picked: type_picked,
@@ -193,8 +178,6 @@ Page({
                 button_enable: true
             })
         }
-
-        console.log('Change the promotion event to ', type_name, ' for the new promotion event.')
     },
 
     /**
@@ -211,6 +194,8 @@ Page({
             end_date = start_date
         }
 
+        console.log('Pick start date ', start_date)
+
         this.setData({
             start_date: start_date,
             start_date_filled: true,
@@ -222,8 +207,6 @@ Page({
                 button_enable: true
             })
         }
-
-        console.log('Change to start date to ', start_date, ' for the new promotion event.')
     },
 
     /**
@@ -235,6 +218,8 @@ Page({
     changeEndDate: function (e) {
         var end_date = e.detail.value
 
+        console.log('Pick end date ', end_date)
+
         this.setData({
             end_date: end_date,
             end_date_filled: true
@@ -245,8 +230,6 @@ Page({
                 button_enable: true
             })
         }
-
-        console.log('Change to end date to ', end_date, ' for the new promotion event.')
     },
 
     /**
@@ -261,121 +244,7 @@ Page({
             mask: true
         })
 
-        this.setData({
-            progress_enable: true
-        })
-
-        var promotion_event = {}
-        promotion_event['promotion_event_name'] = e.detail.value.name
-        promotion_event['products'] = this.data.product_picked
-        promotion_event['promotion_type'] = this.data.type_picked
-        promotion_event['start_date'] = this.data.start_date
-        promotion_event['end_date'] = this.data.end_date
-
-        var event_log = {}
-        event_log['promotion_event_name'] = e.detail.value.name
-        event_log['start_date'] = this.data.start_date
-        event_log['end_date'] = this.data.end_date
-        event_log['promotion_type'] = this.data.types_key_id[this.data.type_picked].promotion_type_name
-
-        event_log['products'] = []
-        for (var i in this.data.product_picked) {
-            event_log['products'].push(this.data.products_key_id[i].product_name)
-        }
-
-        var n_result = false
-
-        if (promotion_event.promotion_event_name !== this.data.promotion_event.promotion_event_name) {
-            n_result = await checkNameRepetition(promotion_event)
-
-            this.setData({
-                progress: 33
-            })
-
-            if (n_result) {
-                this.setData({
-                    progress: 0,
-                    progress_enable: false
-                })
-
-                wx.hideLoading()
-                var content = '修改后促销事件的名称与已有事件重复！'
-                wx.showModal({
-                    title: '错误',
-                    content: content,
-                    showCancel: false
-                })
-            }
-        }
-
-        if (!n_result) {
-            // check whether the new promotion event is repeated compare to existed events
-            var p_result = await checkProductRepetition(promotion_event, this.data.promotion_event._id)
-
-            this.setData({
-                progress: 66
-            })
-
-            if (p_result.repetition) {
-                this.setData({
-                    progress: 0,
-                    progress_enable: false
-                })
-
-                wx.hideLoading()
-                var content = '已有事件 ' + p_result.repetition_name + ' 在同一日期，与新增事件的促销产品及促销类型重复！'
-                wx.showModal({
-                    title: '错误',
-                    content: content,
-                    showCancel: false
-                })
-            } else {
-                wx.cloud.callFunction({
-                    name: 'dbSet',
-                    data: {
-                        collection_name: db_promotion_event,
-                        set_data: promotion_event,
-                        uid: this.data.promotion_event._id
-                    },
-                    success: res => {
-                        this.setData({
-                            progress: 100
-                        })
-
-                        if (res.result.stats.updated === 1) {
-                            console.log('Modified a promotion event in the database.', event_log)
-                            realTimeLog.info('User ', app.globalData.true_name, ' modified a promotion event in the database.', event_log)
-                            pAction.navigateBackUser('修改成功', 1)
-                        } else {
-                            console.log('Failed to update the promotion event in the database.', res)
-                            this.setData({
-                                progress: 0,
-                                progress_enable: false
-                            })
-
-                            wx.hideLoading()
-                            wx.showToast({
-                                title: '修改失败',
-                                icon: 'none'
-                            })
-                        }
-                    },
-                    fail: err => {
-                        this.setData({
-                            progress: 0,
-                            progress_enable: false
-                        })
-                        
-                        realTimeLog.error('Failed to update the promotion event in the database by using dbSet().', err)
-                        wx.hideLoading()
-                        wx.showToast({
-                            title: '网络错误，请重试',
-                            icon: 'none'
-                        })
-                    }
-                })
-            }
-        }
+        updatePromotionEventProcess(this, e.detail.value)
     },
 
     /**
@@ -394,117 +263,66 @@ Page({
 /**
  * Set up all the pickers.
  * 
- * @method setPicker
+ * @method setPickerAndPromotionEvent
  * @param{Page} page The page
  */
-function setPicker(page) {
-    var loading_product = false
-    var loading_type = false
+function setPickerAndPromotionEvent(page, promotion_event_id) {
+    var product_picker = []
+    var promotion_type_picker = []
+    var promotion_event_selected = {}
 
-    // set up the product picker
-    wx.cloud.callFunction({
-        name: 'dbGet',
-        data: {
-            collection_name: db_product,
-            collection_limit: 100,
-            collection_field: {},
-            collection_where: {},
-            collection_orderby_key: 'product_name',
-            collection_orderby_order: 'asc'
-        },
-        success: res => {
-            var product_array = []
-            var products = {}
-            var products_key_id = {}
-            for (var i in res.result) {
-                product_array.push(res.result[i].product_name)
-                products[res.result[i].product_name] = res.result[i]
-                products_key_id[res.result[i]._id] = res.result[i]
-            }
+    try {
+        product_picker = wx.getStorageSync('product_picker')
+        promotion_type_picker = wx.getStorageSync('promotion_type_picker')
+        var events = wx.getStorageSync('promotion_events')
+        promotion_event_selected = events[promotion_event_id]
+    } catch (err) {
+        realTimeLog.error('Failed to get products and promtion types for the picker from the local stroage.', err)
 
-            page.setData({
-                products: products,
-                products_key_id: products_key_id,
-                product_array: product_array,
-                product_picker_enable: true
-            })
-            console.log('Get products for the picker.', product_array)
+        wx.showToast({
+            title: '本地存储读取错误，请重试',
+            icon: 'none'
+        })
 
-            loading_product = true
+        return
+    }
 
-            if (loading_product && loading_type) {
-                loading_picker = true
+    var product_array = []
+    var products_key_name = {}
+    var products_key_id = {}
+    for (var i in product_picker) {
+        product_array.push(product_picker[i].name)
+        products_key_name[product_picker[i].name] = product_picker[i]
+        products_key_id[product_picker[i]._id] = product_picker[i]
+    }
 
-                if (loading_picker && loading_event) {
-                    wx.hideLoading()
-                }
-            }
-        },
-        fail: err => {
-            realTimeLog.error('Failed to get products for modifying a promotion event.', err)
-            wx.hideLoading()
-            wx.showToast({
-                title: '网络错误，请重试',
-                icon: 'none'
-            })
-        }
-    })
+    var type_array = []
+    var types_key_name = {}
+    var types_key_id = {}
+    for (var i in promotion_type_picker) {
+        type_array.push(promotion_type_picker[i].name)
+        types_key_name[promotion_type_picker[i].name] = promotion_type_picker[i]
+        types_key_id[promotion_type_picker[i]._id] = promotion_type_picker[i]
+    }
 
-    // set up the promotion type picker
-    wx.cloud.callFunction({
-        name: 'dbGet',
-        data: {
-            collection_name: db_promotion_type,
-            collection_limit: 100,
-            collection_field: {},
-            collection_where: {},
-            collection_orderby_key: 'promotion_type_name',
-            collection_orderby_order: 'asc'
-        },
-        success: res => {
-            var type_array = []
-            var types = {}
-            var types_key_id = {}
-            for (var i in res.result) {
-                type_array.push(res.result[i].promotion_type_name)
-                types[res.result[i].promotion_type_name] = res.result[i]
-                types_key_id[res.result[i]._id] = res.result[i]
-            }
-
-            page.setData({
-                types: types,
-                types_key_id: types_key_id,
-                type_array: type_array,
-                type_picker_enable: true
-            })
-            console.log('Get promotion types for the picker.', type_array)
-
-            loading_type = true
-
-            if (loading_product && loading_type) {
-                loading_picker = true
-
-                if (loading_picker && loading_event) {
-                    wx.hideLoading()
-                }
-            }
-        },
-        fail: err => {
-            realTimeLog.error('Failed to get promotion types for modifying a promotion event.', err)
-            wx.hideLoading()
-            wx.showToast({
-                title: '网络错误，请重试',
-                icon: 'none'
-            })
-        }
-    })
-
-    // set up the start date picker and the end date picker
     var today = date.dateInformat(date.dateInArray(new Date()))
+
     page.setData({
+        error_happened: false,
+        promotion_event_selected: promotion_event_selected,
+        products_key_name: products_key_name,
+        products_key_id: products_key_id,
+        product_array: product_array,
+        product_picker_enable: true,
+        types_key_name: types_key_name,
+        types_key_id: types_key_id,
+        type_array: type_array,
+        type_picker_enable: true,
         today: today,
-        start_date: today,
-        end_date: today
+        start_date: promotion_event_selected.start_date,
+        end_date: promotion_event_selected.end_date,
+        product_picked: promotion_event_selected.products,
+        type_picked: promotion_event_selected.promotion_type
     })
 }
 
@@ -525,31 +343,172 @@ function isAllFilled(page) {
 }
 
 
-/**
- * Return whether the new promotion event name is same as other promotion events in the database.
- * 
- * @method checkNameRepetition
- * @param{Object} event The new promotion event
- * @return{Promise} The state of the function. Resolve with whether the new promotion event name is same as other promotion events in the database.
- */
-function checkNameRepetition(event) {
+async function updatePromotionEventProcess(page, inputs) {
+    var update_promotion_event_data = {}
+    var event_log = {}
+
+    page.setData({
+        progress: 0,
+        progress_text: '检查修改后促销事件名称',
+        progress_enable: true
+    })
+
+    if (inputs.name !== page.data.promotion_event_selected.name) {
+        var n_result = await isRepeated(inputs.name)
+
+        if (n_result.stat) {
+            if (n_result.result) {
+                page.setData({
+                    progress: 0,
+                    progress_text: '未开始',
+                    progress_enable: false
+                })
+
+                wx.hideLoading()
+                wx.showModal({
+                    title: '错误',
+                    content: '新增促销事件的名称与此餐厅已有促销事件的名称重复，请更改后重试。',
+                    showCancel: false
+                })
+
+                return
+            }
+        } else {
+            page.setData({
+                progress: 0,
+                progress_text: '未开始',
+                progress_enable: false
+            })
+
+            wx.hideLoading()
+            wx.showToast({
+                title: '网络错误，请重试',
+                icon: 'none'
+            })
+
+            return
+        }
+    }
+
+    update_promotion_event_data['restaurant_id'] = app.globalData.restaurant_id
+    update_promotion_event_data['name'] = inputs.name
+    update_promotion_event_data['products'] = page.data.product_picked
+    update_promotion_event_data['promotion_type'] = page.data.type_picked
+    update_promotion_event_data['start_date'] = page.data.start_date
+    update_promotion_event_data['end_date'] = page.data.end_date
+
+    event_log['name'] = inputs.name
+    event_log['start_date'] = page.data.start_date
+    event_log['end_date'] = page.data.end_date
+    event_log['promotion_type'] = page.data.types_key_id[page.data.type_picked].name
+
+    event_log['products'] = []
+    for (let i in page.data.product_picked) {
+        event_log['products'].push(page.data.products_key_id[i].name)
+    }
+
+    page.setData({
+        progress: 33,
+        progress_text: '检查修改后促销事件的促销产品'
+    })
+
+    var p_result = await checkProductRepetition(page.data.promotion_event_selected._id, update_promotion_event_data)
+
+    if (p_result.stat) {
+        if (p_result.result.repetition) {
+            page.setData({
+                progress: 0,
+                progress_text: '未开始',
+                progress_enable: false
+            })
+
+            wx.hideLoading()
+            var content = '已有事件 ' + p_result.result.repetition_name + ' 在同一日期，与新增事件的促销产品及促销类型重复，请修改后重试。'
+            wx.showModal({
+                title: '错误',
+                content: content,
+                showCancel: false
+            })
+
+            return
+        }
+    } else {
+        page.setData({
+            progress: 0,
+            progress_text: '未开始',
+            progress_enable: false
+        })
+
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重试',
+            icon: 'none'
+        })
+
+        return
+    }
+
+    page.setData({
+        progress: 67,
+        progress_text: '检查通过，正在上传修改后的促销事件'
+    })
+
+    var update_result = await updatePromotionEvent(page.data.promotion_event_selected._id, update_promotion_event_data)
+
+    if (update_result.stat) {
+        page.setData({
+            progress: 100,
+            progress_text: '上传成功'
+        })
+
+        realTimeLog.info('User ', app.globalData.user_name, app.globalData.uid, ' modified a promotion event ', event_log, ' into the restaurant ', app.globalData.restaurant_name, app.globalData.restaurant_id)
+
+        pAction.navigateBackUser('修改成功', 1)
+    } else {
+        page.setData({
+            progress: 0,
+            progress_text: '未开始',
+            progress_enable: false
+        })
+
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重试',
+            icon: 'none'
+        })
+
+        return
+    }
+}
+
+
+function isRepeated(name) {
     return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+        result['result'] = true
+
         db.collection(db_promotion_event)
             .where({
-                promotion_event_name: event.promotion_event_name
+                restaurant_id: app.globalData.restaurant_id,
+                name: name
+            })
+            .field({
+                _id: true
             })
             .get({
                 success: res => {
+                    result['stat'] = true
                     if (res.data.length === 0) {
-                        resolve(false)
-                    } else {
-                        console.log('Found a promotion event with the same name of the new promotion event.')
-                        resolve(true)
+                        result['result'] = false
                     }
+
+                    resolve(result)
                 },
                 fail: err => {
-                    realTimeLog.error('Failed to get the promotion event with the same name of the new promotion event.', err)
-                    reject(true)
+                    realTimeLog.error('Failed to get the promotion event with the same date as the new promotion event in the same restaurant from the database.', err)
+
+                    resolve(result)
                 }
             })
     })
@@ -561,11 +520,14 @@ function checkNameRepetition(event) {
  * 
  * @method checkProductRepetition
  * @param{Object} event The new promotion event
- * @param{String} event_id The original promotion event id
  * @return{Promise} The state of the function. Resolve with whether the new promotion event is repeated compare to existed events.
  */
-function checkProductRepetition(event, event_id) {
+function checkProductRepetition(promotion_event_id, event) {
     return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+        result['result'] = {}
+
         wx.cloud.callFunction({
             name: 'getPromotionEvent',
             data: {
@@ -573,17 +535,19 @@ function checkProductRepetition(event, event_id) {
                 end_date: event.end_date
             },
             success: res => {
+                result['stat'] = true
+
                 var repetition = false
                 var repetition_name = ''
 
                 for (var i in res.result) {
-                    if (res.result[i]._id === event_id) {
+                    if (res.result[i]._id === promotion_event_id) {
                         continue
                     }
 
                     for (var j in event.products) {
-                        if (j in res.result[i].products && event.promotion_type == res.result[i].promotion_type) {
-                            repetition_name = res.result[i].promotion_event_name
+                        if (j in res.result[i].products && event.promotion_type === res.result[i].promotion_type) {
+                            repetition_name = res.result[i].name
                             repetition = true
 
                             console.log('Found a repeated promotion event ', repetition_name, ' that contains the same product with the same promotion type and date, compared to the new promotion event.')
@@ -597,59 +561,40 @@ function checkProductRepetition(event, event_id) {
                     }
                 }
 
-                resolve({
-                    repetition: repetition,
-                    repetition_name: repetition_name
-                })
+                result['result']['repetition'] = repetition
+                result['result']['repetition_name'] = repetition_name
+                resolve(result)
             },
             fail: err => {
                 realTimeLog.error('Failed to get promotion events which contains the same date, compared to the start and end date of the new promotion event.', err)
-                reject({
-                    repetition: true
-                })
+                resolve(result)
             }
         })
     })
 }
 
 
-/**
- * Get the promotion event with the given event it, and store it in the page data.
- * 
- * @method setPromotionEvent
- * @param{Page} page The page
- * @param{String} event_id The id of the promotion event
- */
-function setPromotionEvent(page, event_id) {
-    db.collection(db_promotion_event)
-        .where({
-            _id: event_id
-        })
-        .get({
+function updatePromotionEvent(promotion_event_id, update_promotion_event_data) {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+
+        wx.cloud.callFunction({
+            name: 'dbSet',
+            data: {
+                collection_name: db_promotion_event,
+                set_data: update_promotion_event_data,
+                uid: promotion_event_id
+            },
             success: res => {
-                console.log('Modify the promotion event: ', res.data[0])
-                
-                page.setData({
-                    promotion_event: res.data[0],
-                    product_picked: res.data[0].products,
-                    type_picked: res.data[0].promotion_type,
-                    start_date: res.data[0].start_date,
-                    end_date: res.data[0].end_date
-                })
-
-                loading_event = true
-
-                if (loading_event && loading_picker) {
-                    wx.hideLoading()
+                if (res.result.stats.updated === 1) {
+                    result['stat'] = true
                 }
+                resolve(result)
             },
             fail: err => {
-                realTimeLog.error('Failed to get the selected promotion event from the database.', err)
-                wx.hideLoading()
-                wx.showToast({
-                    title: '网络错误，请重试',
-                    icon: 'none'
-                })
+                resolve(result)
             }
         })
+    })
 }

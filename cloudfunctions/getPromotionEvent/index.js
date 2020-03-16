@@ -24,16 +24,19 @@ exports.main = async (event, context) => {
         const _ = db.command
 
         var period1 = {
-            end_date: _.and([_.gte(start_date), _.lte(end_date)])
+            end_date: _.and([_.gte(start_date), _.lte(end_date)]),
+            restaurant_id: event.restaurant_id
         }
 
         var period2 = {
-            start_date: _.and([_.gte(start_date), _.lte(end_date)])
+            start_date: _.and([_.gte(start_date), _.lte(end_date)]),
+            restaurant_id: event.restaurant_id
         }
 
         var period3 = {
             start_date: _.lte(start_date),
-            end_date: _.gte(end_date)
+            end_date: _.gte(end_date),
+            restaurant_id: event.restaurant_id
         }
 
         while (result_amount == collection_limit) {

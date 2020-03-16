@@ -1,6 +1,7 @@
 /**
  * Modify a promotion type in the cloud database
  */
+const realTimeLog = require('../../../../utils/log.js') // require the util of user inputs
 const pAction = require('../../../../utils/pageAction.js') // require the util of page actions
 const uInput = require('../../../../utils/uInput.js') // require the util of user inputs
 
@@ -15,19 +16,37 @@ Page({
      * Data for the page
      */
     data: {
-        promotion_type: {}, // the promotion type for modifying
+        error_happened: true, // whether error happened
+        promotion_type_selected: {}, // the promotion type for modifying
         name_filled: true, // whether the name input is filled
         multiple_filled: true, // whether the multiple input is filled
         button_enable: false, // whether the sumbit button is enabled
         name_warn_enable: false, // whether the warning icon for the name should be enabled
-        multiple_warn_enable: false // whether the warning icon for the multiple should be enabled
+        multiple_warn_enable: false, // whether the warning icon for the multiple should be enabled
+        progress: 0, // the process to add a new promotion event in percentage
+        progress_text: '未开始', // the process to register a new user in text
+        progress_enable: false // whether the progress bar is enabled
     },
 
     /**
      * When the page is loaded, search the given type id in the database and store it in the page data.
      */
     onLoad: function (options) {
-        setPromotionType(this, options.promotion_type_id)
+        try {
+            var promotion_types = wx.getStorageSync('promotion_types')
+            
+            this.setData({
+                error_happened: false,
+                promotion_type_selected: promotion_types[options.promotion_type_id]
+            })
+        } catch (err) {
+            realTimeLog.error('Failed to get the selected promotion type data from the local storage.', err)
+
+            wx.showToast({
+                title: '存储错误，请重试',
+                icon: 'none'
+            })
+        }
     },
 
     /**
@@ -44,7 +63,7 @@ Page({
         var name_warn_enable = false
         var new_name = event.detail.value
 
-        if (new_name.length == 0) {
+        if (new_name.length === 0) {
             name_filled = false
             name_warn_enable = true
         }
@@ -105,50 +124,7 @@ Page({
             mask: true
         })
 
-        var update_promotion_type_data = {}
-        var is_repeated = false
-        var new_name = e.detail.value.name
-        var new_multiple = parseFloat(e.detail.value.multiple)
-
-        if (this.data.promotion_type.promotion_type_name != new_name) {
-            update_promotion_type_data['promotion_type_name'] = new_name
-            is_repeated = await uInput.isRepeated(db_promotion_type, update_promotion_type_data)
-            console.log('Check is the new promotion type is repeated: ', is_repeated)
-        }
-
-        if (!is_repeated) {
-            if (this.data.promotion_type.promotion_type_multiple != new_multiple) {
-                update_promotion_type_data['promotion_type_multiple'] = new_multiple
-            }
-
-            if (Object.keys(update_promotion_type_data).length != 0) {
-                wx.cloud.callFunction({
-                    name: 'dbUpdate',
-                    data: {
-                        collection_name: db_promotion_type,
-                        update_data: update_promotion_type_data,
-                        uid: this.data.promotion_type._id
-                    },
-                    success: res => {
-                        console.log('Updated promotion type: ', res)
-                        pAction.navigateBackUser('修改成功', 1)
-                    },
-                    fail: err => {
-                        console.error('Failed to modify the promotion type', err)
-                    }
-                })
-            } else {
-                console.log('No promotion type data changed')
-                pAction.navigateBackUser('修改成功', 1)
-            }
-        } else {
-            wx.hideLoading()
-            wx.showModal({
-                title: '错误',
-                content: '新修改的促销类型的名称与已有类型重复',
-                showCancel: false
-            })
-        }
+        updatePromotionTypetProcess(this, e.detail.value)
     },
 
     /**
@@ -164,28 +140,161 @@ Page({
 })
 
 
-/**
- * Search the promotion type with the given id, then store it in the page data.
- * 
- * @method setPromotionType
- * @param{Page} page The page
- * @param{String} promotion_type_id The id of the given promotion type
- */
-function setPromotionType(page, promotion_type_id) {
-    db.collection(db_promotion_type)
-        .where({
-            _id: promotion_type_id
-        })
-        .get({
-            success: res => {
+async function updatePromotionTypetProcess(page, inputs) {
+    var update_promotion_type_data = {}
+
+    page.setData({
+        progress: 0,
+        progress_text: '检查名称',
+        progress_enable: true
+    })
+
+    if (inputs.name !== page.data.promotion_type_selected.name) {
+        var n_result = await isRepeated(inputs.name)
+
+        if (n_result.stat) {
+            if (n_result.result) {
                 page.setData({
-                    promotion_type: res.data[0],
-                    button_enable: true
+                    progress: 0,
+                    progress_text: '未开始',
+                    progress_enable: false
                 })
-                console.log('Modify the promotion type: ', res.data[0])
+
+                wx.hideLoading()
+                wx.showModal({
+                    title: '错误',
+                    content: '修改后的促销类型的名称与此餐厅已有促销类型的名称重复，请更改后重试。',
+                    showCancel: false
+                })
+
+                return
+            } else {
+                update_promotion_type_data['name'] = inputs.name
+            }
+
+        } else {
+            page.setData({
+                progress: 0,
+                progress_text: '未开始',
+                progress_enable: false
+            })
+
+            wx.hideLoading()
+            wx.showToast({
+                title: '网络错误，请重试',
+                icon: 'none'
+            })
+
+            return
+        }
+    }
+
+    if (parseFloat(inputs.multiple) !== page.data.promotion_type_selected.multiple) {
+        update_promotion_type_data['multiple'] = parseFloat(inputs.multiple)
+    }
+
+    page.setData({
+        progress: 50,
+        progress_text: '检查通过，正在上传修改后的在售产品'
+    })
+
+    if (Object.keys(update_promotion_type_data).length !== 0) {
+        var update_result = await updatePromotionType(page.data.promotion_type_selected._id, update_promotion_type_data)
+
+        if (update_result.stat) {
+            page.setData({
+                progress: 100,
+                progress_text: '上传成功'
+            })
+
+            realTimeLog.info('User ', app.globalData.user_name, app.globalData.uid, ' modified a promotion type ', page.data.promotion_type_selected._id, update_promotion_type_data, ' into the restaurant ', app.globalData.restaurant_name, app.globalData.restaurant_id)
+
+            pAction.navigateBackUser('修改成功', 1)
+        } else {
+            page.setData({
+                progress: 0,
+                progress_text: '未开始',
+                progress_enable: false
+            })
+
+            wx.hideLoading()
+            wx.showToast({
+                title: '网络错误，请重试',
+                icon: 'none'
+            })
+
+            return
+        }
+    } else {
+        page.setData({
+            progress: 100,
+            progress_text: '上传成功'
+        })
+
+        pAction.navigateBackUser('修改成功', 1)
+    }
+}
+
+
+function isRepeated(name) {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+        result['result'] = true
+
+        db.collection(db_promotion_type)
+            .where({
+                restaurant_id: app.globalData.restaurant_id,
+                name: name
+            })
+            .field({
+                _id: true
+            })
+            .get({
+                success: res => {
+                    result['stat'] = true
+                    if (res.data.length === 0) {
+                        result['result'] = false
+                    }
+
+                    resolve(result)
+                },
+                fail: err => {
+                    realTimeLog.error('Failed to get the promotion event with the same date as the promotion event in the same restaurant from the database.', err)
+
+                    resolve(result)
+                }
+            })
+    })
+}
+
+
+function updatePromotionType(promotion_type_id, update_promotion_type_data) {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+
+        wx.cloud.callFunction({
+            name: 'dbUpdate',
+            data: {
+                collection_name: db_promotion_type,
+                update_data: update_promotion_type_data,
+                uid: promotion_type_id
+            },
+            success: res => {
+                if (res.result.stats.updated === 1) {
+                    result['stat'] = true
+                    result['result'] = res
+                } else {
+                    realTimeLog.warn('The return value of the dbUpdate() is not correct while updateing the promotion type.', res)
+                }
+
+                resolve(result)
             },
             fail: err => {
-                console.err('Failed to search the promotion type in the database', err)
+                realTimeLog.error('Failed to update the promotion type by using dbUpdate().', err)
+                resolve(result)
             }
         })
+    })
 }

@@ -1,6 +1,7 @@
 /**
  * Add a new promotion type to the cloud database
  */
+const realTimeLog = require('../../../../utils/log.js') // require the util of user inputs
 const pAction = require('../../../../utils/pageAction.js') // require the util of page actions
 const uInput = require('../../../../utils/uInput.js') // require the util of user inputs
 
@@ -19,7 +20,10 @@ Page({
         multiple_filled: false, // whether the multiple input is filled
         button_enable: false, // whether the sumbit button is enabled
         name_warn_enable: false, // whether the warning icon for the name should be enabled
-        multiple_warn_enable: false // whether the warning icon for the multiple should be enabled
+        multiple_warn_enable: false, // whether the warning icon for the multiple should be enabled
+        progress: 0, // the process to add a new promotion event in percentage
+        progress_text: '未开始', // the process to register a new user in text
+        progress_enable: false // whether the progress bar is enabled
     },
 
     /**
@@ -43,7 +47,7 @@ Page({
         var name_warn_enable = false
         var new_name = event.detail.value
 
-        if (new_name.length == 0) {
+        if (new_name.length === 0) {
             name_filled = false
             name_warn_enable = true
         }
@@ -104,39 +108,7 @@ Page({
             mask: true
         })
 
-        var add_promotion_type_data = {
-            promotion_type_name: e.detail.value.name
-        }
-
-        var is_repeated = await uInput.isRepeated(db_promotion_type, add_promotion_type_data)
-        console.log('Check is the new promotion type is repeated: ', is_repeated)
-
-        if (!is_repeated) {
-            add_promotion_type_data['promotion_type_multiple'] = parseFloat(e.detail.value.multiple)
-
-            wx.cloud.callFunction({
-                name: 'dbAdd',
-                data: {
-                    collection_name: db_promotion_type,
-                    add_data: add_promotion_type_data
-                },
-                success: res => {
-                    console.log('Add a new promotion type to the database: ', add_promotion_type_data)
-                    pAction.navigateBackUser('新增成功', 1)
-                },
-                fail: err => {
-                    console.error('Failed to add a new promotion type to the database', err)
-                    wx.hideLoading()
-                }
-            })
-        } else {
-            wx.hideLoading()
-            wx.showModal({
-                title: '错误',
-                content: '新促销类型的名称与已有类型重复',
-                showCancel: false
-            })
-        }
+        addPromotionTypeProcess(this, e.detail.value)
     },
 
     /**
@@ -150,3 +122,147 @@ Page({
         }
     }
 })
+
+
+async function addPromotionTypeProcess(page, inputs) {
+    var add_promotion_type_data = {}
+
+    page.setData({
+        progress: 0,
+        progress_text: '检查新增促销类型名称',
+        progress_enable: true
+    })
+
+    var n_result = await isRepeated(inputs.name)
+
+    if (n_result.stat) {
+        if (n_result.result) {
+            page.setData({
+                progress: 0,
+                progress_text: '未开始',
+                progress_enable: false
+            })
+
+            wx.hideLoading()
+            wx.showModal({
+                title: '错误',
+                content: '新增促销类型的名称与此餐厅已有促销类型的名称重复，请更改后重试。',
+                showCancel: false
+            })
+
+            return
+        } else {
+            add_promotion_type_data['restaurant_id'] = app.globalData.restaurant_id
+            add_promotion_type_data['name'] = inputs.name
+            add_promotion_type_data['multiple'] = inputs.multiple
+        }
+
+    } else {
+        page.setData({
+            progress: 0,
+            progress_text: '未开始',
+            progress_enable: false
+        })
+
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重试',
+            icon: 'none'
+        })
+
+        return
+    }
+
+    page.setData({
+        progress: 50,
+        progress_text: '检查通过，正在上传新的促销类型'
+    })
+
+    var add_result = await addPromotionType(add_promotion_type_data)
+
+    if (add_result.stat) {
+        page.setData({
+            progress: 100,
+            progress_text: '上传成功'
+        })
+
+        realTimeLog.info('User ', app.globalData.user_name, app.globalData.uid, ' add a promotion type ', add_promotion_type_data, ' into the restaurant ', app.globalData.restaurant_name, app.globalData.restaurant_id)
+
+        pAction.navigateBackUser('新增成功', 1)
+    } else {
+        page.setData({
+            progress: 0,
+            progress_text: '未开始',
+            progress_enable: false
+        })
+
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重试',
+            icon: 'none'
+        })
+
+        return
+    }
+}
+
+
+function isRepeated(name) {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+        result['result'] = true
+
+        db.collection(db_promotion_type)
+            .where({
+                restaurant_id: app.globalData.restaurant_id,
+                name: name
+            })
+            .field({
+                _id: true
+            })
+            .get({
+                success: res => {
+                    result['stat'] = true
+                    if (res.data.length === 0) {
+                        result['result'] = false
+                    }
+
+                    resolve(result)
+                },
+                fail: err => {
+                    realTimeLog.error('Failed to get the promotion type data with the same date as the new promotion type in the same restaurant from the database.', err)
+
+                    resolve(result)
+                }
+            })
+    })
+}
+
+
+function addPromotionType(add_promotion_type_data) {
+    return new Promise((resolve, reject) => {
+        var result = {}
+        result['stat'] = false
+
+        wx.cloud.callFunction({
+            name: 'dbAdd',
+            data: {
+                collection_name: db_promotion_type,
+                add_data: add_promotion_type_data
+            },
+            success: res => {
+                if (res.result._id !== undefined) {
+                    result['stat'] = true
+                    result['result'] = res
+                }
+
+                resolve(result)
+            },
+            fail: err => {
+                realTimeLog.error('Failed to add a new promotion type into the database by using dbAdd().', err)
+                resolve(result)
+            }
+        })
+    })
+}
