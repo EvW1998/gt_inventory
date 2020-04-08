@@ -3,7 +3,7 @@
 <view class="page">
     <view class="page__hd">
         <view class="page__title">员工管理</view>
-        <view class="page__desc">点击员工更改姓名及权限</view>
+        <view class="page__desc">点击员工修改姓名及权限</view>
     </view>
 
     <block wx:if="{{search_state == 'searching'}}">
@@ -21,7 +21,7 @@
 
     <block wx:elif="{{search_state == 'error'}}">
         <view class="weui-loadmore weui-loadmore_line">
-            <view class="weui-loadmore__tips weui-loadmore__tips_in-line no-data">网络错误，请下拉刷新重试</view>
+            <view class="weui-loadmore__tips weui-loadmore__tips_in-line no-data">发生错误，请下拉刷新重试</view>
         </view>
     </block>
 
@@ -30,7 +30,7 @@
             <view class="weui-cells__title">权限2级</view>
             <view class="weui-cells weui-cells_after-title">
                 <block wx:for="{{user_level_2}}" wx:key="_id">
-                    <navigator url="{{userSetting_page}}?title={{item._id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
+                    <navigator url="{{userSetting_page}}?user_id={{item._id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
                         <view class="weui-cell__bd">{{item[restaurant_id].name}}</view>
                         <view class="weui-cell__ft weui-cell__ft_in-access"></view>
                     </navigator>
@@ -42,7 +42,7 @@
             <view class="weui-cells__title">权限1级</view>
             <view class="weui-cells weui-cells_after-title">
                 <block wx:for="{{user_level_1}}" wx:key="_id">
-                    <navigator url="{{userSetting_page}}?title={{item._id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
+                    <navigator url="{{userSetting_page}}?user_id={{item._id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
                         <view class="weui-cell__bd">{{item[restaurant_id].name}}</view>
                         <view class="weui-cell__ft weui-cell__ft_in-access"></view>
                     </navigator>
@@ -54,7 +54,7 @@
             <view class="weui-cells__title">权限0级</view>
             <view class="weui-cells weui-cells_after-title">
                 <block wx:for="{{user_level_0}}" wx:key="_id">
-                    <navigator url="{{userSetting_page}}?title={{item._id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
+                    <navigator url="{{userSetting_page}}?user_id={{item._id}}" class="weui-cell weui-cell_access" hover-class="weui-cell_active">
                         <view class="weui-cell__bd">{{item[restaurant_id].name}}</view>
                         <view class="weui-cell__ft weui-cell__ft_in-access"></view>
                     </navigator>

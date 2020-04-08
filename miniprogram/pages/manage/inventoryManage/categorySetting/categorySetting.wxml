@@ -54,7 +54,7 @@
 
         <block wx:elif="{{search_state == 'error'}}">
             <view class="weui-loadmore weui-loadmore_line">
-                <view class="weui-loadmore__tips weui-loadmore__tips_in-line no-data">网络错误，请下拉刷新重试</view>
+                <view class="weui-loadmore__tips weui-loadmore__tips_in-line no-data">发生错误，请下拉刷新重试</view>
             </view>
         </block>
 

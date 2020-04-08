@@ -3,6 +3,7 @@
  */
 const app = getApp() // the app
 const db = wx.cloud.database() // the cloud database
+const db_restaurant = 'restaurant' // the collection of restaruants
 const db_category = 'category' // the collection of categories
 const db_item = 'item' // the collection of items
 const db_info = 'info' // the collection of the app info
@@ -16,11 +17,11 @@ const db_sale = 'sale' // the collection of sales
  * @param{Page} page The page
  * @param{String} type The type, whether update, left or refill
  */
-async function setInventory(page, type) {
+async function setInventory(page, type, restaurant_id) {
     if (type == 'update') {
         // for the inventoryUpdate page
         // get the check_left value and update to the app and page data
-        var cl = await getCheckLeft()
+        var cl = await getCheckLeft(restaurant_id)
         page.setData({
             check_left: cl
         })
@@ -29,7 +30,7 @@ async function setInventory(page, type) {
     }
     
     // get all categories and add a nav_order key for the switch navigation
-    var categories = await getCategory()
+    var categories = await getCategory(restaurant_id)
     for (var c in categories) {
         categories[c]['nav_order'] = parseInt(c)
     }
@@ -92,9 +93,13 @@ async function setInventory(page, type) {
  * @method getCheckLeft
  * @return{Promise} The state of the function. Resolve with the check_left value.
  */
-function getCheckLeft() {
+function getCheckLeft(restaurant_id) {
     return new Promise((resolve, reject) => {
-        db.collection(db_info)
+        console.log(restaurant_id)
+        db.collection(db_restaurant)
+            .where({
+                _id: restaurant_id
+            })
             .field({
                 check_left: true
             })
@@ -117,15 +122,18 @@ function getCheckLeft() {
  * @method getCategory
  * @return{Promise} The state of the function. Resolve with all the categories.
  */
-function getCategory() {
+function getCategory(restaurant_id) {
     return new Promise((resolve, reject) => {
+        var collection_where = {}
+        collection_where['restaurant_id'] = restaurant_id
+
         wx.cloud.callFunction({
             name: 'dbGet',
             data: {
                 collection_name: db_category,
                 collection_limit: 100,
                 collection_field: {},
-                collection_where: {},
+                collection_where: collection_where,
                 collection_orderby_key: 'category_order',
                 collection_orderby_order: 'asc'
             },

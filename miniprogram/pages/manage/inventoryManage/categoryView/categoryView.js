@@ -1,7 +1,8 @@
 /**
- * The page to show all the category in the category collection.
+ * Show all the categories in the current restaurant.
  */
-const realTimeLog = require('../../../../utils/log.js') // require the util of user inputs
+const realTimeLog = require('../../../../utils/log.js') // require the util of real time log
+const uInput = require('../../../../utils/uInput.js') // require the util of user input
 
 const app = getApp() // the app
 const db = wx.cloud.database() // the cloud database
@@ -35,22 +36,33 @@ Page({
     },
 
     /**
-     * When show the page, get all category info
+     * When show the page
      */
     onShow: function () {
         setAllCategoryrInfo(this)
     },
 
     /**
-     * When the use pulls down to refresh,
-     * call onShow to update categories info.
+     * When pull down to refresh
      */
     onPullDownRefresh: function () {
         setAllCategoryrInfo(this)
     },
 
+    /**
+     * When unload the page
+     */
     onUnload: function () {
-        wx.removeStorageSync('categories')
+        try {
+            wx.removeStorageSync('categories')
+        } catch (err) {
+            realTimeLog.error('Failed to remove the categories data in the local stroage.', err)
+
+            wx.showToast({
+                title: '本地存储错误，请重试',
+                icon: 'none'
+            })
+        }
     },
 
     /**
@@ -71,12 +83,12 @@ Page({
     },
 
     /**
-     * When the user wants to share this miniapp
+     * When share the mini app
      */
     onShareAppMessage: function () {
         return {
-            title: 'GT库存',
-            desc: '国泰餐厅库存管理程序',
+            title: '国泰耗材管理',
+            desc: '国泰餐厅耗材管理程序',
             path: 'pages/inventory/inventoryUpdate/inventoryUpdate'
         }
     }
@@ -84,7 +96,7 @@ Page({
 
 
 /**
- * Set all the category info into the page data.
+ * Store all the category info into the page data.
  * 
  * @method setAllCategoryrInfo
  * @param{Page} page The page
@@ -118,18 +130,36 @@ function setAllCategoryrInfo(page) {
                     storage_category[res.result[i]._id] = res.result[i].name
                 }
 
-                wx.setStorageSync('categories', storage_category)
+                try {
+                    wx.setStorageSync('categories', storage_category)
+                } catch (err) {
+                    page.setData({
+                        search_state: 'error'
+                    })
 
-                var categories = addOrder(res.result, res.result.length)
+                    realTimeLog.error('Failed to store the category data in the local stroage.', err)
 
-                page.setData({
-                    search_state: 'found',
-                    categories: categories,
-                    category_amount: res.result.length
-                })
+                    wx.showToast({
+                        title: '本地存储错误，请重试',
+                        icon: 'none'
+                    })
+                }
+
+                var categories = uInput.addOrder(res.result, res.result.length)
+
+                if (page.data.search_state !== 'error') {
+                    page.setData({
+                        search_state: 'found',
+                        categories: categories,
+                        category_amount: res.result.length
+                    })
+                }
             }
 
-            console.log('View all the categoies in the current restaurant.', page.data.categories)
+            if (app.globalData.debug) {
+                console.log('View all the categoies in the current restaurant.', page.data.categories)
+            }
+            
             wx.stopPullDownRefresh()
         },
         fail: err => {
@@ -145,27 +175,4 @@ function setAllCategoryrInfo(page) {
             })
         }
     })
-}
-
-
-function addOrder(target, amount) {
-    var order = 1
-
-    for (var i in target) {
-        var new_order = order.toString()
-
-        if (amount > 9 && order < 10) {
-            new_order = '0' + new_order
-        }
-
-        if (amount > 99 && order < 100) {
-            new_order = '0' + new_order
-        }
-
-        target[i]['order'] = new_order
-
-        order++
-    }
-
-    return target
 }

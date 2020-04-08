@@ -43,7 +43,7 @@ Page({
 
             checkUpdate()
 
-            userLogin()
+            userLogin(this)
         }
     },
 
@@ -54,13 +54,12 @@ Page({
         console.log('First load: ', this.data.first_load)
         if (!this.data.first_load) {
             checkPermission()
+            inventory.setInventory(this, 'update', app.globalData.restaurant_id)
         } else {
             this.setData({
                 first_load: false
             })
         }
-
-        inventory.setInventory(this, 'update')
     },
 
     /**
@@ -98,6 +97,14 @@ Page({
      * @param{Object} e The data from the button tapped
      */
     bindLeft: function(e) {
+        wx.showToast({
+            title: '敬请期待',
+            icon: 'none'
+        })
+
+        /**
+        
+
         var legal_action = true
 
         if (this.data.category_amount == 0) {
@@ -124,6 +131,7 @@ Page({
                 url: check_left_page
             })
         }
+         */
     },
 
     /**
@@ -133,6 +141,11 @@ Page({
      * @param{Object} e The data from the button tapped
      */
     bindRefill: function (e) {
+        wx.showToast({
+            title: '敬请期待',
+            icon: 'none'
+        })
+        /** 
         var legal_action = true
 
         if (this.data.category_amount == 0) {
@@ -159,6 +172,7 @@ Page({
                 url: refill_page
             })
         }
+        */
     },
 
     /**
@@ -196,7 +210,7 @@ function checkPermission() {
  * 
  * @method userLogin
  */
-async function userLogin() {
+async function userLogin(page) {
     console.log('Start user login process.')
 
     var log_info = {}
@@ -357,6 +371,8 @@ async function userLogin() {
 
     console.log('User login process completed.')
     realTimeLog.info('User login succeeded.', log_info)
+
+    inventory.setInventory(page, 'update', app.globalData.restaurant_id)
 
     wx.hideLoading()
     checkPermission()

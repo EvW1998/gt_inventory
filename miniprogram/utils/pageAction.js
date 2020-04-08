@@ -51,12 +51,19 @@ function swiperChanged(page, e) {
  * @method navigateBackUser
  * @param{String} message The message to show in the toast.
  * @param{Number} level The level navigate back to.
+ * @param{String} icon The icon of the toast.
  */
-function navigateBackUser(message, level) {
+function navigateBackUser(message, level, icon) {
     wx.hideLoading()
+
+    var icon_show = 'success'
+    if (icon !== undefined) {
+        icon_show = icon
+    }
 
     wx.showToast({
         title: message,
+        icon: icon_show,
         duration: 1500,
         complete: function (res) {
             setTimeout(function () {

@@ -1,8 +1,9 @@
 /**
- * The page to add new category to database
+ * Add a new category to the current restaurant
  */
-const realTimeLog = require('../../../../utils/log.js') // require the util of user inputs
+const realTimeLog = require('../../../../utils/log.js') // require the util of real time log
 const pAction = require('../../../../utils/pageAction.js') // require the util of page actions
+const uInput = require('../../../../utils/uInput.js') // require the util of user input
 
 const app = getApp() // the app
 const db = wx.cloud.database() // the cloud database
@@ -17,7 +18,6 @@ Page({
      */
     data: {
         error_happened: true, // whether there is error happened while loading
-        existed_category_amount: 0, // The amount of the existed cateogies in the collection
         name_filled: false, // whether the name input is filled
         name_warn_enable: false, // whether the warning icon for the name should be enabled
         button_enable: false, // whether the sumbit button is enabled
@@ -27,15 +27,12 @@ Page({
     },
 
     /**
-     * When the page gets loaded, get the amount of existing categories.
+     * When load the page
      */
     onLoad: function() {
-        wx.showLoading({
-            title: '加载中'
+        this.setData({
+            error_happened: false
         })
-
-        // set the amount of categories to the page data
-        setCategoryAmount(this)
     },
 
     /**
@@ -50,9 +47,10 @@ Page({
         var name_filled = true
         var name_warn_enable = false
         var button_enable = true
-        var new_name = event.detail.value
 
-        if (new_name.length === 0) {
+        var input_name = event.detail.value
+
+        if (input_name.length === 0) {
             name_filled = false
             name_warn_enable = true
             button_enable = false
@@ -66,7 +64,7 @@ Page({
     },
 
     /**
-     * When the confirm button tapped
+     * Add a new category into the current restaurant.
      * 
      * @method formSubmit
      * @param e The return val from the form submit
@@ -77,16 +75,16 @@ Page({
             mask: true
         })
 
-        addCategoryProcess(this, this.data.existed_category_amount, e.detail.value.name)
+        addCategoryProcess(this, e.detail.value)
     },
 
     /**
-     * When the user wants to share this miniapp
+     * When share the mini app
      */
     onShareAppMessage: function () {
         return {
-            title: 'GT库存',
-            desc: '国泰餐厅库存管理程序',
+            title: '国泰耗材管理',
+            desc: '国泰餐厅耗材管理程序',
             path: 'pages/inventory/inventoryUpdate/inventoryUpdate'
         }
     }
@@ -94,67 +92,34 @@ Page({
 
 
 /**
- * Set the amount of categoies in the db to the page data.
+ * The process to add a new category into the current restaurant.
  * 
- * @method setCategoryAmount
- * @param page The page
+ * @method addCategoryProcess
+ * @param{Page} page The page
+ * @param{Object} inputs The user inputs about the new category
  */
-function setCategoryAmount(page) {
-    db.collection(db_restaurant)
-        .where({
-            _id: app.globalData.restaurant_id
-        })
-        .field({
-            category_amount: true
-        })
-        .get({
-            success: res => {
-                if (res.data.length === 1) {
-                    page.setData({
-                        error_happened: false,
-                        existed_category_amount: res.data[0].category_amount
-                    })
-
-                    console.log('Get the amount of existed categories in the current restaurant.', res.data[0].category_amount)
-                    wx.hideLoading()
-
-                } else {
-                    realTimeLog.error('Failed to get category amount from the restaurant database.', res)
-
-                    wx.hideLoading()
-                    wx.showToast({
-                        title: '网络错误，请重试',
-                        icon: 'none'
-                    })
-                }
-            },
-            fail: err => {
-                realTimeLog.error('Failed to get category amount from the restaurant database.', err)
-
-                wx.hideLoading()
-                wx.showToast({
-                    title: '网络错误，请重试',
-                    icon: 'none'
-                })
-            }
-        })
-}
-
-
-async function addCategoryProcess(page, category_order, category_name) {
-    var add_category_data = {}
-    var update_restaurant_data = {}
+async function addCategoryProcess(page, inputs) {
+    var add_category = {}
+    var update_restaurant = {}
 
     page.setData({
         progress: 0,
-        progress_text: '检查名称',
+        progress_text: '正在检查名称是否重复', 
         progress_enable: true
     })
 
-    var n_result = await isRepeated(category_name)
+    var name_check = {}
+    name_check['name'] = inputs.name
+    name_check['restaurant_id'] = app.globalData.restaurant_id
 
-    if (n_result.stat) {
-        if (n_result.result) {
+    var name_result = await uInput.isRepeated(db_category, name_check)
+
+    if (name_result.stat) {
+        if (!name_result.result.repetition) {
+            add_category['restaurant_id'] = app.globalData.restaurant_id
+            add_category['name'] = inputs.name
+            add_category['item_amount'] = 0
+        } else {
             page.setData({
                 progress: 0,
                 progress_text: '未开始',
@@ -162,22 +127,16 @@ async function addCategoryProcess(page, category_order, category_name) {
             })
 
             wx.hideLoading()
+
+            var name_content = '新增的品类名称与已有品类 ' + name_result.result.repetition_name + ' 重复，请修改后重试。'
             wx.showModal({
-                title: '错误',
-                content: '输入的品类名称与此餐厅已有品类重复，请更改后重试。',
+                title: '名称重复',
+                content: name_content,
                 showCancel: false
             })
 
             return
-        } else {
-            add_category_data['restaurant_id'] = app.globalData.restaurant_id
-            add_category_data['name'] = category_name
-            add_category_data['category_order'] = category_order
-            add_category_data['item_amount'] = 0
-            
-            update_restaurant_data['category_amount'] = category_order + 1
         }
-
     } else {
         page.setData({
             progress: 0,
@@ -195,11 +154,37 @@ async function addCategoryProcess(page, category_order, category_name) {
     }
 
     page.setData({
-        progress: 33,
-        progress_text: '检查通过，正在上传餐厅数据'
+        progress: 25,
+        progress_text: '无名称重复，正在获取餐厅数据'
     })
 
-    var update_result = await updateRestaurant(update_restaurant_data)
+    var get_result = await getCategoryAmount()
+
+    if (get_result.stat) {
+        add_category['category_order'] = get_result.result
+        update_restaurant['category_amount'] = get_result.result + 1
+    } else {
+        page.setData({
+            progress: 0,
+            progress_text: '未开始',
+            progress_enable: false
+        })
+
+        wx.hideLoading()
+        wx.showToast({
+            title: '网络错误，请重试',
+            icon: 'none'
+        })
+
+        return
+    }
+
+    page.setData({
+        progress: 50,
+        progress_text: '获取成功，正在修改餐厅数据'
+    })
+
+    var update_result = await updateRestaurant(update_restaurant)
 
     if (!update_result.stat) {
         page.setData({
@@ -218,11 +203,11 @@ async function addCategoryProcess(page, category_order, category_name) {
     }
 
     page.setData({
-        progress: 67,
-        progress_text: '正在上传新的补货品类'
+        progress: 75,
+        progress_text: '修改成功，正在上传新的补货品类'
     })
 
-    var add_result = await addCategory(add_category_data)
+    var add_result = await addCategory(add_category)
 
     if (add_result.stat) {
         page.setData({
@@ -230,7 +215,7 @@ async function addCategoryProcess(page, category_order, category_name) {
             progress_text: '上传成功'
         })
 
-        realTimeLog.info('User ', app.globalData.user_name, app.globalData.uid, ' add a new category ', add_category_data, ' into the restaurant ', app.globalData.restaurant_name, app.globalData.restaurant_id)
+        realTimeLog.info('User ', app.globalData.user_name, app.globalData.uid, ' add a new category ', add_category, ' into the restaurant ', app.globalData.restaurant_name, app.globalData.restaurant_id)
 
         pAction.navigateBackUser('新增成功', 1)
     } else {
@@ -251,31 +236,44 @@ async function addCategoryProcess(page, category_order, category_name) {
 }
 
 
-function isRepeated(category_name) {
+/**
+ * Get the existed category amount in the current restaurant.
+ * 
+ * @method getCategoryAmount
+ * @return{Promise} The state of the function. Resolve with the category amount.
+ */
+function getCategoryAmount() {
     return new Promise((resolve, reject) => {
         var result = {}
         result['stat'] = false
-        result['result'] = true
+        result['result'] = 0
 
-        db.collection(db_category)
+        db.collection(db_restaurant)
             .where({
-                restaurant_id: app.globalData.restaurant_id,
-                name: category_name
+                _id: app.globalData.restaurant_id
             })
             .field({
-                _id: true
+                category_amount: true
             })
             .get({
                 success: res => {
-                    result['stat'] = true
-                    if (res.data.length === 0) {
-                        result['result'] = false
-                    }
+                    if (res.data.length === 1) {
+                        result['stat'] = true
+                        result['result'] = res.data[0].category_amount
 
-                    resolve(result)
+                        if (app.globalData.debug) {
+                            console.log('Get the amount of existed categories in the current restaurant.', res.data[0].category_amount)
+                        }
+                        
+                        resolve(result)
+                    } else {
+                        realTimeLog.error('Failed to get category amount from the restaurant database.', res)
+
+                        resolve(result)
+                    }
                 },
                 fail: err => {
-                    realTimeLog.error('Failed to get the cateogry with the same name as the new category in the same restaurant from the database.', err)
+                    realTimeLog.error('Failed to get category amount from the restaurant database.', err)
 
                     resolve(result)
                 }
@@ -284,6 +282,13 @@ function isRepeated(category_name) {
 }
 
 
+/**
+ * Update the current restaurant with the given data.
+ * 
+ * @method updateRestaurant
+ * @param{Object} update_restaurant_data The update data
+ * @return{Promise} The state of the function. Resolve with the update result.
+ */
 function updateRestaurant(update_restaurant_data) {
     return new Promise((resolve, reject) => {
         var result = {}
@@ -313,6 +318,13 @@ function updateRestaurant(update_restaurant_data) {
 }
 
 
+/**
+ * Add the new category to the database with the given data.
+ * 
+ * @method addCategory
+ * @param{Object} add_category_data The new category data
+ * @return{Promise} The state of the function. Resolve with the add result.
+ */
 function addCategory(add_category_data) {
     return new Promise((resolve, reject) => {
         var result = {}

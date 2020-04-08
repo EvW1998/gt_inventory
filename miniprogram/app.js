@@ -38,6 +38,7 @@ App({
         this.globalData.new_restaurant_add = false
         this.globalData.info_id = '157bd19b-1943-4998-886f-5c6bb3f0bb78' // the id of the info collection
         this.globalData.version = 'Copyright © 开发所属：国泰肯德基 王智健' // the version info of this app
+        this.globalData.debug = true // whether in the debug mode
 
         // get the App's info from database
         setInfo(this, wx.cloud.database())

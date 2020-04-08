@@ -42,12 +42,12 @@ Page({
      * When show the page, check the user's permission level.
      */
     onShow: function () {
-        checkPermission()
-
         this.setData({
             permission_level: app.globalData.permission_level,
             restaurant_name: app.globalData.restaurant_name
         })
+
+        checkPermission()
     },
 
     /**
@@ -85,12 +85,12 @@ Page({
     },
 
     /**
-     * When the user wants to share this miniapp
+     * When share the mini app
      */
     onShareAppMessage: function () {
         return {
-            title: 'GT库存',
-            desc: '国泰餐厅库存管理程序',
+            title: '国泰耗材管理',
+            desc: '国泰餐厅耗材管理程序',
             path: 'pages/inventory/inventoryUpdate/inventoryUpdate'
         }
     }
@@ -105,10 +105,19 @@ Page({
  */
 function checkPermission() {
     if (app.globalData.permission_level < 2) {
-        console.log('User permission level too low to view this page')
-        app.globalData.permission_too_low = true
-        wx.switchTab({
-            url: info_page
+        if (app.globalData.debug) {
+            console.log('User permission level too low to view this page')
+        }
+        
+        wx.showModal({
+            title: '权限不足',
+            content: '查看此页面需权限2级及以上。\r\n请联系权限3级的管理组进行权限提升。',
+            showCancel: false,
+            success: res => {
+                wx.switchTab({
+                    url: info_page
+                })
+            }
         })
     }
 }

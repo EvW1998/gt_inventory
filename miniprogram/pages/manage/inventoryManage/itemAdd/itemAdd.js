@@ -1,8 +1,8 @@
 /**
- * The page to add new item to the selected category.
+ * Add a new item into the selected category
  */
 const uInput = require('../../../../utils/uInput.js') // require the util of user inputs
-const realTimeLog = require('../../../../utils/log.js') // require the util of user inputs
+const realTimeLog = require('../../../../utils/log.js') // require the util of real time log
 const pAction = require('../../../../utils/pageAction.js') // require the util of page actions
 
 const app = getApp() // the app
@@ -46,25 +46,27 @@ Page({
      * When the page gets loaded, get the amount of existing items.
      */
     onLoad: function(options) {
-        wx.showLoading({
-            title: '加载中'
-        })
+        try {
+            category_id = options.category_id
 
-        category_id = options.category_id
+            var categories = wx.getStorageSync('categories')
 
-        var categories = wx.getStorageSync('categories')
+            this.setData({
+                error_happened: false,
+                category_name: categories[category_id]
+            })
+        } catch (err) {
+            realTimeLog.error('Failed to get the selected category data from the local storage.', err)
 
-        this.setData({
-            category_name: categories[category_id]
-        })
-
-        setItemAmount(this, options.category_id)
+            wx.showToast({
+                title: '存储错误，请重试',
+                icon: 'none'
+            })
+        }
     },
 
     /**
-     * Check the input, set the name_filled to be true if the length is greater than 0,
-     * enable the warning icon if the length is 0.
-     * If both the input is filled, enable the confirm button.
+     * Check the input of item name
      * 
      * @method nameInput
      * @param{Object} event The event of the input
@@ -94,6 +96,12 @@ Page({
         })
     },
 
+    /**
+     * Check the input of item daily refill value
+     * 
+     * @method dailyInput
+     * @param{Object} event The event of the input
+     */
     dailyInput: function (event) {
         var daily_filled = true
         var daily_warn_enable = false
@@ -149,6 +157,12 @@ Page({
         })
     },
 
+    /**
+     * Check the input of item number of prepare day
+     * 
+     * @method prepareInput
+     * @param{Object} event The event of the input
+     */
     prepareInput: function (event) {
         var prepare_filled = true
         var prepare_warn_enable = false
@@ -204,6 +218,12 @@ Page({
         })
     },
 
+    /**
+     * Check the input of item stock value
+     * 
+     * @method stockInput
+     * @param{Object} event The event of the input
+     */
     stockInput: function (event) {
         var stock_filled = true
         var stock_warn_enable = false
@@ -259,6 +279,12 @@ Page({
         })
     },
 
+    /**
+     * Check the input of item capacity value
+     * 
+     * @method capacityInput
+     * @param{Object} event The event of the input
+     */
     capacityInput: function (event) {
         var capacity_filled = true
         var capacity_warn_enable = false
@@ -321,12 +347,12 @@ Page({
     },
 
     /**
-     * When the user wants to share this miniapp
+     * When share the mini app
      */
     onShareAppMessage: function () {
         return {
-            title: 'GT库存',
-            desc: '国泰餐厅库存管理程序',
+            title: '国泰耗材管理',
+            desc: '国泰餐厅耗材管理程序',
             path: 'pages/inventory/inventoryUpdate/inventoryUpdate'
         }
     }
@@ -402,13 +428,11 @@ function isAllFilled(page) {
 
 
 /**
- * Add the new item to the item collection.
- * Update the amount of the items inside this category in the category collection.
- * Then return to the previous page.
+ * The process to add a new item into the category
  * 
  * @method addItem
- * @param page{Page} The page
- * @param inputs{Object} The info of the new item
+ * @param{Page} page The page
+ * @param{Object} inputs The user inputs
  */
 async function addItemProcess(page, inputs) {
     var add_item_data = {}
@@ -416,14 +440,28 @@ async function addItemProcess(page, inputs) {
 
     page.setData({
         progress: 0,
-        progress_text: '检查名称',
+        progress_text: '正在检查名称是否重复',
         progress_enable: true
     })
 
-    var n_result = await isRepeated(inputs.name)
+    var name_check = {}
+    name_check['name'] = inputs.name
+    name_check['restaurant_id'] = app.globalData.restaurant_id
 
-    if (n_result.stat) {
-        if (n_result.result) {
+    var name_result = await uInput.isRepeated(db_item, name_check)
+
+    if (name_result.stat) {
+        if (!name_result.result.repetition) {
+            add_item_data['restaurant_id'] = app.globalData.restaurant_id
+            add_item_data['category_id'] = category_id
+            add_item_data['name'] = inputs.name
+            add_item_data['daily_refill'] = parseInt(inputs.daily)
+            add_item_data['prepare_day'] = parseFloat(inputs.prepare)
+            add_item_data['stock'] = parseFloat(inputs.stock)
+            add_item_data['capacity'] = parseInt(inputs.capacity)
+            //add_item_data['item_order'] = existed_item_amount
+            //update_category_data['item_amount'] = existed_item_amount + 1
+        } else {
             page.setData({
                 progress: 0,
                 progress_text: '未开始',
@@ -431,26 +469,16 @@ async function addItemProcess(page, inputs) {
             })
 
             wx.hideLoading()
+
+            var name_content = '新增的品项名称与已有品项 ' + name_result.result.repetition_name + ' 重复，请修改后重试。'
             wx.showModal({
-                title: '错误',
-                content: '输入的品项名称与此餐厅已有品项重复，请更改后重试。',
+                title: '名称重复',
+                content: name_content,
                 showCancel: false
             })
 
             return
-        } else {
-            add_item_data['restaurant_id'] = app.globalData.restaurant_id
-            add_item_data['category_id'] = category_id
-            add_item_data['item_order'] = existed_item_amount
-            add_item_data['name'] = inputs.name
-            add_item_data['daily_refill'] = parseInt(inputs.daily)
-            add_item_data['prepare_day'] = parseFloat(inputs.prepare)
-            add_item_data['stock'] = parseFloat(inputs.stock)
-            add_item_data['capacity'] = parseInt(inputs.capacity)
-
-            update_category_data['item_amount'] = existed_item_amount + 1
         }
-
     } else {
         page.setData({
             progress: 0,
@@ -521,39 +549,6 @@ async function addItemProcess(page, inputs) {
 
         return
     }
-}
-
-
-function isRepeated(item_name) {
-    return new Promise((resolve, reject) => {
-        var result = {}
-        result['stat'] = false
-        result['result'] = true
-
-        db.collection(db_item)
-            .where({
-                restaurant_id: app.globalData.restaurant_id,
-                name: item_name
-            })
-            .field({
-                _id: true
-            })
-            .get({
-                success: res => {
-                    result['stat'] = true
-                    if (res.data.length === 0) {
-                        result['result'] = false
-                    }
-
-                    resolve(result)
-                },
-                fail: err => {
-                    realTimeLog.error('Failed to get the item with the same name as the new item in the same restaurant from the database.', err)
-
-                    resolve(result)
-                }
-            })
-    })
 }
 
 

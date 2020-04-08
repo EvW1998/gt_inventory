@@ -89,7 +89,7 @@
             </view>
 
             <view class="weui-form__opr-area">
-                <button type="primary" form-type="submit" disabled="{{!button_enable}}">确定</button>
+                <button type="primary" form-type="submit" disabled="{{!button_enable || error_happened}}">确定</button>
             </view>
         </form>
     </view>

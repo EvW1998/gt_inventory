@@ -5,7 +5,7 @@
         <scroll-view class="scroll-view_H" scroll-x="true" enable-flex="true">
             <view class="scroll-view_H">
                 <view wx:for="{{category}}" wx:for-item="category" wx:key="_id">
-                    <view class="{{flag==category.nav_order?'select':'normal'}}" id="{{category.nav_order}}" bindtap="switchNav">{{category.category_name}}</view>
+                    <view class="{{flag==category.nav_order?'select':'normal'}}" id="{{category.nav_order}}" bindtap="switchNav">{{category.name}}</view>
                 </view>
             </view>
         </scroll-view>
@@ -20,10 +20,10 @@
                     <view class="{{subitem.item_state==1?'sub_red':'sub'}}">
 
                         <navigator url="{{detail_page}}?title={{subitem._id}}" class="sub-navigator">
-                            <text>{{subitem.item_name}}</text>
+                            <text>{{subitem.name}}</text>
                         </navigator>
 
-                        <view class="stockValue">上次统计后存量: {{subitem.stock_value}}</view>
+                        <view class="stockValue">上次统计后存量: {{subitem.stock}}</view>
                     </view>
                 </view>
             </swiper-item>

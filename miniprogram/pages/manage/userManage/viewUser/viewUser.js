@@ -1,12 +1,11 @@
 /**
- * The page to show all the user in the user collection,
- * whose permission level is lower than the current user.
+ * Show all the user in the current restaurant whose permission level are lower than the current user.
  */
 const realTimeLog = require('../../../../utils/log.js') // require the util of real time logs
 
 const app = getApp() // the app
 const db = wx.cloud.database() // the cloud database
-const db_user = 'user' // the collection name of the user
+const db_user = 'user' // the collection name of the users
 
 const userSetting_page = '../userSetting/userSetting' // the page url of the user setting
 
@@ -14,12 +13,11 @@ const userSetting_page = '../userSetting/userSetting' // the page url of the use
 Page({
 
     /**
-     * Data for this page
+     * Page data
      */
     data: {
         search_state: 'searching', // the state of the searching users
-        user: {}, // users in the miniapp
-        user_amount: 0, // the amount of users
+        user: {}, // users in the current restaurant
         user_level_2: {}, // users have permission level 2
         user_level_2_amount: 0, // the amount of users have permission level 2
         user_level_1: {}, // users have permission level 1
@@ -39,7 +37,7 @@ Page({
     },
 
     /**
-     * When show the page, update permission level and get all user info
+     * When show the page
      */
     onShow: function () {
         this.setData({
@@ -51,24 +49,40 @@ Page({
     },
 
     /**
-     * When the use pulls down to refresh,
-     * call onShow to update users info.
+     * When pull down to refresh
      */
     onPullDownRefresh: function() {
-        this.onShow()
-    },
+        this.setData({
+            permission_level: app.globalData.permission_level,
+            restaurant_id: app.globalData.restaurant_id
+        })
 
-    onUnload: function () {
-        wx.removeStorageSync('users')
+        setAllUserInfo(this)
     },
 
     /**
-     * When the user wants to share this miniapp
+     * When unload the page
+     */
+    onUnload: function () {
+        try {
+            wx.removeStorageSync('users')
+        } catch (err) {
+            realTimeLog.error('Failed to remove the user data in the local stroage.', err)
+
+            wx.showToast({
+                title: '本地存储错误，请重试',
+                icon: 'none'
+            })
+        }
+    },
+
+    /**
+     * When share the mini app
      */
     onShareAppMessage: function () {
         return {
-            title: 'GT库存',
-            desc: '国泰餐厅库存管理程序',
+            title: '国泰耗材管理',
+            desc: '国泰餐厅耗材管理程序',
             path: 'pages/inventory/inventoryUpdate/inventoryUpdate'
         }
     }
@@ -76,7 +90,8 @@ Page({
 
 
 /**
- * Set all the user info into the page data.
+ * Search users in the current restaurant.
+ * If found, store them in different permission levels in the page data.
  * 
  * @method setAllUserInfo
  * @param{Page} page The page
@@ -130,21 +145,39 @@ function setAllUserInfo(page) {
                         search_state: 'noUsers'
                     })
                 } else {
-                    wx.setStorageSync('users', storage_user)
 
-                    page.setData({
-                        user_level_2: user_level_2,
-                        user_level_2_amount: user_level_2_amount,
-                        user_level_1: user_level_1,
-                        user_level_1_amount: user_level_1_amount,
-                        user_level_0: user_level_0,
-                        user_level_0_amount: user_level_0_amount,
-                        search_state: 'foundUsers'
-                    })
+                    try {
+                        wx.setStorageSync('users', storage_user)
+                    } catch (err) {
+                        page.setData({
+                            search_state: 'error'
+                        })
+
+                        realTimeLog.error('Failed to store the user data in the local stroage.', err)
+
+                        wx.showToast({
+                            title: '本地存储错误，请重试',
+                            icon: 'none'
+                        })
+                    }
+                    
+                    if (page.data.search_state !== 'error') {
+                        page.setData({
+                            user_level_2: user_level_2,
+                            user_level_2_amount: user_level_2_amount,
+                            user_level_1: user_level_1,
+                            user_level_1_amount: user_level_1_amount,
+                            user_level_0: user_level_0,
+                            user_level_0_amount: user_level_0_amount,
+                            search_state: 'foundUsers'
+                        })
+                    }
                 }
             }
 
-            console.log('Get all users info', user_result)
+            if (app.globalData.debug) {
+                console.log('Get all users info', user_result)
+            }
             wx.stopPullDownRefresh()
         },
         fail: err => {

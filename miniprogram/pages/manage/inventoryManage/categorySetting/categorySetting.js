@@ -1,8 +1,8 @@
 /**
- * Modify the category name or delete it.
- * Also show items under this category.
+ * Show the items under the selected category
  */
-const realTimeLog = require('../../../../utils/log.js') // require the util of user inputs
+const realTimeLog = require('../../../../utils/log.js') // require the util of real time log
+const uInput = require('../../../../utils/uInput.js') // require the util of user input
 
 const app = getApp() // the app
 const db = wx.cloud.database() // the cloud database
@@ -34,12 +34,12 @@ Page({
     },
 
     /**
-     * When the app loads the page
+     * When load the page
      * 
      * @param{Object} options The data passed to this page
      */
     onLoad: function (options) {
-        category_id = options.title
+        category_id = options.category_id
         
         this.setData({
             category_id: category_id
@@ -59,12 +59,33 @@ Page({
         setItem(this)
     },
 
+    /**
+     * When pull down to refresh
+     */
     onPullDownRefresh: function() {
+        var categories = wx.getStorageSync('categories')
+
+        this.setData({
+            category_name: categories[category_id]
+        })
+
         setItem(this)
     },
 
+    /**
+     * When unload the page
+     */
     onUnload: function () {
-        wx.removeStorageSync('items')
+        try {
+            wx.removeStorageSync('items')
+        } catch (err) {
+            realTimeLog.error('Failed to remove the items data in the local stroage.', err)
+
+            wx.showToast({
+                title: '本地存储错误，请重试',
+                icon: 'none'
+            })
+        }
     },
 
     /**
@@ -85,18 +106,24 @@ Page({
     },
 
     /**
-     * When the user wants to share this miniapp
+     * When share the mini app
      */
     onShareAppMessage: function () {
         return {
-            title: 'GT库存',
-            desc: '国泰餐厅库存管理程序',
+            title: '国泰耗材管理',
+            desc: '国泰餐厅耗材管理程序',
             path: 'pages/inventory/inventoryUpdate/inventoryUpdate'
         }
     }
 })
 
 
+/**
+ * Store the items under the selected category into the page data and local storage.
+ * 
+ * @method setItem
+ * @param{Page} page The page
+ */
 function setItem(page) {
     var collection_where = {}
     collection_where['restaurant_id'] = app.globalData.restaurant_id
@@ -128,18 +155,36 @@ function setItem(page) {
                     storage_item[res.result[i]._id] = res.result[i]
                 }
 
-                wx.setStorageSync('items', storage_item)
+                try {
+                    wx.setStorageSync('items', storage_item)
+                } catch (err) {
+                    page.setData({
+                        search_state: 'error'
+                    })
 
-                var items = addOrder(res.result, res.result.length)
+                    realTimeLog.error('Failed to store the item data in the local stroage.', err)
 
-                page.setData({
-                    search_state: 'found',
-                    items: items,
-                    item_amount: res.result.length
-                })
+                    wx.showToast({
+                        title: '本地存储错误，请重试',
+                        icon: 'none'
+                    })
+                }
+
+                var items = uInput.addOrder(res.result, res.result.length)
+
+                if (page.data.search_state !== 'error') {
+                    page.setData({
+                        search_state: 'found',
+                        items: items,
+                        item_amount: res.result.length
+                    })
+                }
             }
 
-            console.log('View all the items under the category ', page.data.category_name, ' in the current restaurant.', page.data.items)
+            if (app.globalData.debug) {
+                console.log('View all the items under the category ', page.data.category_name, ' in the current restaurant.', page.data.items)
+            }
+
             wx.stopPullDownRefresh()
         },
         fail: err => {
@@ -155,27 +200,4 @@ function setItem(page) {
             })
         }
     })
-}
-
-
-function addOrder(target, amount) {
-    var order = 1
-
-    for (var i in target) {
-        var new_order = order.toString()
-
-        if (amount > 9 && order < 10) {
-            new_order = '0' + new_order
-        }
-
-        if (amount > 99 && order < 100) {
-            new_order = '0' + new_order
-        }
-
-        target[i]['order'] = new_order
-
-        order++
-    }
-
-    return target
 }
